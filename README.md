@@ -5,7 +5,7 @@
 > **Agent name:** *Smriti* (स्मृति), which means "memory".
 > **Track:** Yugaantar 2026 · DevForge — Track 1, *"Can It Play DOOM?"*
 > **Built on:** the official [`devforge-doom-template`](https://github.com/Reinforce-SST/devforge-doom-template).
-> **Status:** 🎮 Playing. The submitted agent runs our first trained champion (`submission/weights/champion.pt`, Phase 2 brain: **+2,021** on our 20 validation maps vs **−201** for random). Phase 3 memory is built; training it is next.
+> **Status:** 🎮 Playing. The submitted agent is **champion #2**, the Phase 3 memory brain (mind map + landmark notebook): **+5,182.69** on our 24 validation maps vs +2,511.03 for champion #1. It solves all key-near-start puzzles and opens locked doors; big Freedoom levels are still its weak spot.
 
 ## What is this?
 

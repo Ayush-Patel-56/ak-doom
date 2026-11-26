@@ -2,7 +2,7 @@
 
 > **One line:** Every rule from the official Track 1 problem statement, as a tick-box list. Check it before every major submission.
 
-**Last audited:** 2026-11-27 on `main` @ `01b6ca9` (after #17), with champion #1 in `submission/weights/`.
+**Last audited:** 2026-11-27 on `main` @ `01b6ca9` (after #17); champion lines updated for **champion #2** (Phase 3 memory brain).
 **Result:** 37 of 41 items verified ✅. Still open: sending the URL, the final merge before the deadline, and the 2-page brief (two items). Re-audit after every new champion and right before submitting.
 
 ---
@@ -59,5 +59,5 @@
 
 ## Final sanity
 - [x] Fresh `git clone` → LFS weights download → `validate.py` passes: clone of `main` @ `01b6ca9` got the real 2,242,253-byte `champion.pt` and passed
-- [x] Mini-League: 0 crashes: champion #1, 24 val maps × 2 seeds: **0 of 48** runs stopped (`champion1-val24`; reproduced exactly under #17's code: +2,511.03)
-- [x] Latest champion is the one in `submission/weights/`: `champion.json` records its source, SHA-256 and +2,511.03 on map set `8fda02b8a085ba01`
+- [x] Mini-League: 0 crashes: champion #2, 24 val maps × 2 seeds: **0 of 48** runs stopped (`p3-final-4.5M-val24`); champion #1 also 0 of 48
+- [x] Latest champion is the one in `submission/weights/`: champion #2; `champion.json` records its source (`p3-mem-ws-v1`, 4,501,504 steps), SHA-256 and +5,182.69 on map set `8fda02b8a085ba01`; official Docker check: init 6.7 s, p50 2.4 ms, 639 MB
