@@ -189,7 +189,8 @@ They're removed (or simply unused) on game day.
 
 - Save a checkpoint every N updates.
 - Every checkpoint plays the **validation maps** in the Mini-League (see [Testing Plan](05-TESTING-PLAN.md)).
-- If it beats the champion's score → **it becomes the new champion** → copy it to `submission/weights/` (Git LFS) through a pull request.
+- If it beats the champion's score **on the same maps and seeds** → **it becomes the new champion** → `scripts/export_champion.py` copies it to `submission/weights/` (Git LFS), then a pull request.
+- Totals from different map sets are never compared: `evaluate.py` records a map-set fingerprint and the weights' SHA-256, and `champion.json` keeps the champion's score per map set. When the validation set grows, re-score the champion first (`export_champion.py --rebaseline`).
 - Keep the last 3 champions in case a regression appears later.
 
 ## 4.9 Experiment tracking

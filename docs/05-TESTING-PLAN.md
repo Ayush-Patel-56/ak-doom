@@ -108,7 +108,7 @@ Our own copy of the hidden evaluation.
 | champion   | …  | …  | …  | …  | …              | …      | 0       |
 | challenger | …  | …  | …  | …  | …              | …      | 0       |
 
-**Champion rule:** a new checkpoint replaces the champion only if its weighted total is higher **and** it has 0 crashes **and** its speed is within budget.
+**Champion rule:** a new checkpoint replaces the champion only if its weighted total is higher **on the same map set** (same maps and seeds as the champion's stored score) **and** it has 0 crashes **and** its speed is within budget. `scripts/export_champion.py` enforces all three and checks each result was made with the right weights.
 
 ## 5.7 Level 6: Stress & chaos tests (`tests/agent/stress/`)
 

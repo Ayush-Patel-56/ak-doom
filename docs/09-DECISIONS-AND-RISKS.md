@@ -38,6 +38,7 @@ Add a new row whenever we make or change a big choice. Never delete old rows; ma
 | D-27 | **One training stack: Aneek's (`training/rollout.py`, `ppo.py`, `train.py`)** | It trains the memory brain with the exact agent code path; the separate PR #8 trainer was retired after its long-run fixes were ported | Keep two trainers | ✅ Active |
 | D-28 | **Warm-start memory brains from the champion** (new memory inputs start at zero) | The memory brain then starts with the champion's skills (exit ~75% at step 0 vs ~2% from scratch) and only learns to use memory | Train each memory brain from scratch | ✅ Active |
 | D-29 | **More replay (40%) when warm-starting** (`--puzzle-share 0.6`) | Most of the champion's score comes from arenas and mazes; 80% key puzzles risks forgetting them | Stage 3 default (80% puzzles) | ✅ Active for `p3-mem-ws-v1` |
+| D-30 | **Compare Mini-League totals only on the same map set** (fingerprint of maps × seeds + weights SHA-256 in every result) | The val set grew from 20 to 24 maps; a worse Phase 3 checkpoint's 24-map total (+2,464) would have beaten champion #1's stale 20-map number (+2,021), while on the same 24 maps the champion scores +2,511 | Compare raw totals | ✅ Active |
 | D-23 | **Write our own map generator** (text drawing → UDMF) instead of depending on OBLIGE first | No extra install; maps are tiny, exact and reproducible from a seed; we control the skill being tested (e.g. key away from its door) | OBLIGE only | ✅ Active; OBLIGE stays optional for big full levels |
 
 ---
