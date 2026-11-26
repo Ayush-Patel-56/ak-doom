@@ -222,3 +222,9 @@ _vizdoom.ini
 
 # Local validator / scorer artifacts
 *.lmp
+
+# AK-Doom: training outputs (never ignore anything under submission/: validate.py fails)
+runs/
+checkpoints/
+maps/generated/
+videos/

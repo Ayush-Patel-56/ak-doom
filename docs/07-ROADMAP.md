@@ -22,13 +22,13 @@ flowchart LR
 
 - [x] Repo `ak-doom` on GitHub, built on the official template
 - [x] Read `CONTRACT.md` → facts recorded in the [PRD §1.9](01-PRD.md#19-contract-facts-answered-by-the-official-template)
-- [ ] Planning docs merged (this PR)
-- [ ] Every team member: setup steps in [Repo & Workflow §6.1](06-REPO-AND-WORKFLOW.md#61-setting-up-step-by-step) (`uv sync`, `validate.py`, `pytest`)
+- [x] Planning docs merged (PR #1)
+- [x] Setup works on Windows (`uv sync`, `validate.py` passes; see §6.1 for Windows notes). Every team member: [Repo & Workflow §6.1](06-REPO-AND-WORKFLOW.md#61-setting-up-step-by-step) (`uv sync`, `validate.py`, `pytest`)
 - [ ] Build the Docker image and run `validate.py --docker` once
-- [ ] Run the test map and **print one full observation** to understand it
-- [ ] Measure the turn amount per step (`TURN_LEFT` for 4 tics) with `privileged_state()`
-- [ ] Add `.gitignore` lines and the `maps/curated/**` LFS rule
-- [ ] Protect `main` on GitHub: require a pull request before merging
+- [x] Run the test map and **print one full observation** (`scripts/inspect_observation.py`)
+- [x] Calibrate the odometer (`scripts/measure_odometry.py` → `configs/odometry.json`): turn model and 0.3% drift on `two_rooms.wad`
+- [x] Add `.gitignore` lines and the `maps/curated/**` LFS rule
+- [x] Protect `main` on GitHub: require a pull request before merging
 
 **Done when:** everyone can run a game locally, and `main` only changes through PRs.
 

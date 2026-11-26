@@ -30,7 +30,7 @@ Small, fast checks on each building block.
 |------|--------|
 | Ray encoder | Output shape is right; rotating the rays rotates the result in a sensible way |
 | Entity encoder | Works with 0, 1 and 30 entities; empty slots change nothing |
-| Odometer | Walk forward 10 steps in a straight corridor → estimated distance ≈ real distance |
+| Odometer | Replay a recorded path → position error < 1% of distance, heading error < 0.1° (baseline from `configs/odometry.json`) |
 | Mind map | A ray hitting a wall marks the right cell; the visited cell is marked |
 | Notebook | Seeing the same locked door twice updates **one** slot, not two |
 | Action head | Always produces a valid action in the official format |

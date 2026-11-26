@@ -122,7 +122,7 @@ These came from [CONTRACT.md](CONTRACT.md), [EVALUATION.md](EVALUATION.md) and `
 |---|----------|--------|----------------------|
 | Q1 | Action format? | `MultiBinary(9)`: forward, back, strafe L, strafe R, turn L, turn R, attack, use, next weapon | Grouped action heads (see Design §3.4). `USE` fires only when the button goes down, and spamming it makes doors bounce. |
 | Q2 | Observation keys? | `rgb` (120×160×3), `depth` (120×160), `vitals` (17), `rays` (64 × distance + hit type), `visible_entities` (32 slots × 5 features + type + mask) | Encoders sized to match |
-| Q3 | Velocity frame? | Player's own frame (forward, right, up), map units per tic | Odometer works for movement. Turning has to be learned or calibrated (we can't see our heading). |
+| Q3 | Velocity frame? | Player's own frame (forward, right, up), map units per tic | Odometer works. **Measured in Phase 0 on `two_rooms.wad`:** turning is predictable from our buttons, and drift is 0.3% of distance (see Design §3.3.1). Re-check on larger maps. |
 | Q4 | Entity types? | melee/hitscan/projectile enemy, **projectile**, health, armor, ammo, weapon, **key**, barrel, other | We can see keys and incoming projectiles. **Key colour is not given.** |
 | Q5 | Is the exit visible in rays/entities? | **No.** Rays only report none/wall/door/locked door/enemy/item. | An **RGB encoder is needed** to spot exit signs and switches |
 | Q6 | Where can agent code live? | Weights load relative to `submission/`, and the validator checks every package `submission/` imports | Brain code lives **inside `submission/smriti/`** |
