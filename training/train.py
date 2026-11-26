@@ -51,6 +51,12 @@ def build_args(argv=None):
     ap.add_argument("--ticks", type=int, default=2100, help="episode tick cap")
     ap.add_argument("--device", default="cpu")
     ap.add_argument("--init", type=Path, help="start from this checkpoint (must have the same memory config)")
+    ap.add_argument("--warm-start", type=Path,
+                    help="start a memory brain from a brain WITHOUT memory (e.g. the Phase 2 champion): all shared "
+                         "weights are copied, the new memory inputs start at zero (training/warmstart.py)")
+    ap.add_argument("--puzzle-share", type=float,
+                    help="share of games on key & door puzzles (default: the stage's own, 0.8 for stage 3); "
+                         "the rest replays older maps")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--name", default=None)
     ap.add_argument("--save-every", type=int, default=50_000)
@@ -101,17 +107,27 @@ def main(argv=None) -> int:
         if not ((out / "latest.pt").is_file() and resume_state.is_file()):
             raise SystemExit(f"--resume: no latest.pt + train_state.pt in {out}")
         a.init = out / "latest.pt"
+        a.warm_start = None  # the run's own latest.pt already contains everything
+    if a.warm_start and a.init:
+        raise SystemExit("use either --init (same memory config) or --warm-start (adds memory), not both")
     if a.init:
         net, _ = load_checkpoint(a.init, dev)
         if (net.cfg.use_mindmap, net.cfg.use_notebook) != (use_map, use_notes):
             raise SystemExit(f"--init checkpoint memory config {net.cfg} does not match --memory {a.memory}")
     else:
         net = SmritiNet(BrainConfig(use_mindmap=use_map, use_notebook=use_notes)).to(dev)
+        if a.warm_start:
+            from training.warmstart import warm_start_from
+
+            source, _ = load_checkpoint(a.warm_start, dev)
+            report = warm_start_from(net, source)
+            print(f"[train] warm start from {a.warm_start}: {len(report['copied'])} tensors copied, "
+                  f"widened {report['widened']}, {len(report['new'])} new memory tensors", flush=True)
     net.eval()
     cfg = PPOConfig(T=a.T, lr=a.lr, ent_coef=a.ent, epochs=a.epochs, minibatches=a.minibatches)
     kinds = a.kinds.split(",") if a.kinds else None
     vec = VecGames(a.workers, a.games, a.stage, a.seed, use_map, use_notes, episode_ticks=a.ticks,
-                   switch_every=a.switch_every, kinds=kinds)
+                   switch_every=a.switch_every, kinds=kinds, puzzle_share=a.puzzle_share)
     n = vec.n
     ppo = PPO(net, cfg, n, dev)
     resumed = load_train_state(resume_state, ppo, n) if a.resume else None

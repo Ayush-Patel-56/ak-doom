@@ -115,7 +115,8 @@ class Game:
             self.env.close()
 
 
-def _worker(remote, wid, n_games, stage, seed, use_mindmap, use_notebook, episode_ticks, switch_every, kinds):
+def _worker(remote, wid, n_games, stage, seed, use_mindmap, use_notebook, episode_ticks, switch_every, kinds,
+            puzzle_share=None):
     _paths()
     os.environ.setdefault("OMP_NUM_THREADS", "1")
     fine_timer()
@@ -125,7 +126,7 @@ def _worker(remote, wid, n_games, stage, seed, use_mindmap, use_notebook, episod
         from smriti.policy.actions import groups_to_buttons
         from training.curriculum import MapSampler
 
-        sampler = MapSampler(stage, seed * 1009 + wid, kinds=kinds)
+        sampler = MapSampler(stage, seed * 1009 + wid, kinds=kinds, puzzle_share=puzzle_share)
         rng = np.random.default_rng(seed * 7919 + wid)
         games = [Game(sampler, use_mindmap, use_notebook, episode_ticks, switch_every, rng) for _ in range(n_games)]
         remote.send(("ok", stack([g.start() for g in games])))
@@ -151,7 +152,8 @@ def _worker(remote, wid, n_games, stage, seed, use_mindmap, use_notebook, episod
 
 class VecGames:
     def __init__(self, workers: int, games_per_worker: int, stage: int, seed: int, use_mindmap: bool,
-                 use_notebook: bool, episode_ticks: int = 2100, switch_every: int = 2, kinds=None):
+                 use_notebook: bool, episode_ticks: int = 2100, switch_every: int = 2, kinds=None,
+                 puzzle_share: float | None = None):
         ctx = mp.get_context("spawn")  # same on Linux, macOS and Windows
         self.k, self.n = games_per_worker, workers * games_per_worker
         self.remotes, self.procs = [], []
@@ -159,7 +161,7 @@ class VecGames:
             a, b = ctx.Pipe()
             p = ctx.Process(target=_worker, daemon=True,
                             args=(b, w, games_per_worker, stage, seed, use_mindmap, use_notebook, episode_ticks,
-                                  switch_every, kinds))
+                                  switch_every, kinds, puzzle_share))
             p.start()
             self.remotes.append(a)
             self.procs.append(p)

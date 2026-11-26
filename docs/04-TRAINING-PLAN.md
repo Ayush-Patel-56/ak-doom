@@ -39,6 +39,16 @@ Learned the hard way during the first 6M-step run, now built into `training/roll
 
 Measured on our 20-core Windows laptop (stage 3, memory on, 4 workers × 4 games): **~110 → ~375 steps/s** (≈1.35M steps/hour).
 
+### Warm start: add memory without starting over
+
+A memory brain only adds inputs at the end of two layers (mind map → `fuse`, notebook → `gru`). `--warm-start <brain without memory>` copies every shared weight and sets the new memory inputs to **zero**, so the memory brain starts out playing **exactly** like the source brain (tested) and only has to learn to use memory (`training/warmstart.py`).
+
+```bash
+uv run python -m training.train --stage 3 --memory on --warm-start submission/weights/champion.pt     --puzzle-share 0.6 --ticks 3500 --workers 8 --games 2 --steps 4500000 --name p3-mem-ws-v1
+```
+
+`--puzzle-share 0.6` keeps 40% of games on older maps (default 20%) so a strong starting brain doesn't forget arenas and mazes; `--ticks 3500` matches the Tier 3 time limit (backtracking takes time). On our laptop 8 workers × 2 games (~450 steps/s) beat 4 × 4 (~356).
+
 ## 4.2 Rewards: mirror the official scorer
 
 Rule of thumb: **reward what the scorer rewards**, plus a few helpers.
