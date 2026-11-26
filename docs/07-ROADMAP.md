@@ -66,10 +66,10 @@ flowchart LR
 ## Phase 3 — Memory system ⭐ (our USP)
 
 - [x] Odometer (+ real-engine training-ground-truth tests; measured drift and limitations in System Design §3.3.1)
-- [ ] Mind map (grid update + rotated crop + small CNN)
-- [ ] Landmark notebook (slots + attention)
-- [ ] Curriculum Stage 3 (key & door puzzles)
-- [ ] Ablation: with vs without memory
+- [x] Mind map (grid update + rotated crop + small CNN): `smriti/memory/mindmap.py`, `MapEncoder`
+- [x] Landmark notebook (slots + attention from the GRU state): `smriti/memory/notebook.py`, `NotebookReader`
+- [x] Curriculum Stage 3 (key & door puzzles): `training/curriculum.py`, new `keynear` layout (key near spawn → far `keydoor` over the run, 20% replay), 4 + 4 held-out `t3-keynear` val/test maps
+- [x] Ablation pipeline: with vs without memory (`scripts/ablation.py`, `--memory on|off`); first short CPU run logged in `docs/experiments.md`. A long GPU run is still needed for the *Done when* criterion
 
 **Done when:** the agent picks up keycards and opens matching locked doors on held-out Tier 3 maps, and the ablation shows memory helps.
 

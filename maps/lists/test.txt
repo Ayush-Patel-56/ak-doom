@@ -19,3 +19,7 @@ maps/curated/test/t3-keydoor-200000.wad:MAP01
 maps/curated/test/t3-keydoor-200001.wad:MAP01
 maps/curated/test/t3-keydoor-200002.wad:MAP01
 maps/curated/test/t3-keydoor-200003.wad:MAP01
+maps/curated/test/t3-keynear-200000.wad:MAP01
+maps/curated/test/t3-keynear-200001.wad:MAP01
+maps/curated/test/t3-keynear-200002.wad:MAP01
+maps/curated/test/t3-keynear-200003.wad:MAP01

@@ -1,4 +1,9 @@
-"""BrainPolicy: runs SmritiNet one step at a time inside the agent (keeps memory between steps)."""
+"""BrainPolicy: runs SmritiNet one step at a time inside the agent (keeps memory between steps).
+
+When the network uses Phase 3 memory, the owner (DoomAgent) updates an EpisodeMemory every decision
+and sets `policy.memory` to it; BrainPolicy only reads its features. Without memory (or when it is not
+attached) the memory inputs are zeros.
+"""
 
 from __future__ import annotations
 
@@ -17,6 +22,7 @@ class BrainPolicy:
         self.seed = seed
         self.greedy = greedy
         self.generator = torch.Generator(device=self.device)
+        self.memory = None  # EpisodeMemory, attached by DoomAgent when self.uses_memory
         self._warm_up()
         self.reset()
 
@@ -30,6 +36,10 @@ class BrainPolicy:
             logits, _, state = self.net(x, state)
             sample_actions(logits[0, 0], self.generator, self.greedy)
 
+    @property
+    def uses_memory(self) -> bool:
+        return self.net.cfg.uses_memory
+
     def reset(self) -> None:
         self.state = self.net.initial_state(1, self.device)
         self.prev_action = np.zeros(9, np.float32)
@@ -37,7 +47,8 @@ class BrainPolicy:
 
     @torch.inference_mode()
     def __call__(self, obs: dict) -> np.ndarray:
-        feats = extract(obs, self.prev_action)
+        mem = self.memory.features() if (self.memory is not None and self.uses_memory) else None
+        feats = extract(obs, self.prev_action, mem)
         x = {k: torch.as_tensor(v, device=self.device)[None, None] for k, v in feats.items()}  # (T=1, B=1)
         logits, _, self.state = self.net(x, self.state)
         choices = sample_actions(logits[0, 0], self.generator, self.greedy).cpu().numpy()

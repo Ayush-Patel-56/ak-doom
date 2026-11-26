@@ -97,6 +97,7 @@ This exits nonzero when the configured maximum position-drift fraction or headin
 - **Reading:** cut out a **32 × 32 window around the agent (≈ the 1,024-unit ray range), rotated so "up" = facing direction**, and pass it through a small CNN → 128 numbers.
 - **Why rotate?** The network then always sees the map "from its own eyes", which generalises better.
 - **Rule check:** this is *preprocessing and encoding observations*, which [RULES.md](RULES.md) allows. There is **no pathfinding or BFS** on the grid; the network decides where to go.
+- **Built (Phase 3, `submission/smriti/memory/mindmap.py`):** 256 × 256 cells of 32 units (8,192 units, centred on spawn; points outside are not drawn). Free space is sampled every 16 units along each ray up to half a cell before the hit; seeing *through* a door/item cell clears it (door opened / item taken). Enemy marks and visit recency are stored as step stamps and fade (≈35 and ≈350 decisions). The 32 × 32 crop takes the **max over 2 × 2 sub-samples per pixel**, so rotation never drops a one-cell door or corner. Output is `uint8` (8 × 32 × 32) → `MapEncoder` (3 stride-2 convs → 128). Pure NumPy, < 1 ms per step (map + notebook together).
 
 ### 3.3.3 Landmark notebook
 
@@ -105,6 +106,9 @@ This exits nonzero when the configured maximum position-drift fraction or headin
 - **Key detection:** when a key flag in `vitals` flips from 0 to 1, the nearest "key" slot is marked done, and we now know the **colour** of the key we hold.
 - **Colour (optional):** sample the RGB pixels in the direction of a locked door to guess its colour. If unknown, the agent simply tries locked doors after picking up any key.
 - **Reading:** for each slot, compute *distance* and *direction from the agent right now*, encode it, and use **attention** to combine. The key question this answers: *"I just got a key; where was that locked door?"*
+- **Built (Phase 3, `submission/smriti/memory/notebook.py`):** 16 slots of type key / locked door / door (no exit yet: nothing in rays/entities shows the exit; that needs the Phase 4 RGB head; colour is not inferred). One sighting per *contiguous run* of door rays (wrap-around aware); sightings of the same type within 96–128 units merge (running mean). A door slot is **done (open)** when the ray pointing at it now reaches ≥ 64 units past it, and not done when it is seen closed again. A key-flag flip marks the nearest key slot within 192 units done (or notes the key at our position). Full → replace the least recently seen slot, done ones first. Slot features (9): one-hot type, distance/1024, sin/cos of the direction *relative to our heading*, closeness, age, done. `NotebookReader` attends over the slots + a learned "nothing noted" slot with a **query from the previous GRU state**; the read vector joins the GRU input.
+- **Shared runtime:** `memory/episode.py` `EpisodeMemory` = odometer + mind map + notebook, used **identically** by `DoomAgent` and every training game (`training/rollout.py`). On bad motion data it freezes the map/notebook (no drawing at a wrong pose) until `reset()`; without a calibration it returns zero memory features and the agent still acts.
+- **Known limitation (measured, see §3.3.1):** dead reckoning drifts badly while the player is pinned in a corner: the engine keeps reporting velocity while the true position does not change. On the 16 Tier 1–3 val maps with a random wall-bumping policy (600 steps, 2 seeds), the **maximum** position error per run had a median of ~550 units. The crop is local and fades old breadcrumbs, so it degrades gracefully, but far-away notebook landmarks become approximate. Fix candidates: ray matching against the mind map, or a contact-aware correction (a simple "remove motion into a wall closer than 18 units" rule only cut the median to ~330–420 units).
 
 ### 3.3.4 Short-term memory (GRU)
 
@@ -203,6 +207,8 @@ Weights at ~1.5 M parameters take about **6 MB**, far below the 1 GB repo limit.
 ## 3.7 Main code modules
 
 **Built so far (Phase 2a):** one file holds all Phase 2 encoders, the GRU and the heads; it will be split into the folders below as Phase 3/4 add the mind map, notebook and manager.
+
+**Phase 3 additions:** `submission/smriti/memory/{mindmap,notebook,episode}.py`; `MapEncoder` + `NotebookReader` in `brain.py`, switched by `BrainConfig.use_mindmap / use_notebook` (default **off**, so Phase 2 checkpoints load unchanged; incompatible or unknown configs raise and the agent falls back to random). With memory on: **749,968 parameters (~3 MB)**. Training: `training/{rewards,curriculum,rollout,ppo,train}.py`, ablation: `scripts/ablation.py`.
 
 | Module | Responsibility |
 |--------|----------------|

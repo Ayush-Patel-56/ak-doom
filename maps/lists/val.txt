@@ -18,3 +18,7 @@ maps/curated/val/t3-keydoor-100000.wad:MAP01
 maps/curated/val/t3-keydoor-100001.wad:MAP01
 maps/curated/val/t3-keydoor-100002.wad:MAP01
 maps/curated/val/t3-keydoor-100003.wad:MAP01
+maps/curated/val/t3-keynear-100000.wad:MAP01
+maps/curated/val/t3-keynear-100001.wad:MAP01
+maps/curated/val/t3-keynear-100002.wad:MAP01
+maps/curated/val/t3-keynear-100003.wad:MAP01
