@@ -104,17 +104,22 @@ def test_champion_warm_start_trains_with_phase4_flags():
     from conftest import REPO
     from training.train import main
     from smriti.brain import load_checkpoint
+    champion = REPO / 'submission/weights/champion.pt'
+    source, _ = load_checkpoint(champion)
+    # RGB is always new here, so fuse is always widened; the GRU input only widens when the
+    # champion has no notebook yet (champion #1 was a Phase 2 brain, champion #2 already has memory).
+    expected = {'fuse.0.weight'} | (set() if source.cfg.use_notebook else {'gru.weight_ih'})
     name = 'merge-warmstart-' + uuid.uuid4().hex[:8]
     out = REPO / 'runs' / name
     try:
-        assert main(['--warm-start', str(REPO / 'submission/weights/champion.pt'),
+        assert main(['--warm-start', str(champion),
                      '--memory', 'on', '--manager', 'on', '--rgb', 'on', '--puzzle-share', '0',
                      '--workers', '1', '--games', '1', '--T', '8', '--steps', '32',
                      '--epochs', '1', '--minibatches', '1', '--threads', '1', '--ticks', '40',
                      '--name', name]) == 0
         net, metadata = load_checkpoint(out / 'latest.pt')
         assert net.cfg.use_manager and net.cfg.use_rgb and net.cfg.uses_memory
-        assert set(metadata['warm_start']['widened']) == {'fuse.0.weight', 'gru.weight_ih'}
+        assert set(metadata['warm_start']['widened']) == expected
     finally:
         shutil.rmtree(out, ignore_errors=True)
 
