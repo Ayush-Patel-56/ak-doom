@@ -98,7 +98,7 @@ The 512-decision smoke comparison had zero exits in every arm; improvement is no
 - [ ] Bigger, more varied map pool
 - [ ] Teacher–student training (stretch)
 - [ ] Auxiliary tasks (stretch)
-- [ ] Stress & chaos tests (§5.7) all passing
+- [x] Stress & chaos tests (§5.7) all passing: `tests/agent/stress/` (4 brain types) + 20-map soak
 - [ ] Speed tuning (TorchScript, etc.) → < 20 ms average
 
 **Done when:** the score on **test maps** (used for the first time here) is close to the validation score, meaning no overfitting.
