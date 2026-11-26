@@ -13,12 +13,17 @@ from __future__ import annotations
 import random
 from collections import deque
 
-from .udmf import GridMap
+from .udmf import LOCKED, GridMap, validate
 
 KINDS = {"arena": 1, "maze": 2, "rooms": 2, "keydoor": 3}
 MONSTERS = "zzzsid"  # weighted: zombiemen are most common
 KEYS = (("r", "R"), ("b", "B"), ("y", "Y"))
+KEY_FOR = {"R": "r", "B": "b", "Y": "y"}
 ANGLES = (0, 90, 180, 270)
+# Floor, start, exit, open/locked doors, keys, monsters and items. Used so distance
+# and placement can cross a whole map, not just the start room.
+THROUGH_DOORS = ".PXDRBYrbyzsidhaAS"
+MAX_ATTEMPTS = 64
 
 
 class Canvas:
@@ -49,7 +54,7 @@ class Canvas:
         return "\n".join("".join(row) for row in self.g)
 
 
-def bfs(canvas: Canvas, start, passable: str = ".PrbyXzsidhaAS") -> dict:
+def bfs(canvas: Canvas, start, passable: str = THROUGH_DOORS) -> dict:
     dist = {start: 0}
     q = deque([start])
     h, w = canvas.size
@@ -63,13 +68,78 @@ def bfs(canvas: Canvas, start, passable: str = ".PrbyXzsidhaAS") -> dict:
 
 
 def scatter(canvas: Canvas, rng: random.Random, chars: str, count: int, away_from=None, min_dist: int = 4):
-    cells = canvas.floor_cells()
-    if away_from is not None:
-        far = bfs(canvas, away_from)
-        cells = [c for c in cells if far.get(c, 0) >= min_dist]
+    """Place up to `count` items on floor cells. Prefer cells at least min_dist from `away_from`,
+    walking through open and locked doors, then relax the distance if there is not enough space."""
+    if count <= 0:
+        return
+    floors = canvas.floor_cells()
+    if away_from is None or not floors:
+        cells = floors
+    else:
+        far = bfs(canvas, away_from, passable=THROUGH_DOORS)
+        cells = []
+        for dist in range(min_dist, -1, -1):
+            cells = [c for c in floors if far.get(c, 0) >= dist and c != away_from]
+            if len(cells) >= count:
+                break
     rng.shuffle(cells)
     for cell in cells[:count]:
         canvas[cell] = rng.choice(chars)
+
+
+# ----------------------------------------------------------------------------- solvability
+
+def reachable(grid: GridMap, start, keys: set[str]) -> set:
+    """Cells walkable from start, treating locked doors as open only when we hold the matching key."""
+    seen, q = {start}, deque([start])
+    while q:
+        r, c = q.popleft()
+        for n in ((r - 1, c), (r + 1, c), (r, c - 1), (r, c + 1)):
+            ch = grid.at(*n)
+            if n in seen or ch == "#" or (ch in LOCKED and KEY_FOR[ch] not in keys):
+                continue
+            seen.add(n)
+            q.append(n)
+    return seen
+
+
+def solvable(grid: GridMap) -> tuple[bool, bool]:
+    """(exit reachable with keys we can actually pick up, exit reachable with no keys)."""
+    starts, exits = list(grid.cells("P")), list(grid.cells("X"))
+    if len(starts) != 1 or not exits:
+        return False, False
+    start = starts[0]
+    no_keys = reachable(grid, start, set())
+    held = {grid.at(*c) for c in no_keys if grid.at(*c) in "rby"}
+    with_keys = reachable(grid, start, held)
+    return any(e in with_keys for e in exits), any(e in no_keys for e in exits)
+
+
+def playable(grid: GridMap, kind: str) -> bool:
+    """True if the layout is a sensible, solvable map of this kind."""
+    try:
+        validate(grid)
+    except ValueError:
+        return False
+    starts, exits = list(grid.cells("P")), list(grid.cells("X"))
+    if len(starts) != 1 or len(exits) != 1 or starts[0] == exits[0]:
+        return False
+    with_keys, without_keys = solvable(grid)
+    if not with_keys:
+        return False
+    if kind == "keydoor":
+        if without_keys or not any(grid.cells("rby")):
+            return False
+        if not any(grid.at(*c) in "rby" for c in reachable(grid, starts[0], set())):
+            return False
+    return True
+
+
+def _attempt_seed(seed: int, attempt: int) -> int:
+    """Deterministic sub-seed: attempt 0 is the public seed, later attempts are mixed from it."""
+    if attempt == 0:
+        return seed
+    return seed * 1_000_003 + attempt * 2_000_029 + 17
 
 
 # ----------------------------------------------------------------------------- arena (tier 1)
@@ -84,7 +154,10 @@ def arena(seed: int) -> GridMap:
     start = (rng.randint(1, h - 2), 1)
     cv[start] = "P"
     reach = bfs(cv, start)
-    exit_cell = max(reach, key=reach.get)
+    candidates = [c for c in reach if c != start]
+    exit_cell = max(candidates, key=reach.get) if candidates else None
+    if exit_cell is None:
+        return GridMap.parse(cv.text(), player_angle=0, notes={"kind": "arena", "tier": 1, "seed": seed})
     cv[exit_cell] = "X"
     scatter(cv, rng, MONSTERS, rng.randint(3, 8), away_from=start, min_dist=5)
     scatter(cv, rng, "hhaA", rng.randint(1, 4))
@@ -118,7 +191,9 @@ def maze(seed: int) -> GridMap:
     start = (1, 1)
     cv[start] = "P"
     reach = bfs(cv, start)
-    cv[max(reach, key=reach.get)] = "X"
+    candidates = [c for c in reach if c != start]
+    if candidates:
+        cv[max(candidates, key=reach.get)] = "X"
     scatter(cv, rng, "zz", rng.randint(0, 3), away_from=start, min_dist=8)
     return GridMap.parse(cv.text(), player_angle=rng.choice(ANGLES), notes={"kind": "maze", "tier": 2, "seed": seed})
 
@@ -150,43 +225,81 @@ def _room_layout(rng: random.Random, grid_rows: int, grid_cols: int, slot: int =
 
 
 def _connect(cv: Canvas, rooms, a, b, door: str | None):
-    """Straight-ish corridor between rooms a and b, with an optional door next to room b."""
+    """Corridor between adjacent slot-rooms. Uses a straight run when the rooms share a row or
+    column, otherwise an L through the gap so both rooms always join. Optional door sits in the gap."""
     ra, rb = rooms[a], rooms[b]
-    if a[0] == b[0]:  # same slot row: horizontal corridor
-        lo, hi = max(ra[0], rb[0]), min(ra[2], rb[2])
-        row = (lo + hi) // 2 if lo <= hi else (ra[0] + ra[2]) // 2
+    cells: list[tuple[int, int]] = []
+    if a[0] == b[0]:  # same slot row: horizontal neighbours
         left, right = (ra, rb) if ra[1] < rb[1] else (rb, ra)
-        cells = [(row, c) for c in range(left[3] + 1, right[1])]
-        if lo > hi:  # rooms don't overlap vertically: add a vertical leg inside the corridor end
-            r_end = (rb[0] + rb[2]) // 2
-            cells += [(r, right[1] - 1) for r in range(min(row, r_end), max(row, r_end) + 1)]
-    else:  # vertical corridor
-        lo, hi = max(ra[1], rb[1]), min(ra[3], rb[3])
-        col = (lo + hi) // 2 if lo <= hi else (ra[1] + ra[3]) // 2
+        r_left, r_right = (left[0] + left[2]) // 2, (right[0] + right[2]) // 2
+        gap_lo, gap_hi = left[3] + 1, right[1] - 1
+        mid_c = (gap_lo + gap_hi) // 2 if gap_lo <= gap_hi else left[3]
+        for c in range(left[3] + 1, mid_c + 1):
+            cells.append((r_left, c))
+        for r in range(min(r_left, r_right), max(r_left, r_right) + 1):
+            cells.append((r, mid_c))
+        for c in range(mid_c, right[1]):
+            cells.append((r_right, c))
+    else:  # vertical neighbours
         top, bottom = (ra, rb) if ra[0] < rb[0] else (rb, ra)
-        cells = [(r, col) for r in range(top[2] + 1, bottom[0])]
-        if lo > hi:
-            c_end = (rb[1] + rb[3]) // 2
-            cells += [(bottom[0] - 1, c) for c in range(min(col, c_end), max(col, c_end) + 1)]
+        c_top, c_bot = (top[1] + top[3]) // 2, (bottom[1] + bottom[3]) // 2
+        gap_lo, gap_hi = top[2] + 1, bottom[0] - 1
+        mid_r = (gap_lo + gap_hi) // 2 if gap_lo <= gap_hi else top[2]
+        for r in range(top[2] + 1, mid_r + 1):
+            cells.append((r, c_top))
+        for c in range(min(c_top, c_bot), max(c_top, c_bot) + 1):
+            cells.append((mid_r, c))
+        for r in range(mid_r, bottom[0]):
+            cells.append((r, c_bot))
     for cell in cells:
         if cv[cell] == "#":
             cv[cell] = "."
     if door and cells:
-        _place_door(cv, cells, door)
+        _place_door(cv, cells, door, rooms_ab=(ra, rb))
 
 
-def _place_door(cv: Canvas, cells, door: str) -> None:
+def _in_room(room, cell) -> bool:
+    r, c = cell
+    return room[0] <= r <= room[2] and room[1] <= c <= room[3]
+
+
+def _place_door(cv: Canvas, cells, door: str, rooms_ab=None) -> bool:
+    """Put the door on a 1-cell corridor cell in the gap (not inside either room)."""
     h, w = cv.size
-    for r, c in cells:  # first corridor cell with walls on both sides across the corridor
+    seen: list[tuple[int, int]] = []
+    for r, c in cells:
+        if (r, c) in seen:
+            continue
+        seen.append((r, c))
+        if rooms_ab and any(_in_room(room, (r, c)) for room in rooms_ab):
+            continue
         ns = [cv[r + d, c] if 0 <= r + d < h else "#" for d in (-1, 1)]
         ew = [cv[r, c + d] if 0 <= c + d < w else "#" for d in (-1, 1)]
         if (ns == ["#", "#"] and "#" not in ew) or (ew == ["#", "#"] and "#" not in ns):
             cv[r, c] = door
-            return
+            return True
+    return False
 
 
 def _room_center(room):
     return ((room[0] + room[2]) // 2, (room[1] + room[3]) // 2)
+
+
+def _place_start_and_exit(cv: Canvas, start, exit_cell) -> bool:
+    """Write one P and one X on distinct reachable cells. Returns False if that is impossible."""
+    if start == exit_cell or cv[start] == "#":
+        return False
+    cv[start] = "P"
+    reach = bfs(cv, start, passable=THROUGH_DOORS)
+    if exit_cell != start and exit_cell in reach and cv[exit_cell] != "P":
+        cv[exit_cell] = "X"
+        return True
+    candidates = [c for c in reach if c != start]
+    if not candidates:
+        cv[start] = "."  # leave a clean failure for playable()
+        return False
+    cv[max(candidates, key=reach.get)] = "X"
+    return True
 
 
 def rooms(seed: int) -> GridMap:
@@ -196,10 +309,15 @@ def rooms(seed: int) -> GridMap:
         _connect(cv, rms, a, b, "D" if rng.random() < 0.6 else None)
     start_room = rng.choice(sorted(rms))
     start = _room_center(rms[start_room])
-    cv[start] = "P"
-    reach = bfs(cv, start, passable=".PXDzsidhaAS")
-    far_room = max(rms, key=lambda k: reach.get(_room_center(rms[k]), -1))
-    cv[_room_center(rms[far_room])] = "X"
+    reach = bfs(cv, start, passable=THROUGH_DOORS)
+    others = [k for k in rms if k != start_room and _room_center(rms[k]) in reach]
+    if others:
+        far_room = max(others, key=lambda k: reach.get(_room_center(rms[k]), -1))
+        exit_cell = _room_center(rms[far_room])
+    else:
+        exit_cell = start  # _place_start_and_exit will pick the farthest floor cell instead
+    if not _place_start_and_exit(cv, start, exit_cell):
+        return GridMap.parse(cv.text(), player_angle=0, notes={"kind": "rooms", "tier": 2, "seed": seed})
     scatter(cv, rng, MONSTERS, rng.randint(2, 6), away_from=start, min_dist=6)
     scatter(cv, rng, "hha", rng.randint(1, 3))
     return GridMap.parse(cv.text(), player_angle=rng.choice(ANGLES), notes={"kind": "rooms", "tier": 2, "seed": seed})
@@ -208,6 +326,7 @@ def rooms(seed: int) -> GridMap:
 def keydoor(seed: int) -> GridMap:
     """Exit room is a leaf behind a locked door; the key is in the farthest other room."""
     rng = random.Random(seed)
+    leaves, rms, edges, cv, start_room, parent, depth, adj = [], {}, [], Canvas(3, 3), None, {}, {}, {}
     for _ in range(50):  # retry until the tree has a usable leaf for the exit
         cv, rms, edges = _room_layout(rng, rng.randint(2, 3), rng.randint(2, 4))
         start_room = rng.choice(sorted(rms))
@@ -225,6 +344,8 @@ def keydoor(seed: int) -> GridMap:
         leaves = [k for k in rms if k != start_room and len(adj[k]) == 1]
         if leaves and len(rms) >= 3:
             break
+    if not leaves or start_room is None:
+        return GridMap.parse("###\n#P#\n###", notes={"kind": "keydoor", "tier": 3, "seed": seed})
     exit_room = max(leaves, key=lambda k: (depth[k], rng.random()))
     key_char, lock_char = rng.choice(KEYS)
     for a, b in edges:
@@ -233,14 +354,22 @@ def keydoor(seed: int) -> GridMap:
         else:
             _connect(cv, rms, a, b, "D" if rng.random() < 0.5 else None)
     start = _room_center(rms[start_room])
-    cv[start] = "P"
-    cv[_room_center(rms[exit_room])] = "X"
+    if not _place_start_and_exit(cv, start, _room_center(rms[exit_room])):
+        return GridMap.parse(cv.text(), player_angle=0, notes={"kind": "keydoor", "tier": 3, "seed": seed})
     others = [k for k in rms if k not in (start_room, exit_room)]
     # Prefer a key room that is NOT next to the locked door, so the agent must remember the door
     # and backtrack (the Tier 3 skill); fall back to the deepest room when there is no choice.
+    if not others:
+        return GridMap.parse(cv.text(), player_angle=0, notes={"kind": "keydoor", "tier": 3, "seed": seed})
     key_room = max(others, key=lambda k: (k != parent[exit_room], depth[k], rng.random()))
     kr = rms[key_room]
-    cv[(rng.randint(kr[0], kr[2]), rng.randint(kr[1], kr[3]))] = key_char
+    key_cell = (rng.randint(kr[0], kr[2]), rng.randint(kr[1], kr[3]))
+    if cv[key_cell] in "PX":
+        floors = [(r, c) for r in range(kr[0], kr[2] + 1) for c in range(kr[1], kr[3] + 1) if cv[r, c] == "."]
+        if not floors:
+            return GridMap.parse(cv.text(), player_angle=0, notes={"kind": "keydoor", "tier": 3, "seed": seed})
+        key_cell = rng.choice(floors)
+    cv[key_cell] = key_char
     scatter(cv, rng, MONSTERS, rng.randint(2, 6), away_from=start, min_dist=6)
     scatter(cv, rng, "hha", rng.randint(1, 3))
     return GridMap.parse(cv.text(), player_angle=rng.choice(ANGLES),
@@ -251,4 +380,17 @@ GENERATORS = {"arena": arena, "maze": maze, "rooms": rooms, "keydoor": keydoor}
 
 
 def generate(kind: str, seed: int) -> GridMap:
-    return GENERATORS[kind](seed)
+    """Build a playable map of this kind. Reproducible from (kind, seed).
+
+    If a layout is unsolvable (disconnected rooms, missing start, etc.), retries with a
+    deterministic sub-seed derived from `seed` instead of emitting a bad map.
+    """
+    fn = GENERATORS[kind]
+    for attempt in range(MAX_ATTEMPTS):
+        grid = fn(_attempt_seed(seed, attempt))
+        grid.notes["kind"] = kind
+        grid.notes["tier"] = KINDS[kind]
+        grid.notes["seed"] = seed
+        if playable(grid, kind):
+            return grid
+    raise RuntimeError(f"could not generate a solvable {kind} map from seed {seed}")

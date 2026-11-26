@@ -3,53 +3,57 @@
 from __future__ import annotations
 
 import sys
-from collections import deque
 
 import numpy as np
 import pytest
 
 from conftest import REPO
-from training.mapgen import KINDS, GridMap, generate, to_udmf, write_map
-from training.mapgen.udmf import LOCKED, label_regions, validate
+from training.mapgen import KINDS, GridMap, generate, playable, solvable, to_udmf, write_map
+from training.mapgen.udmf import label_regions, validate
 
 sys.path.insert(0, str(REPO / "scripts"))
 from build_map_catalog import assign_splits, describe  # noqa: E402
 
-KEY_FOR = {"R": "r", "B": "b", "Y": "y"}
-
-
-def solvable(grid: GridMap) -> tuple[bool, bool]:
-    """(exit reachable with all keys, exit reachable with no keys), walking through doors."""
-    def reach(keys: set[str]) -> bool:
-        start = next(grid.cells("P"))
-        seen, q = {start}, deque([start])
-        while q:
-            r, c = q.popleft()
-            if grid.at(r, c) == "X":
-                return True
-            for n in ((r - 1, c), (r + 1, c), (r, c - 1), (r, c + 1)):
-                ch = grid.at(*n)
-                if n in seen or ch == "#" or (ch in LOCKED and KEY_FOR[ch] not in keys):
-                    continue
-                seen.add(n)
-                q.append(n)
-        return False
-
-    return reach({"r", "b", "y"}), reach(set())
+# Wide range: covers previously unsolvable keydoor seeds (45, 130, …) and rooms seed 840.
+SEED_RANGE = 2000
+# Previously broken public seeds; generate() must still return a playable map for each.
+REGRESSION_SEEDS = {"keydoor": (45, 130, 152, 189), "rooms": (840,)}
 
 
 @pytest.mark.parametrize("kind", sorted(KINDS))
 def test_layouts_are_valid_solvable_and_reproducible(kind):
-    for seed in range(40):
+    for seed in range(SEED_RANGE):
         grid = generate(kind, seed)
         validate(grid)
-        assert len(list(grid.cells("X"))) >= 1
+        starts, exits = list(grid.cells("P")), list(grid.cells("X"))
+        assert len(starts) == 1 and len(exits) == 1 and starts[0] != exits[0], f"{kind} seed {seed}: P/X"
+        assert playable(grid, kind), f"{kind} seed {seed}: not playable"
         with_keys, without_keys = solvable(grid)
         assert with_keys, f"{kind} seed {seed}: exit unreachable"
         if kind == "keydoor":
             assert not without_keys, f"{kind} seed {seed}: exit reachable without the key"
             assert any(grid.cells("rby")), "keydoor map has no key"
         assert generate(kind, seed).rows == grid.rows
+
+
+@pytest.mark.parametrize("kind", ["rooms", "keydoor"])
+def test_rooms_and_keydoor_place_requested_monsters(kind):
+    """scatter() walks through doors, so 2–6 requested monsters actually appear when space allows."""
+    zeros = []
+    for seed in range(SEED_RANGE):
+        grid = generate(kind, seed)
+        n = sum(ch in "zsid" for row in grid.rows for ch in row)
+        floors = sum(ch == "." for row in grid.rows for ch in row)
+        if n < 2 and floors >= 2:
+            zeros.append((seed, n, floors))
+    assert not zeros, f"{kind}: maps with fewer than 2 monsters despite free floor: {zeros[:8]}"
+
+
+@pytest.mark.parametrize(("kind", "seed"), [(k, s) for k, ss in REGRESSION_SEEDS.items() for s in ss])
+def test_previously_broken_seeds_are_playable(kind, seed):
+    grid = generate(kind, seed)
+    assert playable(grid, kind)
+    assert len(list(grid.cells("P"))) == 1 and len(list(grid.cells("X"))) == 1
 
 
 def test_udmf_doors_and_locks_are_seen_by_the_official_parser(tmp_path):
