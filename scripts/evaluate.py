@@ -116,6 +116,7 @@ def main() -> int:
     ap.add_argument("--map", action="append", help="wad[:MAPxx] instead of a split, repeatable")
     ap.add_argument("--seeds", type=int, default=1, help="episodes per map (seeds 0..N-1)")
     ap.add_argument("--device", default="cpu", choices=["cpu", "cuda"])
+    ap.add_argument("--weights", type=Path, help="brain checkpoint to test (default: submission/weights/champion.pt)")
     ap.add_argument("--no-buffers", action="store_true", help="skip rgb/depth (only if the agent ignores them)")
     ap.add_argument("--name", default=None, help="result name (default: <split>-<timestamp>)")
     args = ap.parse_args()
@@ -131,8 +132,9 @@ def main() -> int:
         specs = [ln.strip() for ln in lst.read_text(encoding="utf-8").splitlines() if ln.strip()]
 
     t0 = time.perf_counter()
-    agent = agent_loader.load_agent_class()(observation_space(), action_space(), args.device)
+    agent = agent_loader.load_agent_class()(observation_space(), action_space(), args.device, weights_path=args.weights)
     init_s = time.perf_counter() - t0
+    print(f"Policy: {agent.policy_name}")
     if init_s > limits.INIT_TIMEOUT_S:  # official rule: 0 points on every map
         print(f"WARNING: __init__ took {init_s:.1f}s > {limits.INIT_TIMEOUT_S:.0f}s: the scorer would give 0 points")
     rows = []

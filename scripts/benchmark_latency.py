@@ -40,6 +40,7 @@ def main() -> int:
     ap.add_argument("--episodes", type=int, default=1, help="episodes per map")
     ap.add_argument("--ticks", type=int, default=2100, help="episode tick cap (2100-4200 at evaluation)")
     ap.add_argument("--device", default="cpu", choices=["cpu", "cuda"])
+    ap.add_argument("--weights", type=Path, help="brain checkpoint to test (default: submission/weights/champion.pt)")
     ap.add_argument("--target-ms", type=float, default=20.0, help="our own average-ms-per-decision target")
     ap.add_argument("--json", type=Path, help="optional path for a JSON report")
     args = ap.parse_args()
@@ -48,7 +49,7 @@ def main() -> int:
     maps = args.map or [str(REPO / "maps" / "two_rooms.wad") + ":MAP01"]
 
     t0 = time.perf_counter()
-    agent = agent_loader.load_agent_class()(observation_space(), action_space(), args.device)
+    agent = agent_loader.load_agent_class()(observation_space(), action_space(), args.device, weights_path=args.weights)
     init_s = time.perf_counter() - t0
 
     report: dict = {"device": args.device, "pinned_one_cpu": pinned, "init_s": round(init_s, 3), "runs": []}
@@ -103,7 +104,7 @@ def main() -> int:
         finally:
             env.close()
 
-    print(f"Init {init_s:.2f}s on {args.device}" + ("" if pinned else "  (not pinned to 1 CPU: Linux only)"))
+    print(f"Policy {agent.policy_name}, init {init_s:.2f}s on {args.device}" + ("" if pinned else "  (not pinned to 1 CPU: Linux only)"))
     print(f"{'map':<28}{'ep':>3}{'steps':>7}{'reset s':>9}{'first ms':>10}{'mean ms':>9}{'p99 ms':>8}{'max ms':>8}{'agent/budget s':>17}")
     for r in report["runs"]:
         print(

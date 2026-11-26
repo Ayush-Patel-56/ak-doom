@@ -181,7 +181,21 @@ Weights at ~1.5 M parameters take about **6 MB**, far below the 1 GB repo limit.
 
 ---
 
-## 3.7 Main code modules (planned)
+## 3.7 Main code modules
+
+**Built so far (Phase 2a):** one file holds all Phase 2 encoders, the GRU and the heads; it will be split into the folders below as Phase 3/4 add the mind map, notebook and manager.
+
+| Module | Responsibility |
+|--------|----------------|
+| `submission/smriti/features.py` | Observation → network input arrays (shared by agent and training) |
+| `submission/smriti/brain.py` | `SmritiNet`: ray encoder (circular conv), entity encoder (attention + "nothing here" token), vitals + previous-action MLP, GRU (256), policy (15 logits = 6 groups) and value heads; checkpoint loading |
+| `submission/smriti/policy/actions.py` | 6 action groups ↔ 9 buttons |
+| `submission/smriti/policy/brain_policy.py` | Runs the brain step by step in the agent; warms up in `__init__` |
+| `training/checkpoints.py` | Saving checkpoints (the agent never writes files) |
+
+Measured: **557,632 parameters (2.2 MB)**; ~3 ms per decision locally, 2.2 ms median inside the official Docker image (1 CPU), 965 MB peak RAM, `__init__` 19 s in Docker (mostly importing PyTorch).
+
+**Full plan:**
 
 The brain lives **inside `submission/`** so the validator and scorer can import it. Training code imports it from there, so there's **one copy** of the brain.
 
