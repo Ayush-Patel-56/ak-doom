@@ -73,11 +73,14 @@ def build_args(argv=None):
     ap.add_argument('--rnd-coef', type=float, default=.01, help='initial intrinsic weight; linearly decays to zero')
     ap.add_argument('--exit-aux', type=float, default=.1)
     ap.add_argument('--full-level-share', type=float, default=None)
+    ap.add_argument('--dynamics-coef', type=float, default=0.)
     ap.add_argument('--teacher', type=Path)
     ap.add_argument('--distill-coef', type=float, default=0.)
     ap.add_argument('--distill-temperature', type=float, default=1.)
     ap.add_argument('--catalog', type=Path, default=REPO / 'maps/catalog.json')
     a = ap.parse_args(argv)
+    if not np.isfinite(a.dynamics_coef) or a.dynamics_coef < 0:
+        ap.error('dynamics coefficient must be finite and nonnegative')
     if not np.isfinite(a.distill_coef) or a.distill_coef < 0 or not np.isfinite(a.distill_temperature) or a.distill_temperature <= 0:
         ap.error('distillation coefficient must be nonnegative and temperature positive (finite)')
     if a.distill_coef and a.teacher is None:
@@ -168,11 +171,11 @@ def main(argv=None) -> int:
         a.init = out / "latest.pt"
     requested = BrainConfig(use_mindmap=use_map, use_notebook=use_notes,
                             use_manager=a.manager == 'on', use_rgb=a.rgb == 'on', use_depth=a.depth == 'on',
-                            goal_interval=a.goal_interval)
+                            goal_interval=a.goal_interval, use_dynamics=a.dynamics_coef > 0)
     transferred = None
     if a.init:
         net, _ = load_checkpoint(a.init, dev)
-        flags = ('use_mindmap', 'use_notebook', 'use_manager', 'use_rgb', 'use_depth', 'goal_interval')
+        flags = ('use_mindmap', 'use_notebook', 'use_manager', 'use_rgb', 'use_depth', 'goal_interval', 'use_dynamics')
         if any(getattr(net.cfg, k) != getattr(requested, k) for k in flags):
             raise SystemExit('--init architecture does not match flags; use --warm-start PATH to expand it')
     else:
@@ -184,7 +187,7 @@ def main(argv=None) -> int:
             print('[train] explicit warm start: ' + json.dumps(transferred), flush=True)
     net.eval()
     cfg = PPOConfig(T=a.T, lr=a.lr, ent_coef=a.ent, epochs=a.epochs, minibatches=a.minibatches, exit_aux_coef=a.exit_aux,
-                    distill_coef=a.distill_coef, distill_temperature=a.distill_temperature)
+                    distill_coef=a.distill_coef, distill_temperature=a.distill_temperature, dynamics_coef=a.dynamics_coef)
     kinds = a.kinds.split(",") if a.kinds else None
     from training.curriculum import MapSampler
     curriculum = MapSampler(a.stage, a.seed, kinds=kinds, puzzle_share=a.puzzle_share,
@@ -195,6 +198,8 @@ def main(argv=None) -> int:
     ppo.training_config = dict(rnd=a.rnd, rnd_coef=a.rnd_coef, helpers=a.goal_helpers,
                                helper_weights=a.helper_weights, exit_aux=a.exit_aux)
 
+    if a.dynamics_coef:
+        ppo.training_config['dynamics'] = dict(coefficient=a.dynamics_coef,target='legal-ray-proximity-and-normalized-vitals-delta-v1')
     teacher = None
     if a.distill_coef:
         from training.distill import FrozenTeacher
@@ -233,6 +238,9 @@ def main(argv=None) -> int:
         while steps < a.steps:
             progress = steps / a.steps
             buf = Rollout(cfg.T, n)
+            if a.dynamics_coef:
+                buf.dynamics_target = np.zeros((cfg.T,n,NUM_RAYS+NUM_VITALS),np.float32)
+                buf.dynamics_mask = np.zeros((cfg.T,n),bool)
             if teacher is not None:
                 from smriti.policy.actions import NUM_LOGITS
                 buf.teacher_logits = np.zeros((cfg.T,n,NUM_LOGITS),np.float32)
@@ -256,6 +264,10 @@ def main(argv=None) -> int:
                 if goals is not None:
                     buf.goals[t] = goals
                 feats, r, done, infos = vec.step(choices, progress, goals)
+                if a.dynamics_coef:
+                    from training.dynamics import transition_targets
+                    buf.dynamics_target[t],buf.dynamics_mask[t] = transition_targets(
+                        {k:buf.f[k][t] for k in buf.f},feats,done)
                 if ppo.intervals is not None:
                     ppo.intervals.step(feats['_extrinsic'], done)
                 intrinsic = np.zeros(n, np.float32)

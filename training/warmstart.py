@@ -26,7 +26,7 @@ def warm_start_from(target: SmritiNet, source: SmritiNet) -> dict[str, list[str]
     """Copy `source` weights into `target` (in place). Returns which parameters were copied / widened / new."""
     if target.cfg.hidden != source.cfg.hidden:
         raise ValueError("warm start needs the same hidden size")
-    for flag in ('use_mindmap', 'use_notebook', 'use_rgb', 'use_depth', 'use_manager'):
+    for flag in ('use_mindmap', 'use_notebook', 'use_rgb', 'use_depth', 'use_manager', 'use_dynamics'):
         if getattr(source.cfg, flag) and not getattr(target.cfg, flag):
             raise ValueError(f'warm start cannot remove {flag}')
 

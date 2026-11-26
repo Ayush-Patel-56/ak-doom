@@ -39,6 +39,7 @@ class PPOConfig:
     exit_aux_coef: float = 0.1
     distill_coef: float = 0.0
     distill_temperature: float = 1.0
+    dynamics_coef: float = 0.0
 
 
 def to_torch(d: dict, device) -> dict:
@@ -56,6 +57,8 @@ class Rollout:
         self.goals = np.zeros((T, N), np.int64)
         self.exit_target = np.zeros((T, N), np.float32)
         self.exit_known = np.zeros((T, N), np.bool_)
+        self.dynamics_target = None
+        self.dynamics_mask = None
         self.teacher_logits = None  # allocated only when distillation is enabled
         self.start = np.zeros((T, N), np.bool_)  # observation t is the first of an episode
 
@@ -168,6 +171,7 @@ class PPO:
         stats = []
         auxiliary = []
         distill_losses = []
+        dynamics_losses = []
         self.net.train()
         for _ in range(c.epochs):
             np.random.shuffle(idx)
@@ -198,6 +202,16 @@ class PPO:
                     target = torch.as_tensor(buf.teacher_logits[:,j.cpu().numpy()],device=dev)
                     distill_loss = distillation_loss(logits,target,c.distill_temperature)
                     loss = loss + c.distill_coef * distill_loss
+                dynamics_loss_value = torch.zeros((),device=dev)
+                if c.dynamics_coef:
+                    from training.dynamics import dynamics_loss
+                    if buf.dynamics_target is None or buf.dynamics_mask is None:
+                        raise ValueError('missing dynamics targets')
+                    target = torch.as_tensor(buf.dynamics_target[:,j.cpu().numpy()],device=dev)
+                    mask = torch.as_tensor(buf.dynamics_mask[:,j.cpu().numpy()],device=dev)
+                    dynamics_loss_value = dynamics_loss(self.net,aux['hidden'],A[:,j],target,mask)
+                    loss = loss + c.dynamics_coef * dynamics_loss_value
+                dynamics_losses.append(float(dynamics_loss_value.detach()))
                 distill_losses.append(float(distill_loss.detach()))
                 auxiliary.append(float(exit_loss.detach()))
                 self.opt.zero_grad(set_to_none=True)
@@ -210,6 +224,7 @@ class PPO:
                 stats.append((pg.item(), vl.item(), en.mean().item(), kl, cf, float(gn)))
         self.net.eval()
         result = dict(zip(("pg", "vf", "ent", "kl", "clipfrac", "gradnorm"), np.mean(stats, 0).tolist()))
+        result['dynamics_loss'] = float(np.mean(dynamics_losses))
         result['distill_loss'] = float(np.mean(distill_losses))
         result['exit_aux_loss'] = float(np.mean(auxiliary))
         result.update(self.update_manager(ent))
