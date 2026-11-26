@@ -28,6 +28,17 @@ We write PPO **ourselves** (not a default Stable-Baselines3 script). This is req
 
 ---
 
+### Speed and robustness for long runs
+
+Learned the hard way during the first 6M-step run, now built into `training/rollout.py` / `training/train.py`:
+
+1. **Windows timer:** game workers ask for 1 ms timer resolution (`timeBeginPeriod(1)`). Without it, lockstep stepping is ~10× slower on Windows (Linux/macOS are unaffected).
+2. **Fewer map loads:** a map load takes ~0.6 s and stalls every game in the batch, so each map is reused for `--switch-every 8` episodes (was 2).
+3. **Bad maps are skipped**, not fatal: a map that fails to build or load is logged and another one is picked.
+4. **`--resume`** continues a run from `latest.pt` + `train_state.pt` (optimizer, reward scale, step count, curriculum progress).
+
+Measured on our 20-core Windows laptop (stage 3, memory on, 4 workers × 4 games): **~110 → ~375 steps/s** (≈1.35M steps/hour).
+
 ## 4.2 Rewards: mirror the official scorer
 
 Rule of thumb: **reward what the scorer rewards**, plus a few helpers.

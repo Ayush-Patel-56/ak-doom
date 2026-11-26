@@ -21,5 +21,11 @@ the vanilla engine through the official `doom_env` wrapper, so train on `doom_en
 
 Outputs go to `runs/<name>/` (git-ignored): `latest.pt`, `step_<n>.pt`, `metrics.jsonl`, TensorBoard events
 (`uv run tensorboard --logdir runs`). Memory ablation: `uv run python scripts/ablation.py run --steps 2000000`.
-Export a checkpoint to `submission/weights/champion.pt` (Git LFS) only after the Mini-League says it is better.
+Long runs: `--resume` continues `runs/<name>/` (weights, optimizer, reward scale, step count); maps are reused for
+`--switch-every 8` episodes; a map that fails to load is skipped; on Windows the workers ask for 1 ms timer
+resolution (~3× faster training here).
+
+Export a checkpoint to `submission/weights/champion.pt` (Git LFS) only after the Mini-League says it is better:
+`uv run python scripts/export_champion.py runs/<name>/latest.pt --eval runs/eval/<name>.json` (checks it loads,
+gives valid actions, stays under 20 ms, had 0 Mini-League crashes and beats the current champion).
 On the NVIDIA machine add `--device cuda`; the games always run on CPU.

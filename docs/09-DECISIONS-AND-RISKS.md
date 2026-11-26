@@ -32,6 +32,10 @@ Add a new row whenever we make or change a big choice. Never delete old rows; ma
 | D-20 | **Run the brain on CPU even when `device="cuda"`** | Batch of 1, ~0.5M parameters: one CPU thread does a step in ~2–3 ms; the GPU is shared with other teams and adds launch/transfer cost | GPU inference | ✅ Active; revisit with image encoders |
 | D-21 | **Warm the network up inside `__init__`** | PyTorch's first forward pass took 5 s, half the 10 s first-`act()` limit; `__init__` has 60 s | Warm up in the first `act()` | ✅ Active |
 | D-22 | **No (or unloadable) trained weights → random policy** | `main` stays submittable before the first champion exists; a broken or un-fetched LFS `champion.pt` must not crash `__init__` (0 on every map) | Fail without weights | ✅ Active |
+| D-24 | **Game workers ask Windows for 1 ms timer resolution** | Default 15.6 ms ticks made lockstep stepping ~10× slower on Windows | Accept the slowdown | ✅ Active |
+| D-25 | **Reuse each training map for 8 episodes** (`--switch-every`) | A map load (~0.6 s) stalls every game in the batch | New map every 2 episodes | ✅ Active |
+| D-26 | **Skip maps that fail to load instead of crashing** | The first 6M-step run died at 3.62M on one bad generated map | Fail fast | ✅ Active |
+| D-27 | **One training stack: Aneek's (`training/rollout.py`, `ppo.py`, `train.py`)** | It trains the memory brain with the exact agent code path; the separate PR #8 trainer was retired after its long-run fixes were ported | Keep two trainers | ✅ Active |
 | D-23 | **Write our own map generator** (text drawing → UDMF) instead of depending on OBLIGE first | No extra install; maps are tiny, exact and reproducible from a seed; we control the skill being tested (e.g. key away from its door) | OBLIGE only | ✅ Active; OBLIGE stays optional for big full levels |
 
 ---
@@ -59,6 +63,7 @@ Add a new row whenever we make or change a big choice. Never delete old rows; ma
 | R-15 | `USE` spam makes doors bounce | 🟡 | 🟡 | Previous-action input + door-bounce penalty in training |
 | R-16 | Turning isn't observed, so heading drifts | 🟢 | 🟡 | Measured on `two_rooms.wad`: turn per step is predictable from our buttons (heading error < 0.06°). Re-check on larger maps. |
 | R-17 | Entities only cover the 90° view | 🟡 | 🟢 | Rays cover 360° (they report enemies too); GRU remembers enemies that left the view |
+| R-22 | Training is slow on one Windows laptop (~375 steps/s with memory on ≈ 1.35M steps/hour) | 🟡 | 🟡 | Keep runs to a few million steps; use `--resume`; try more workers × fewer games; a GPU/Linux box helps the update step |
 | R-21 | Odometer drifts while pinned in a corner (the engine keeps reporting velocity, but the true position does not change) | 🔴 | 🟡 | Measured: with random wall-bumping over 600 steps, the max position error per run has a median of ~550 units on the val maps. The memory crop is local and old breadcrumbs fade; fix candidates: ray matching or a contact-aware correction (System Design §3.3.2) |
 | R-20 | `__init__` takes ~19 s inside the official image (limit 60 s) | 🟡 | 🔴 | Mostly importing PyTorch on 1 CPU; re-measure with `validate.py --docker` whenever the brain grows |
 | R-19 | Validation/test maps are only big Freedoom levels (no Tier 1/2) | 🟢 | 🟡 | ✅ Fixed: 16 generated val + 16 test maps (arena, maze, rooms, keydoor); val is now 4/8/5/3 maps per tier |

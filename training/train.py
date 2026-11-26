@@ -4,6 +4,8 @@
     uv run python -m training.train --stage 3 --memory on  --name s3-mem   --steps 2000000
     # ablation arm: same everything, memory OFF (GRU only)
     uv run python -m training.train --stage 3 --memory off --name s3-nomem --steps 2000000
+    # continue an interrupted run (same name; restores weights, optimizer, reward scale and step count)
+    uv run python -m training.train --stage 3 --memory on  --name s3-mem   --steps 2000000 --resume
 
 Outputs go to runs/<name>/ (git-ignored): latest.pt, step_<n>.pt, metrics.jsonl, TensorBoard events.
 Export a checkpoint to submission/weights/champion.pt only after the Mini-League says it is better.
@@ -29,7 +31,7 @@ import torch  # noqa: E402
 from smriti.brain import BrainConfig, SmritiNet, load_checkpoint  # noqa: E402
 from training.checkpoints import save_checkpoint  # noqa: E402
 from training.ppo import PPO, PPOConfig, Rollout  # noqa: E402
-from training.rollout import VecGames  # noqa: E402
+from training.rollout import VecGames, fine_timer  # noqa: E402
 
 
 def build_args(argv=None):
@@ -53,6 +55,9 @@ def build_args(argv=None):
     ap.add_argument("--name", default=None)
     ap.add_argument("--save-every", type=int, default=50_000)
     ap.add_argument("--threads", type=int, default=4, help="torch threads for the learner")
+    ap.add_argument("--switch-every", type=int, default=8,
+                    help="episodes per map before loading a new one (a map load stalls every game ~0.6 s)")
+    ap.add_argument("--resume", action="store_true", help="continue runs/<name> from latest.pt + train_state.pt")
     return ap.parse_args(argv)
 
 
@@ -60,8 +65,29 @@ def memory_flags(mode: str) -> tuple[bool, bool]:
     return {"on": (True, True), "off": (False, False), "map": (True, False), "notebook": (False, True)}[mode]
 
 
+def save_train_state(path: Path, ppo: PPO, steps: int, it: int, next_save: int) -> None:
+    """Everything --resume needs besides the weights (written atomically next to latest.pt)."""
+    rs = ppo.rscale
+    tmp = path.with_suffix(".tmp")
+    torch.save({"opt": ppo.opt.state_dict(), "rscale": {"mean": rs.mean, "var": rs.var, "count": rs.count,
+                                                         "ret": rs.ret.copy()},
+                "steps": steps, "it": it, "next_save": next_save}, tmp)
+    tmp.replace(path)
+
+
+def load_train_state(path: Path, ppo: PPO, n_games: int) -> dict:
+    st = torch.load(path, map_location="cpu", weights_only=False)
+    ppo.opt.load_state_dict(st["opt"])
+    rs = ppo.rscale
+    rs.mean, rs.var, rs.count = st["rscale"]["mean"], st["rscale"]["var"], st["rscale"]["count"]
+    if len(st["rscale"]["ret"]) == n_games:  # per-game running returns only fit the same game count
+        rs.ret = st["rscale"]["ret"]
+    return st
+
+
 def main(argv=None) -> int:
     a = build_args(argv)
+    fine_timer()
     torch.manual_seed(a.seed)
     np.random.seed(a.seed)
     torch.set_num_threads(max(1, a.threads))
@@ -70,6 +96,11 @@ def main(argv=None) -> int:
     out = REPO / "runs" / name
     out.mkdir(parents=True, exist_ok=True)
     dev = torch.device(a.device)
+    resume_state = out / "train_state.pt"
+    if a.resume:
+        if not ((out / "latest.pt").is_file() and resume_state.is_file()):
+            raise SystemExit(f"--resume: no latest.pt + train_state.pt in {out}")
+        a.init = out / "latest.pt"
     if a.init:
         net, _ = load_checkpoint(a.init, dev)
         if (net.cfg.use_mindmap, net.cfg.use_notebook) != (use_map, use_notes):
@@ -79,9 +110,11 @@ def main(argv=None) -> int:
     net.eval()
     cfg = PPOConfig(T=a.T, lr=a.lr, ent_coef=a.ent, epochs=a.epochs, minibatches=a.minibatches)
     kinds = a.kinds.split(",") if a.kinds else None
-    vec = VecGames(a.workers, a.games, a.stage, a.seed, use_map, use_notes, episode_ticks=a.ticks, kinds=kinds)
+    vec = VecGames(a.workers, a.games, a.stage, a.seed, use_map, use_notes, episode_ticks=a.ticks,
+                   switch_every=a.switch_every, kinds=kinds)
     n = vec.n
     ppo = PPO(net, cfg, n, dev)
+    resumed = load_train_state(resume_state, ppo, n) if a.resume else None
     print(f"[train] {name}: stage {a.stage}, memory {a.memory}, {n} games, "
           f"{sum(p.numel() for p in net.parameters()):,} params", flush=True)
     try:
@@ -98,6 +131,9 @@ def main(argv=None) -> int:
     starts = np.ones(n, np.bool_)
     recent = deque(maxlen=100)
     steps, it, t_start, next_save = 0, 0, time.time(), a.save_every
+    if resumed:
+        steps, it, next_save = resumed["steps"], resumed["it"], resumed["next_save"]
+        print(f"[train] resumed {name} at step {steps:,}", flush=True)
     try:
         while steps < a.steps:
             progress = steps / a.steps
@@ -139,6 +175,7 @@ def main(argv=None) -> int:
             print(" ".join(f"{k}={v}" for k, v in row.items()), flush=True)
             extra = {"steps": steps, "stage": a.stage, "memory": a.memory, "name": name}
             save_checkpoint(out / "latest.pt", net, extra)
+            save_train_state(resume_state, ppo, steps, it, next_save)
             if steps >= next_save:
                 save_checkpoint(out / f"step_{steps}.pt", net, extra)
                 next_save += a.save_every
