@@ -18,6 +18,22 @@ import numpy as np
 REPO = Path(__file__).resolve().parent.parent
 
 
+MAP_ATTEMPTS = 8  # a bad map must never end a multi-hour run: try other maps first
+
+
+def fine_timer() -> None:
+    """Ask Windows for 1 ms timer resolution (no-op elsewhere).
+
+    Windows wakes sleeping threads only every ~15.6 ms by default. Workers wait for their next command
+    between steps and the engine's waits snap to that tick: lockstep stepping was ~10x slower without
+    this (measured on a 20-core laptop: 2 workers 100 steps/s in total vs 600 for one).
+    """
+    if sys.platform == "win32":
+        import ctypes
+
+        ctypes.windll.winmm.timeBeginPeriod(1)
+
+
 def _paths():
     for p in (str(REPO / "submission"), str(REPO)):
         if p not in sys.path:
@@ -50,8 +66,8 @@ class Game:
         if self.env is None or self.episodes_on_map >= self.switch_every:
             if self.env is not None:
                 self.env.close()
-            self.wad, self.map, self.kind = next(self.sampler)
-            self.env = make_env(self.wad, self.map, episode_ticks=self.ticks, render_buffers=False)
+                self.env = None
+            self._open_next_map(make_env)
             self.episodes_on_map = 0
         obs, _ = self.env.reset(seed=int(self.rng.integers(2**31 - 1)))
         self.memory.reset()
@@ -60,6 +76,21 @@ class Game:
         self.prev_action = np.zeros(9, np.float32)
         self.ret, self.len = 0.0, 0
         return self._features(obs)
+
+    def _open_next_map(self, make_env) -> None:
+        """Load the sampler's next map; skip (with a warning) any map that fails to build or load."""
+        last_error = None
+        for _ in range(MAP_ATTEMPTS):
+            try:
+                wad, map_name, kind = next(self.sampler)
+                self.env = make_env(wad, map_name, episode_ticks=self.ticks, render_buffers=False)
+                self.wad, self.map, self.kind = wad, map_name, kind
+                return
+            except Exception as exc:  # noqa: BLE001
+                last_error = exc
+                print(f"[rollout] skipping a map that failed to load: {type(exc).__name__}: {exc}",
+                      file=sys.stderr, flush=True)
+        raise RuntimeError(f"{MAP_ATTEMPTS} maps in a row failed to load") from last_error
 
     def step(self, buttons: np.ndarray):
         obs, _, term, trunc, _ = self.env.step(buttons)
@@ -87,6 +118,7 @@ class Game:
 def _worker(remote, wid, n_games, stage, seed, use_mindmap, use_notebook, episode_ticks, switch_every, kinds):
     _paths()
     os.environ.setdefault("OMP_NUM_THREADS", "1")
+    fine_timer()
     games = []
     try:
         from smriti.features import stack
