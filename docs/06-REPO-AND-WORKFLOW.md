@@ -20,6 +20,8 @@
 **Windows notes (found in Phase 0):**
 - Set `PYTHONUTF8=1` (PowerShell: `$env:PYTHONUTF8 = "1"`). Without it, `validate.py` crashes printing its ✓ marks.
 - `validate.py` warns that it can't pin the agent to 1 CPU or measure RAM on Windows. Use `--docker` for real numbers.
+- The official image is big: about **19 GB** on disk, and the first build downloads several GB (PyTorch, JAX, CUDA libraries). Later runs reuse it.
+- Even in Docker, Windows can't report per-process GPU memory (`validate.py` warns). Measure it on a Linux GPU machine once the agent uses the GPU.
 - 8 template tests fail on Windows because they use Linux-only Python features (`resource`, `os.sched_getaffinity`). The other 41 pass. They are expected to pass on Linux/Docker.
 
 ## 6.2 Folder layout
