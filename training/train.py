@@ -53,6 +53,12 @@ def build_args(argv=None):
     ap.add_argument("--ticks", type=int, default=2100, help="episode tick cap")
     ap.add_argument("--device", default="cpu")
     ap.add_argument("--init", type=Path, help="start from this checkpoint (must have the same memory config)")
+    ap.add_argument("--warm-start", type=Path,
+                    help="transfer shared weights from a checkpoint; new encoder inputs start at zero, "
+                         "new hierarchy heads initialize normally (training/warmstart.py)")
+    ap.add_argument("--puzzle-share", type=float,
+                    help="share of games on key & door puzzles (default: the stage's own, 0.8 for stage 3); "
+                         "the rest replays older maps")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--name", default=None)
     ap.add_argument("--save-every", type=int, default=50_000)
@@ -66,14 +72,13 @@ def build_args(argv=None):
     ap.add_argument('--helper-weights', type=json.loads, help='JSON object overriding goal helper weights')
     ap.add_argument('--rnd-coef', type=float, default=.01, help='initial intrinsic weight; linearly decays to zero')
     ap.add_argument('--exit-aux', type=float, default=.1)
-    ap.add_argument('--warm-start', action='store_true', help='explicitly transfer shape-compatible weights from --init')
     a = ap.parse_args(argv)
     if any(getattr(a, k) < 1 for k in ('workers','games','steps','T','epochs','minibatches','threads','goal_interval','save_every','switch_every','ticks')):
         ap.error('counts and goal interval must be positive')
     if a.goal_helpers == 'on' and a.manager != 'on':
         ap.error('goal helpers require --manager on')
-    if a.warm_start and (a.init is None or a.resume):
-        ap.error('--warm-start requires --init and cannot be combined with --resume')
+    if a.warm_start and (a.init is not None or a.resume):
+        ap.error('use --warm-start PATH separately from --init or --resume')
     if not all(np.isfinite(v) and v >= 0 for v in (a.rnd_coef, a.exit_aux, a.ent)) or not np.isfinite(a.lr) or a.lr <= 0:
         ap.error('loss/reward weights must be finite and nonnegative; lr must be positive')
     if a.helper_weights is not None:
@@ -148,19 +153,15 @@ def main(argv=None) -> int:
     if a.init:
         net, _ = load_checkpoint(a.init, dev)
         flags = ('use_mindmap', 'use_notebook', 'use_manager', 'use_rgb', 'goal_interval')
-        if a.warm_start:
-            source = net.state_dict()
-            net = SmritiNet(requested).to(dev)
-            target = net.state_dict()
-            shared = {k: v for k, v in source.items() if k in target and target[k].shape == v.shape}
-            transferred = {'copied': sorted(shared), 'newly_initialized': sorted(set(target) - set(shared))}
-            target.update(shared)
-            net.load_state_dict(target)
-            print('[train] explicit warm start: ' + json.dumps(transferred), flush=True)
-        elif any(getattr(net.cfg, k) != getattr(requested, k) for k in flags):
-            raise SystemExit('--init architecture does not match flags; use --warm-start explicitly to expand it')
+        if any(getattr(net.cfg, k) != getattr(requested, k) for k in flags):
+            raise SystemExit('--init architecture does not match flags; use --warm-start PATH to expand it')
     else:
         net = SmritiNet(requested).to(dev)
+        if a.warm_start:
+            from training.warmstart import warm_start_from
+            source, _ = load_checkpoint(a.warm_start, dev)
+            transferred = warm_start_from(net, source)
+            print('[train] explicit warm start: ' + json.dumps(transferred), flush=True)
     net.eval()
     cfg = PPOConfig(T=a.T, lr=a.lr, ent_coef=a.ent, epochs=a.epochs, minibatches=a.minibatches, exit_aux_coef=a.exit_aux)
     kinds = a.kinds.split(",") if a.kinds else None
@@ -173,7 +174,7 @@ def main(argv=None) -> int:
     resumed = load_train_state(resume_state, ppo, n) if a.resume else None
     vec = VecGames(a.workers, a.games, a.stage, a.seed, use_map, use_notes, episode_ticks=a.ticks,
                    switch_every=a.switch_every, kinds=kinds, use_rgb=net.cfg.use_rgb,
-                   goal_helpers=a.goal_helpers == 'on', helper_weights=a.helper_weights)
+                   goal_helpers=a.goal_helpers == 'on', helper_weights=a.helper_weights, puzzle_share=a.puzzle_share)
 
     print(f"[train] {name}: stage {a.stage}, memory {a.memory}, {n} games, "
           f"{sum(p.numel() for p in net.parameters()):,} params", flush=True)

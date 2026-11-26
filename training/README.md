@@ -21,6 +21,9 @@ the vanilla engine through the official `doom_env` wrapper, so train on `doom_en
 
 Outputs go to `runs/<name>/` (git-ignored): `latest.pt`, `step_<n>.pt`, `metrics.jsonl`, TensorBoard events
 (`uv run tensorboard --logdir runs`). Memory ablation: `uv run python scripts/ablation.py run --steps 2000000`.
+Add memory to a trained brain without starting over: `--warm-start <brain without memory>` (new memory inputs start at
+zero, so it plays exactly like that brain at step 0); `--puzzle-share` sets the key-puzzle share of stage 3 (rest = replay).
+
 Long runs: `--resume` continues `runs/<name>/` (weights, optimizer, reward scale, step count); maps are reused for
 `--switch-every 8` episodes; a map that fails to load is skipped; on Windows the workers ask for 1 ms timer
 resolution (~3× faster training here).
@@ -80,7 +83,7 @@ both known positive and negative views and verify the loss falls.
 Use identical feature/reward flags with `--resume`; mismatches fail explicitly. Model, optimizer,
 normalization, and learner RNG states are restored. Games restart, so unfinished manager intervals
 and per-game discounted-return accumulators reset. This is run continuation, not an exact engine
-snapshot. Expanding an older model requires explicit `--init path.pt --warm-start`; copied and newly
+snapshot. Expanding an older model requires explicit `--warm-start path.pt`; copied and newly
 initialized parameter names are printed. Newly initialized heads are not presented as trained.
 
 Inference exposes `DoomAgent.active_goal` and `exit_probability` for future dashboard consumers.

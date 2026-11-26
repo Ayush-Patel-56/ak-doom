@@ -13,7 +13,7 @@ linearly from `near_start` to `near_end` over the run; the rest of the puzzle sh
 from __future__ import annotations
 
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
@@ -54,8 +54,11 @@ def map_path(kind: str, seed: int) -> Path:
 class MapSampler:
     """Picks (wad, map, kind) for the next game of a stage. progress() in [0, 1] moves the schedule."""
 
-    def __init__(self, stage: int, seed: int, seeds_per_kind: int = 200, kinds: list[str] | None = None):
+    def __init__(self, stage: int, seed: int, seeds_per_kind: int = 200, kinds: list[str] | None = None,
+                 puzzle_share: float | None = None):
         self.stage = STAGES[stage]
+        if puzzle_share is not None:  # e.g. more replay when warm-starting from a brain that must not forget
+            self.stage = replace(self.stage, puzzle_share=puzzle_share)
         self.rng = random.Random(seed)
         self.seeds_per_kind = seeds_per_kind
         self.kinds = kinds  # fixed kind list overrides the stage (used by tests / smoke runs)
