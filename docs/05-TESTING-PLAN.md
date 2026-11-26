@@ -112,7 +112,7 @@ Our own copy of the hidden evaluation.
 
 ## 5.7 Level 6: Stress & chaos tests (`tests/agent/stress/`)
 
-✅ **Built** (`tests/agent/stress/test_stress.py`, 11 tests, ~50 s). Every test runs against all four brain types: random fallback, the Phase 2 champion, a Phase 3 memory brain and a full Phase 4 brain (memory + manager + RGB + depth): 600 chaos observations each (NaN/inf, huge values, wrong shapes, missing keys, wrong types, out-of-range ids, non-dict input), a 32-enemy view, `act()` before `reset()` and double resets, and full episodes on a closet spawn, an empty map and a 13-monster crowd in a row. A one-off soak (full Phase 4 brain, 20 val maps × 4,200 ticks) stayed at 3.8–4.4 ms per decision with flat memory (~70 MB) and 0 fallbacks.
+✅ **Built** (`tests/agent/stress/test_stress.py`, 11 tests, ~50 s). Chaos observations, a 32-enemy view, and `act()` before `reset()` / double resets run against all four brain types: random fallback, the Phase 2 champion, a Phase 3 memory brain and a full Phase 4 brain (memory + manager + RGB + depth). Chaos covers 600 observations each (NaN/inf, huge values, wrong shapes, missing keys, wrong types, out-of-range ids, non-dict input). The back-to-back maps test covers memory and phase4: full episodes on a closet spawn, an empty map and a 14-monster crowd in a row. A one-off soak (full Phase 4 brain, 20 val maps × 4,200 ticks) stayed at 3.8–4.4 ms per decision with flat memory (~70 MB) and 0 fallbacks.
 
 | Scenario | Expected |
 |----------|----------|

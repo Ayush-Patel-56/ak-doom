@@ -1,9 +1,10 @@
 """Stress & chaos tests (docs/05-TESTING-PLAN.md §5.7): the agent must never stand still.
 
 If the agent raises, returns an invalid action or is too slow, the scorer freezes the player for the
-rest of the map. Every test runs against all four brain types we ship or may ship:
-random fallback, Phase 2 champion (no memory), Phase 3 memory brain and a full Phase 4 brain
-(memory + manager + RGB + depth). Untrained weights are fine here: robustness, not skill, is tested.
+rest of the map. Chaos observations, a crowded view, and act-before-reset run against all four brain
+types we ship or may ship: random fallback, Phase 2 champion (no memory), Phase 3 memory brain and a
+full Phase 4 brain (memory + manager + RGB + depth). The back-to-back maps test covers memory and phase4.
+Untrained weights are fine here: robustness, not skill, is tested.
 """
 
 from __future__ import annotations
@@ -60,7 +61,7 @@ def chaos_observation(rng: np.random.Generator, obs_space) -> object:
         good["rays"]["distance"] = np.full(64, np.nan, np.float32)
         good["visible_entities"]["features"] = np.full((32, 5), np.inf, np.float32)
         return good
-    if kind == 2:  # huge values (e.g. a teleport: odometer must not blow up)
+    if kind == 2:  # huge values (vitals[14:17] are velocity, not an odometer teleport)
         good["vitals"][14:17] = rng.choice([1e9, -1e9])
         good["rgb"] = np.full((120, 160, 3), 255, np.uint8)
         return good
@@ -146,7 +147,7 @@ def test_many_maps_in_a_row_stay_fast(brain, brain_paths, spaces, tmp_path):
     maps = {
         "closet": "#####\n#P..#\n#####",  # spawn in a tiny closet, no exit
         "empty": "##########\n#P.......#\n#........#\n##########",  # no enemies, no keys, no exit
-        "crowd": "############\n#P.zzzz.sss#\n#..iiii.ddd#\n############",  # many enemies at once
+        "crowd": "############\n#P.zzzz.sss#\n#..iiii.ddd#\n############",  # 14 monsters at once
     }
     agent = load_agent_class()(*spaces, "cpu", weights_path=brain_paths[brain])
     timings = []
