@@ -1,0 +1,126 @@
+# 7. Roadmap
+
+> **One line:** Build in layers. Every phase ends with an agent that is **submittable**, so we always have something to hand in.
+
+No dates here, only order. Each phase has a clear **"Done when"**.
+
+```mermaid
+flowchart LR
+    P0["Phase 0<br/>Setup"] --> P1["Phase 1<br/>Walking skeleton"]
+    P1 --> P2["Phase 2<br/>Baseline brain"]
+    P2 --> P3["Phase 3<br/>Memory ⭐"]
+    P3 --> P4["Phase 4<br/>Manager + curiosity"]
+    P4 --> P5["Phase 5<br/>Generalise"]
+    P5 --> P6["Phase 6<br/>Polish & present"]
+```
+
+> 💡 **Start training early.** Training takes the longest, so get Phase 2 training running as soon as possible and build Phases 3–4 while it runs.
+
+---
+
+## Phase 0 — Setup
+
+- [x] Repo `ak-doom` on GitHub, built on the official template
+- [x] Read `CONTRACT.md` → facts recorded in the [PRD §1.9](01-PRD.md#19-contract-facts-answered-by-the-official-template)
+- [ ] Planning docs merged (this PR)
+- [ ] Every team member: setup steps in [Repo & Workflow §6.1](06-REPO-AND-WORKFLOW.md#61-setting-up-step-by-step) (`uv sync`, `validate.py`, `pytest`)
+- [ ] Build the Docker image and run `validate.py --docker` once
+- [ ] Run the test map and **print one full observation** to understand it
+- [ ] Measure the turn amount per step (`TURN_LEFT` for 4 tics) with `privileged_state()`
+- [ ] Add `.gitignore` lines and the `maps/curated/**` LFS rule
+- [ ] Protect `main` on GitHub: require a pull request before merging
+
+**Done when:** everyone can run a game locally, and `main` only changes through PRs.
+
+---
+
+## Phase 1 — Walking skeleton (a submittable agent)
+
+- [ ] `submission/agent.py` keeps the template's random baseline, plus the safety wrapper (try/except + safe action)
+- [ ] Empty `submission/smriti/` package wired into `agent.py`
+- [ ] Contract tests + `validate.py` passing
+- [ ] First version of `scripts/evaluate.py` (Mini-League with our scorer)
+- [ ] First version of `scripts/benchmark_latency.py`
+- [ ] Map tools: get Freedoom maps + OBLIGE generating maps; create train/val/test lists
+
+**Done when:** a random agent passes the validator and gets a (low) Mini-League score. **We have a baseline.**
+
+---
+
+## Phase 2 — Baseline brain + our PPO
+
+- [ ] Ray, entity (attention) and vitals encoders
+- [ ] GRU memory
+- [ ] Simple flat policy (no manager yet) + critic
+- [ ] Our recurrent PPO + parallel game runner
+- [ ] Reward calculator (§4.2) + count-based curiosity
+- [ ] Curriculum Stage 1 (combat) and Stage 2 (navigation)
+- [ ] TensorBoard logging + checkpoint → Mini-League → champion export
+
+**Done when:** the champion clearly beats random on Tier 1 and Tier 2 validation maps and stays within the speed budget.
+
+---
+
+## Phase 3 — Memory system ⭐ (our USP)
+
+- [ ] Odometer (+ a test that it matches the true movement in training)
+- [ ] Mind map (grid update + rotated crop + small CNN)
+- [ ] Landmark notebook (slots + attention)
+- [ ] Curriculum Stage 3 (key & door puzzles)
+- [ ] Ablation: with vs without memory
+
+**Done when:** the agent picks up keycards and opens matching locked doors on held-out Tier 3 maps, and the ablation shows memory helps.
+
+---
+
+## Phase 4 — Manager/worker + stronger curiosity
+
+- [ ] Manager (5 goals, every 8 decisions) + goal-conditioned worker
+- [ ] Goal helper rewards
+- [ ] RND curiosity (optional)
+- [ ] RGB encoder + "exit in view?" auxiliary task (rays and entities never show the exit)
+- [ ] Depth encoder (if speed allows)
+- [ ] Curriculum Stage 4 (full levels)
+- [ ] Ablations: − manager, − curiosity
+
+**Done when:** exit rate on Tier 3/4 validation maps improves over Phase 3.
+
+---
+
+## Phase 5 — Generalise and harden
+
+- [ ] Stage 5: mixed + heavily randomised maps
+- [ ] Bigger, more varied map pool
+- [ ] Teacher–student training (stretch)
+- [ ] Auxiliary tasks (stretch)
+- [ ] Stress & chaos tests (§5.7) all passing
+- [ ] Speed tuning (TorchScript, etc.) → < 20 ms average
+
+**Done when:** the score on **test maps** (used for the first time here) is close to the validation score, meaning no overfitting.
+
+---
+
+## Phase 6 — Polish & present
+
+- [ ] Final champion exported + fresh-clone `validate.py --docker` check
+- [ ] Final PR merged to `main` **before the deadline** (the scorer evaluates the last commit on the default branch)
+- [ ] Mind View dashboard
+- [ ] Demo videos (good runs + honest failure cases)
+- [ ] Ablation chart
+- [ ] 2-page brief PDF ([outline](08-DEMO-AND-BRIEF.md#82-the-2-page-brief-outline))
+- [ ] Q&A practice: every member can explain every part
+- [ ] [Compliance checklist](10-COMPLIANCE-CHECKLIST.md) fully ticked
+
+**Done when:** submitted, and the demo runs without problems.
+
+---
+
+## If things go badly: fallback ladder
+
+| If… | Then… |
+|-----|-------|
+| PPO won't learn at all | Simplify: fewer buttons, Stage 1 only, check rewards with unit tests |
+| Odometer is unreliable | Drop the mind map and keep the notebook + GRU (Decision D-04) |
+| Manager makes things worse | Ship the flat policy and keep the manager as an ablation result |
+| Too slow | Shrink the image encoders (keep a tiny RGB for the exit), shrink the GRU, use TorchScript |
+| Running out of time | Submit the latest champion. Every phase ends submittable. |

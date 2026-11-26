@@ -1,88 +1,111 @@
-# devforge-doom-template
+# AK-Doom
 
-Starter template for **Yugaantar 2026 · DevForge — Track 1: "Can It Play DOOM?"**
+**A DOOM-playing AI with its own memory: mind map, landmark notebook and curiosity-driven RL on ViZDoom.**
 
-> For decades, *"Can it run DOOM?"* was the ultimate hardware test. Now: **can your neural network
-> actually play DOOM?** Train an agent that plays unseen levels **zero-shot**: survive ambushes,
-> navigate multi-room layouts, find keycards, unlock doors and reach the exit.
+> **Agent name:** *Smriti* (स्मृति), which means "memory".
+> **Track:** Yugaantar 2026 · DevForge — Track 1, *"Can It Play DOOM?"*
+> **Built on:** the official [`devforge-doom-template`](https://github.com/Reinforce-SST/devforge-doom-template).
+> **Status:** 📝 Planning. The agent in `submission/agent.py` is still the template's random baseline.
 
-No dataset is provided. Your agent learns by interacting with the engine.
+## What is this?
 
-## Quickstart
+Smriti is an AI player for DOOM. It learns only by playing the game, with no recorded data and no hand-written moves. Then it plays **maps it has never seen**: it fights monsters, explores rooms, finds keycards, remembers where the locked doors are and reaches the exit.
 
-1. Click **"Use this template"** on GitHub to create your team's (public) repository.
-2. Set up the environment (Python 3.13, [uv](https://docs.astral.sh/uv/)):
+## The idea in one picture
 
-   ```bash
-   uv sync                 # installs vizdoom, gymnasium and the official wrapper (env/) in editable mode
-   uv run python validate.py
-   ```
+```mermaid
+flowchart LR
+    A["👀 What the agent sees<br/>(rays, enemies, health...)"] --> B["🧠 Understand<br/>(encoders)"]
+    B --> C["📒 Remember<br/>(mind map + notebook)"]
+    C --> D["🎯 Decide the goal<br/>(manager)"]
+    D --> E["🎮 Press buttons<br/>(worker)"]
+    E --> F["DOOM game"]
+    F --> A
+```
 
-   Or use the official image, which is exactly what the scorer runs:
+## What makes us different (our USP)
 
-   ```bash
-   docker build -t devforge-doom .            # or: docker pull <official image tag, announced>
-   python validate.py --docker --image devforge-doom   # installs requirements.txt, then runs sandboxed like the scorer
-   ```
+1. **It draws its own map in its head.** The agent builds a "mind map" of the places it has been, even though the game never gives it a map.
+2. **It keeps a notebook of important things.** When it sees a locked door or a keycard, it writes down where that thing is and goes back for it later.
+3. **It thinks in two levels.** A *manager* picks the goal ("explore", "fight", "go get the key"), and a *worker* handles the movement and shooting.
+4. **It is curious.** It gets an extra reward for visiting new places, so it doesn't get stuck in corners.
+5. **You can watch it think.** A live *Mind View* dashboard shows its map, its notebook and its current goal while it plays.
 
-3. Replace the random baseline in `submission/agent.py` with your trained agent.
-4. Put weights in `submission/weights/` (Git LFS) and training code in `training/`.
-5. Run `python validate.py --docker` and submit your repo URL.
+## Quick start
 
-**Platforms:** Linux (x86-64/ARM), macOS on Apple Silicon (macOS 15+) and Windows (x86-64) all
-work with `uv sync` and `validate.py`. Intel Macs have no `vizdoom` 1.3.3 wheel: use Docker or a
-Linux machine. Evaluation runs on Linux, so `validate.py --docker` is the closest check.
+Python 3.13 and [uv](https://docs.astral.sh/uv/):
+
+```bash
+uv sync                      # installs vizdoom, gymnasium and the official wrapper (env/)
+uv run python validate.py    # official pre-submission check
+uv run pytest                # tests
+```
+
+Closest check to the real scorer (needs Docker):
+
+```bash
+docker build -t devforge-doom .
+python validate.py --docker --image devforge-doom
+```
+
+Planned commands (added as the code lands):
+
+```bash
+uv run python scripts/train.py --stage 1      # train
+uv run python scripts/evaluate.py             # our own Mini-League on held-out maps
+uv run python scripts/benchmark_latency.py    # check the 40 ms per-decision budget
+```
 
 ## Repository layout
 
 ```
-env/                  official ViZDoom Gymnasium wrapper (doom_env): spaces, sensors, protocol, limits
-maps/                 one small test map (NOT an evaluation map); bring your own for training
-submission/agent.py   your DoomAgent: the evaluation entry point
-submission/weights/   model weights (Git LFS)
-training/             your training pipeline
-validate.py           run before submitting
-tests/                tests for the wrapper and validator (uv run pytest)
-docs/                 contract, rules, submission guide, evaluation details
+env/                  official ViZDoom wrapper (doom_env): don't edit (the scorer ignores it)
+maps/                 template test map + our training map tools
+submission/agent.py   DoomAgent: the evaluation entry point
+submission/smriti/    the agent's brain (encoders, memory, policy)
+submission/weights/   champion weights (Git LFS)
+training/             training pipeline (PPO, rewards, curiosity, curriculum)
+scripts/              train / evaluate / benchmark entry points
+dashboard/            Mind View demo
+validate.py           official validator: run before every merge
+tests/                template tests + our tests
+docs/                 official docs + our planning docs
 ```
-
-## Using the environment
-
-```python
-from doom_env import make_env
-
-env = make_env("maps/two_rooms.wad")     # test map; use your own maps for training
-obs, info = env.reset(seed=0)
-obs, reward, terminated, truncated, info = env.step(env.action_space.sample())
-```
-
-Observations are a dict of `rgb`, `depth`, `vitals`, `rays` and `visible_entities`, all
-ego-centric and partially observable. See [docs/CONTRACT.md](docs/CONTRACT.md).
-The wrapper's `reward` is a basic default for convenience. Shape your own reward for training.
-
-**Compute tip:** training only on raw pixels is expensive. The `rays`, `visible_entities` and
-`vitals` signals run thousands of steps per second on a CPU. Hybrid pixel + spatial models are welcome.
-
-## Hardware at evaluation
-
-One NVIDIA **RTX 3090 (24 GB)** shared between evaluation workers. Each agent gets **2 GB VRAM,
-8 GB RAM and 1 CPU thread**, so keep models compact and inference fast
-(see [hardware](docs/EVALUATION.md#hardware) and [timeouts](docs/EVALUATION.md#timeouts)).
-`validate.py` runs your agent under the same CPU/RAM limits and reports GPU memory.
 
 ## Documentation
 
+**Official (from the template; read these first):**
+
 | Doc | What's inside |
 | --- | --- |
-| [docs/CONTRACT.md](docs/CONTRACT.md) | Observation/action spaces and the `DoomAgent` interface |
-| [docs/RULES.md](docs/RULES.md) | Ground rules: what's allowed, what gets you disqualified |
-| [docs/SUBMISSION.md](docs/SUBMISSION.md) | Submission checklist, Git LFS, 1 GB limit, `requirements.txt` |
-| [docs/EVALUATION.md](docs/EVALUATION.md) | Map tiers, scoring categories, timeouts, replays |
+| [CONTRACT.md](docs/CONTRACT.md) | Observation/action spaces and the `DoomAgent` interface |
+| [RULES.md](docs/RULES.md) | What's allowed and what gets you disqualified |
+| [SUBMISSION.md](docs/SUBMISSION.md) | Submission checklist, Git LFS, 1 GB limit, `requirements.txt` |
+| [EVALUATION.md](docs/EVALUATION.md) | Map tiers, scoring, hardware, timeouts |
+
+**Ours (read in order; each answers one question):**
+
+| # | Document | Question it answers |
+|---|----------|---------------------|
+| 1 | [PRD](docs/01-PRD.md) | What are we building, and how do we know it's good? |
+| 2 | [System Architecture](docs/02-SYSTEM-ARCHITECTURE.md) | What are the big parts, and how do they connect? |
+| 3 | [System Design](docs/03-SYSTEM-DESIGN.md) | How does each part work inside? |
+| 4 | [Training Plan](docs/04-TRAINING-PLAN.md) | How does the agent learn? |
+| 5 | [Testing Plan](docs/05-TESTING-PLAN.md) | How do we prove it works? |
+| 6 | [Repo & Workflow](docs/06-REPO-AND-WORKFLOW.md) | Where does the code go, and how do we work together? |
+| 7 | [Roadmap](docs/07-ROADMAP.md) | In what order do we build it? |
+| 8 | [Demo & Brief](docs/08-DEMO-AND-BRIEF.md) | How do we show it off and write the 2-page PDF? |
+| 9 | [Decisions & Risks](docs/09-DECISIONS-AND-RISKS.md) | Why did we choose this, and what could go wrong? |
+| 10 | [Compliance Checklist](docs/10-COMPLIANCE-CHECKLIST.md) | Are we following every rule? |
+| — | [Glossary](docs/GLOSSARY.md) | What do these words mean? |
+| — | [Experiment Log](docs/experiments.md) | What did each training run teach us? |
 
 ## Rules in one minute
 
-- Actions must come from **trained neural parameters**: no rule trees, no `A*`/Dijkstra, no `atan2` aimbots,
-  no unmodified off-the-shelf SB3.
-- Change anything you want **during training**. Evaluation uses the **vanilla engine**, the
-  official wrapper and **unseen maps**.
-- Create the repo during the hackathon. Libraries are fine; the core architecture and training must be yours.
+- Actions must come from **trained neural parameters**: no rule trees, no `A*`/Dijkstra/BFS, no `atan2` aimbots, no unmodified off-the-shelf SB3.
+- Change anything you want **during training**. Evaluation uses the **vanilla engine**, the official wrapper and **unseen maps**.
+- The core architecture and training pipeline are built during the hackathon. Libraries are fine.
+
+## Next steps
+
+See [Roadmap Phase 0](docs/07-ROADMAP.md).
