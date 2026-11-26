@@ -17,6 +17,11 @@
 
 **Platforms:** Linux, Apple Silicon Macs and Windows (x86-64) all work. Intel Macs need Docker or Linux. Evaluation runs on Linux, so `--docker` is the closest check.
 
+**Windows notes (found in Phase 0):**
+- Set `PYTHONUTF8=1` (PowerShell: `$env:PYTHONUTF8 = "1"`). Without it, `validate.py` crashes printing its ✓ marks.
+- `validate.py` warns that it can't pin the agent to 1 CPU or measure RAM on Windows. Use `--docker` for real numbers.
+- 8 template tests fail on Windows because they use Linux-only Python features (`resource`, `os.sched_getaffinity`). The other 41 pass. They are expected to pass on Linux/Docker.
+
 ## 6.2 Folder layout
 
 Files from the template are marked 🟦 (**don't edit** unless the organisers release a fix). Our files are marked 🟩.

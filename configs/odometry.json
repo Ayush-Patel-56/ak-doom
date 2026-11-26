@@ -1,0 +1,56 @@
+{
+  "map": "two_rooms.wad:MAP01",
+  "frame_skip": 4,
+  "turns": {
+    "first_step_after_reset_deg": 0.0,
+    "TURN_LEFT": {
+      "held_steps_deg": [
+        7.031,
+        12.305,
+        14.063,
+        14.063,
+        14.063,
+        14.063
+      ],
+      "after_one_release_step_deg": 7.031
+    },
+    "TURN_RIGHT": {
+      "held_steps_deg": [
+        -7.031,
+        -12.305,
+        -14.063,
+        -14.063,
+        -14.063,
+        -14.063
+      ],
+      "after_one_release_step_deg": -7.031
+    },
+    "model": {
+      "held_sequence_deg": [
+        7.031,
+        12.305,
+        14.063
+      ],
+      "steady_deg": 14.063,
+      "release_resets": true,
+      "left_is_positive": true
+    }
+  },
+  "motion": {
+    "a_now": 2.8614,
+    "b_prev": 1.5613,
+    "mean_step_error_open_units": 0.114,
+    "mean_step_error_near_wall_units": 1.84,
+    "naive_4v_mean_step_error_units": 2.964,
+    "mean_true_step_length_units": 14.3,
+    "fit_steps": 600
+  },
+  "drift_with_agent_knowledge_only": {
+    "steps": 600,
+    "distance_travelled_units": 8363.9,
+    "final_position_error_units": 25.2,
+    "max_position_error_units": 87.1,
+    "final_error_pct_of_distance": 0.3,
+    "max_heading_error_deg": 0.054
+  }
+}

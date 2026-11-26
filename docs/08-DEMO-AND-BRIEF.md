@@ -71,7 +71,7 @@ Every team member should be able to answer these:
 
 | Likely question | Short answer |
 |-----------------|--------------|
-| How does it remember without coordinates? | The odometer adds up our own movement (velocity is given in the player's frame) and turns (calibrated per turn press, corrected by ray matching). The mind map is anchored at the spawn point, not the world. |
+| How does it remember without coordinates? | The odometer adds up our own movement (velocity in the player's frame, with Doom's friction modelled) and turns (predicted exactly from our own turn buttons). Drift is about 0.3% of the distance travelled. The mind map is anchored at the spawn point, not the world. |
 | How do you handle many enemies? | Attention over the 32 entity slots works with any count, and empty slots are masked. |
 | Isn't the mind map a hardcoded rule? | No. RULES.md allows "preprocessing and encoding observations" and "learned memory modules". Every *decision* comes from the trained network, and there's no pathfinding or BFS. |
 | How does it find the exit if rays can't see it? | A small RGB encoder, trained with an "is the exit in view?" helper task. |

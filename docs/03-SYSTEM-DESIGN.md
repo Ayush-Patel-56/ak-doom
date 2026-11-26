@@ -59,14 +59,16 @@ All three are **wiped in `reset()`** before every new map.
 
 ### 3.3.1 Odometer: "how did I move?"
 
-The game gives us **no position and no heading**, so we estimate our own movement:
+The game gives us **no position and no heading**, so we estimate our own movement. ✅ **Measured in Phase 0** with `scripts/measure_odometry.py`; the numbers are in `configs/odometry.json`.
 
-- **Moving:** `vel_forward` and `vel_right` are in the player's own frame (units per tic). Multiplying by 4 tics gives this step's movement. ✅ Given by the contract.
-- **Turning:** not observed directly. We estimate it from:
-  1. **Our own turn button**: holding `TURN_LEFT`/`TURN_RIGHT` turns by a roughly fixed amount per step. We **measure that amount once** in training using `env.privileged_state()`.
-  2. **Ray matching (optional upgrade):** compare this step's 64-ray ring with the last one, shifted left or right. The best match tells us how much we turned, which corrects drift.
+- **Turning: predicted exactly from our own buttons.** A held turn rotates **7.03°, then 12.30°, then 14.06° every step after**. Releasing for one step resets it. Switching straight from left to right does *not* reset it, because Doom counts how long *any* turn button is held. Left is positive.
+- **Moving: velocity plus friction.** `vel_forward`/`vel_right` are in the player's own frame (units per tic). Doom applies friction every tic, so simply multiplying by 4 is about 20% off. The best formula uses this step's **and** the previous step's velocity:
+  `step distance = 2.86 × v_now + 1.56 × v_previous` (each turned into the spawn frame with our heading).
+- **Result (test map, 600 steps, only what the agent knows):** heading error under **0.06°**, position drift **0.3%** of the distance travelled (25 units after 8,364). Near walls the per-step error grows a little (1.8 units versus 0.1 in open space).
+- **Engine quirk:** the **first step after `reset()` is not applied** (it turns and moves 0). The odometer must skip it.
+- **Ray matching** (comparing ray rings to correct turning) is no longer needed; we keep it as an idea only if bigger maps show drift.
 - We add these up to get our **position and heading relative to where we spawned**. This isn't a global coordinate; it's our own dead-reckoning guess.
-- **Training check:** compare the odometer with the true position from `privileged_state()` to measure drift.
+- **To re-check:** run the script on bigger maps once we have them (the test map is small, with many wall bumps).
 
 ### 3.3.2 Mind map
 

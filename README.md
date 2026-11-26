@@ -41,6 +41,15 @@ uv run python validate.py    # official pre-submission check
 uv run pytest                # tests
 ```
 
+On Windows, set `PYTHONUTF8=1` first (see [Repo & Workflow §6.1](docs/06-REPO-AND-WORKFLOW.md#61-setting-up-step-by-step)).
+
+Phase 0 tools:
+
+```bash
+uv run python scripts/inspect_observation.py   # print one real observation, readable
+uv run python scripts/measure_odometry.py      # calibrate turning/movement -> configs/odometry.json
+```
+
 Closest check to the real scorer (needs Docker):
 
 ```bash

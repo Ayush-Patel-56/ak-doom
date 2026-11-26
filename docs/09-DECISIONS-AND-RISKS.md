@@ -13,7 +13,7 @@ Add a new row whenever we make or change a big choice. Never delete old rows; ma
 | D-01 | Use **rays + entities + vitals** as the main input, not raw pixels | The organisers say pixels waste ~90% of training on edge detection; rays are fast on CPU | Pixel-only CNN | ✅ Active |
 | D-02 | **PyTorch** over JAX | Team familiarity, simpler export, in the base image | JAX/Flax | ✅ Active |
 | D-03 | **Write our own recurrent PPO** | Innovation points; lets us add manager, curiosity and asymmetric critic | Stable-Baselines3 default (scores poorly by rule) | ✅ Active |
-| D-04 | **Mind map from odometry**, with a fallback to GRU + notebook only | A spatial memory is our USP. Velocity is given in the player's frame; turning is calibrated per turn press and corrected by ray matching. The fallback protects us if drift is too high. | Pure LSTM memory only | ✅ Active (contract confirms velocity frame) |
+| D-04 | **Mind map from odometry**, with a fallback to GRU + notebook only | A spatial memory is our USP. Phase 0 measured it: exact button-based turn model + friction-aware velocity formula gives 0.3% drift. The fallback stays in case big maps disagree. | Pure LSTM memory only | ✅ Active (measured) |
 | D-05 | **Landmark notebook** with attention | Tier 3 (keycard → door) needs long-term memory of specific objects | Hoping the GRU remembers | ✅ Active |
 | D-06 | **Manager/worker** with 5 named goals | Long levels need planning above button presses; easy to explain | Flat policy only (kept as ablation) | ✅ Active |
 | D-07 | **Entity attention** | Handles any number of enemies; gives explainable focus | Fixed top-K list | ✅ Active |
@@ -39,7 +39,7 @@ Add a new row whenever we make or change a big choice. Never delete old rows; ma
 | R-02 | **Overfitting** to training maps | 🟡 | 🔴 | Big varied map pool, randomisation, strict train/val/test split |
 | R-03 | Too slow (> 40 ms) | 🟢 | 🔴 | Speed test on every merge; small model; optional encoders can be switched off |
 | R-04 | Crash on hidden maps | 🟡 | 🔴 | Safety wrapper; chaos tests; NaN cleaning |
-| R-05 | Odometer drifts | 🟡 | 🟡 | Mind map stores "age" so old info fades; fallback D-04 |
+| R-05 | Odometer drifts | 🟢 | 🟡 | Measured 0.3% drift on the test map; re-check on big maps; mind map stores "age" so old info fades; fallback D-04 |
 | R-06 | Training-time cheats leak into habits | 🟡 | 🟡 | Final stages use the normal game; Mini-League uses the normal game only |
 | R-07 | Exit not visible in rays/entities (**confirmed** by the contract) | 🔴 | 🔴 | RGB encoder + "exit in view?" helper task (D-15) |
 | R-08 | Repo > 1 GB | 🟢 | 🔴 | LFS only for the champion + a curated set of WADs; generated maps are git-ignored |
@@ -50,5 +50,6 @@ Add a new row whenever we make or change a big choice. Never delete old rows; ma
 | R-13 | Contract changes during the event (it's `1.0.0-draft`) | 🟢 | 🟡 | Only patch fixes are allowed; watch announcements and pull official fixes into `env/` via PR |
 | R-14 | Key and locked-door **colours are not given** | 🔴 | 🟡 | RGB colour guess; otherwise try every locked door after any key pickup |
 | R-15 | `USE` spam makes doors bounce | 🟡 | 🟡 | Previous-action input + door-bounce penalty in training |
-| R-16 | Turning isn't observed, so heading drifts | 🟡 | 🟡 | Calibrate turn per press with `privileged_state()`, correct with ray matching, fall back to D-04 |
+| R-16 | Turning isn't observed, so heading drifts | 🟢 | 🟡 | ✅ Solved in Phase 0: turn per step is exact from our buttons (heading error < 0.06°) |
+| R-18 | The first step after `reset()` is ignored by the engine | 🔴 | 🟢 | Odometer skips it; nothing to learn from that step |
 | R-17 | Entities only cover the 90° view | 🟡 | 🟢 | Rays cover 360° (they report enemies too); GRU remembers enemies that left the view |
