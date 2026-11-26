@@ -31,6 +31,7 @@ from pathlib import Path  # noqa: E402
 import numpy as np  # noqa: E402
 
 from doom_env import action_space, limits, make_env, observation_space  # noqa: E402
+from league_record import file_sha256, fingerprint, map_set_of  # noqa: E402
 from map_spec import REPO, parse_map  # noqa: E402
 
 sys.path.insert(0, str(REPO))
@@ -159,9 +160,14 @@ def main() -> int:
     name = args.name or f"{'custom' if args.map else args.split}-{datetime.now():%Y%m%d-%H%M%S}"
     out = REPO / "runs" / "eval" / f"{name}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps({"total": total, "by_tier": by_tier, "buckets": buckets, "runs": rows}, indent=2) + "\n",
-                   encoding="utf-8")
-    print(f"Saved {out.relative_to(REPO)}")
+    # What this result covers, so totals are only ever compared on the same maps (scripts/league_record.py).
+    weights = args.weights or (REPO / "submission" / "weights" / "champion.pt")
+    entries = map_set_of(rows)
+    record = {"total": total, "by_tier": by_tier, "buckets": buckets, "policy": agent.policy_name,
+              "weights_sha256": file_sha256(weights) if agent.policy_name.startswith("brain") else None,
+              "map_set_fingerprint": fingerprint(entries), "map_set": entries, "runs": rows}
+    out.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+    print(f"Saved {out.relative_to(REPO)}  (map set {record['map_set_fingerprint']}: {len(entries)} map x seed runs)")
     return 0
 
 

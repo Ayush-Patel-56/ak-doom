@@ -6,15 +6,23 @@
     "updates": 2930,
     "stage": 2
   },
-  "mini_league": {
-    "file": "p2-final-6M-val.json",
-    "total": 2021.28,
-    "by_tier": {
-      "1": 498.07,
-      "2": 1390.35,
-      "3": 231.74,
-      "4": -98.88
-    },
-    "crashes": 0
-  }
+  "results": {
+    "8fda02b8a085ba01": {
+      "file": "champion1-val24.json",
+      "total": 2511.03,
+      "by_tier": {
+        "1": 498.07,
+        "2": 1390.35,
+        "3": 721.49,
+        "4": -98.88
+      },
+      "crashes": 0,
+      "map_set_fingerprint": "8fda02b8a085ba01",
+      "maps": 24,
+      "runs": 48,
+      "weights_sha256": "3196b6098ed359f2dfd47eca85ad4105272834e3703bea4fe553236e56d37093"
+    }
+  },
+  "weights_sha256": "3196b6098ed359f2dfd47eca85ad4105272834e3703bea4fe553236e56d37093",
+  "note": "Original export score 2021.28 was on the old 20-map val set (no map-set fingerprint); only the per-map-set 'results' are comparable."
 }
