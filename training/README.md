@@ -21,6 +21,9 @@ the vanilla engine through the official `doom_env` wrapper, so train on `doom_en
 
 Outputs go to `runs/<name>/` (git-ignored): `latest.pt`, `step_<n>.pt`, `metrics.jsonl`, TensorBoard events
 (`uv run tensorboard --logdir runs`). Memory ablation: `uv run python scripts/ablation.py run --steps 2000000`.
+Add memory to a trained brain without starting over: `--warm-start <brain without memory>` (new memory inputs start at
+zero, so it plays exactly like that brain at step 0); `--puzzle-share` sets the key-puzzle share of stage 3 (rest = replay).
+
 Long runs: `--resume` continues `runs/<name>/` (weights, optimizer, reward scale, step count); maps are reused for
 `--switch-every 8` episodes; a map that fails to load is skipped; on Windows the workers ask for 1 ms timer
 resolution (~3× faster training here).

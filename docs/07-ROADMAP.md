@@ -71,6 +71,7 @@ flowchart LR
 - [x] Landmark notebook (slots + attention from the GRU state): `smriti/memory/notebook.py`, `NotebookReader`
 - [x] Curriculum Stage 3 (key & door puzzles): `training/curriculum.py`, new `keynear` layout (key near spawn → far `keydoor` over the run, 20% replay), 4 + 4 held-out `t3-keynear` val/test maps
 - [x] Ablation pipeline: with vs without memory (`scripts/ablation.py`, `--memory on|off`); first short CPU run logged in `docs/experiments.md`. A long GPU run is still needed for the *Done when* criterion
+- [ ] Long Phase 3 training run: `p3-mem-ws-v1` (memory on, warm-started from champion #1, 4.5M steps, 40% replay); then Mini-League vs the champion and export if better
 
 **Done when:** the agent picks up keycards and opens matching locked doors on held-out Tier 3 maps, and the ablation shows memory helps.
 
