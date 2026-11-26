@@ -57,13 +57,16 @@ ak-doom/
 │   ├── rewards.py                 reward calculator (uses privileged_state)
 │   ├── curiosity.py               novelty bonus / RND
 │   ├── curriculum.py              stage logic
-│   └── critic.py                  asymmetric critic (training only)
+│   ├── critic.py                  asymmetric critic (training only)
+│   ├── scorer.py                  Mini-League scorer ✅
+│   └── mapgen/                    map generator ✅: udmf.py (drawing → WAD), layouts.py (arena/maze/rooms/keydoor)
 │
 ├── maps/
 │   ├── two_rooms.wad              🟦 template test map
-│   ├── generators/                🟩 OBLIGE configs, our map scripts
+│   ├── catalog.json               🟩 every map: sectors, doors, keys, tier, split
 │   ├── lists/{train,val,test}.txt 🟩 which maps are in which split
-│   └── curated/                   🟩 small hand-picked WAD set (Git LFS)
+│   ├── curated/{val,test}/        🟩 fixed generated eval maps (Git LFS)
+│   └── generated/                 🟩 training maps from scripts/generate_maps.py (git-ignored)
 │
 ├── configs/                       🟩 YAML per stage/experiment
 ├── scripts/                       🟩 entry points
@@ -71,6 +74,7 @@ ak-doom/
 │   ├── map_spec.py                "wad:MAP01" parsing, "@vizdoom/..." portable paths
 │   ├── build_map_catalog.py       map library + train/val/test lists
 │   ├── evaluate.py                Mini-League
+│   ├── generate_maps.py           procedural maps → maps/curated or maps/generated
 │   ├── benchmark_latency.py       speed vs. official limits
 │   ├── inspect_observation.py, measure_odometry.py   (Phase 0 tools)
 │   └── (later) train.py, record_video.py, export_champion.py

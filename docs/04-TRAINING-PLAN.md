@@ -99,13 +99,24 @@ flowchart LR
 | **OBLIGE / ObAddon** (procedural generator) | Unlimited full levels with keys, locked doors and exits | ⭐ Best source of variety |
 | **Freedoom Phase 1 & 2** | Classic hand-made levels | Free, matches the eval IWAD |
 | **Community WADs** | Many styles | Check licences |
-| **Our own small maps** | Targeted puzzles (key/door, arenas) | Made with a map editor or a script |
+| **Our own procedural maps** ✅ | Arenas (T1), mazes (T2), doored rooms (T2), key-door puzzles (T3), unlimited and reproducible from a seed | `training/mapgen/` + `scripts/generate_maps.py` (see below) |
 | **Template test map** | `maps/two_rooms.wad` | For smoke tests only (not an eval map) |
 
 **Map rules from the contract:**
 - `make_env("my.wad", "MAP07")` loads any ViZDoom-compatible WAD (Doom, Boom, Hexen, UDMF).
 - Skip maps with **more than 2,048 sectors**: rays and line-of-sight break beyond that, and evaluation maps stay under the limit.
 - Dry-run any map with `python validate.py --map path/to/my.wad:MAP01`.
+
+### Our map generator (`training/mapgen/`)
+
+1. **Text drawing → map** (`udmf.py`): one character per 64-unit cell (`#` wall, `.` floor, `P` start, `D` door, `R/B/Y` locked door, `r/b/y` keycard, `X` exit pad, `z s i d` monsters, `h a A S` items). It writes UDMF, the format of the template's own maps; doors face outward so the engine and `doom_env` both recognise them.
+2. **Seeded layouts** (`layouts.py`): `arena`, `maze`, `rooms`, `keydoor`. In `keydoor` the exit room is a leaf behind a locked door and the key sits in another branch (not next to the door when possible), so the agent must **remember the door and backtrack**.
+3. **Seed ranges never overlap:** training 0–99,999 (`maps/generated/`, git-ignored, rebuild any time); val 100,000+ and test 200,000+ (`maps/curated/val|test/`, committed via Git LFS, 4 maps per kind each).
+
+```bash
+uv run python scripts/generate_maps.py --set train --count 50 --check   # training maps
+uv run python scripts/build_map_catalog.py                              # refresh maps/lists/
+```
 
 ### Split (never mix these!)
 

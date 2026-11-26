@@ -11,7 +11,10 @@ whether there is an exit line. A simple heuristic sorts maps into the 4 evaluati
 
 Split rules: within each tier, maps are ordered by a stable hash; every 10th goes to test, the next
 to val, the rest to train (at least 1 val + 1 test per tier when the tier has >= 3 eligible maps).
-Maps without an exit, scenarios and the template test map are always train-only.
+Maps without an exit, scenarios, generated maps and the template test map are always train-only.
+Maps under maps/curated/<train|val|test>/ are pinned to that split. Generated maps carry their tier in
+the file name (t3-keydoor-100002.wad). maps/generated/ is git-ignored, so it is only listed with
+--include-generated (training reads that folder directly).
 
     uv run python scripts/build_map_catalog.py            # writes maps/catalog.json + maps/lists/*.txt
 """
@@ -21,6 +24,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import struct
 from collections import defaultdict
 from pathlib import Path
@@ -46,11 +50,14 @@ EXIT_SPECIALS = {11, 51, 52, 124, 197, 198}  # normal + secret exits (Doom/Boom)
 HEXEN_EXIT_SPECIALS = {74, 75, 243, 244}  # Teleport_NewMap, Teleport_EndGame, Exit_Normal, Exit_Secret (ZDoom/UDMF)
 
 
-def sources() -> list[tuple[str, str]]:
+def sources(include_generated: bool = False) -> list[tuple[str, str]]:
     """(portable wad reference, source name)."""
     out = [(f"{VIZDOOM_PREFIX}freedoom2.wad", "freedoom2")]
     out += [(f"{VIZDOOM_PREFIX}scenarios/{name}.wad", "vizdoom-scenario") for name in SCENARIOS]
-    for folder, source in (("maps", "template"), ("maps/curated", "curated"), ("maps/generated", "generated")):
+    folders = [("maps", "template"), ("maps/curated", "curated")]
+    if include_generated:  # git-ignored, so off by default: committed lists must only name committed files
+        folders.append(("maps/generated", "generated"))
+    for folder, source in folders:
         base = REPO / folder
         if base.is_dir():
             pattern = "*.wad" if folder == "maps" else "**/*.wad"
@@ -97,6 +104,10 @@ def udmf_stats(text: str, has_behavior: bool) -> dict:
     return {"monsters": monsters, "keys": keys, "exit_lines": exits if exits or not has_behavior else None}
 
 
+TIER_HINT = re.compile(r"^t([1-4])-")
+SPLIT_FOLDERS = ("train", "val", "test")  # maps/curated/<split>/ pins a map to that split
+
+
 def tier_for(m: dict) -> int:
     """Heuristic tier, mirroring docs/EVALUATION.md: 1 combat, 2 multi-room, 3 key puzzle, 4 gauntlet."""
     if m["locked_doors"] > 0 and (m.get("keys") or 0) > 0:
@@ -125,7 +136,8 @@ def describe(ref: str, source: str, map_name: str) -> dict:
         m.update(doom_format_stats(lumps))
     else:  # Hexen binary format: thing/line layout differs, not parsed
         m.update({"monsters": None, "keys": None, "exit_lines": None})
-    m["tier"] = tier_for(m)
+    hint = TIER_HINT.match(Path(ref).name)  # generated maps carry their intended tier: t3-keydoor-100002.wad
+    m["tier"] = int(hint.group(1)) if hint else tier_for(m)
     m["episode_ticks"] = TIER_TICKS[m["tier"]]
     m["has_exit"] = bool(m["exit_lines"]) if m["exit_lines"] is not None else None
     m["usable"] = m["sectors"] <= MAX_SECTORS
@@ -139,9 +151,12 @@ def stable_hash(text: str) -> int:
 def assign_splits(maps: list[dict]) -> None:
     by_tier: dict[int, list[dict]] = defaultdict(list)
     for m in maps:
+        pinned = next((s for s in SPLIT_FOLDERS if f"/{s}/" in m["id"]), None)
         if not m["usable"]:
             m["split"] = "excluded"
-        elif m["source"] in ("vizdoom-scenario", "template") or m["has_exit"] is False:
+        elif pinned and m["source"] == "curated":
+            m["split"] = pinned
+        elif m["source"] in ("vizdoom-scenario", "template", "generated") or m["has_exit"] is False:
             m["split"] = "train"  # drills and exit-less maps can't be scored like evaluation maps
         else:
             by_tier[m["tier"]].append(m)
@@ -156,10 +171,11 @@ def assign_splits(maps: list[dict]) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--out-dir", type=Path, default=REPO / "maps")
+    ap.add_argument("--include-generated", action="store_true", help="also list maps/generated/ (local use only)")
     args = ap.parse_args()
 
     maps: list[dict] = []
-    for ref, source in sources():
+    for ref, source in sources(args.include_generated):
         path = resolve_wad(ref)
         if not Path(path).is_file():
             print(f"skip (missing): {ref}")
