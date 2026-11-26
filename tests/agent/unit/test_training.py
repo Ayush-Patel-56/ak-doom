@@ -118,3 +118,47 @@ def test_env_pool_and_one_ppo_update(tmp_path):
         assert extra["steps"] == 64
     finally:
         pool.close()
+
+
+def test_a_bad_map_is_skipped_instead_of_ending_training(tmp_path):
+    """One broken map (missing file, bad layout) must not crash a multi-hour run: workers pick another."""
+    from training.curriculum import Stage
+    from training.envpool import EnvPool
+
+    flaky = Stage("flaky", {"maps/does-not-exist.wad:MAP01": 0.8, "gen:arena": 0.2})
+    seed = 3
+    # Same seeds the pool gives its workers (seed * 1000 + i): make sure the broken map really comes up first.
+    firsts = [MapSampler(flaky, random.Random(seed * 1000 + i), tmp_path / f"s{i}").next()[3] for i in range(2)]
+    assert "does-not-exist" in firsts
+    pool = EnvPool(2, stage=flaky, seed=seed, episodes_per_map=1)
+    try:
+        feats = pool.reset()  # a worker whose first map is missing must still return an observation
+        assert feats["ray_dist"].shape == (2, 64)
+        for _ in range(50):
+            pool.step(np.zeros((2, 9), np.int8))
+    finally:
+        pool.close()
+
+
+def test_resume_sends_the_current_stage_to_fresh_workers(tmp_path):
+    """Regression: after --resume the trainer knew it was in stage 2 but never told the new workers."""
+    from training.ppo import PPOConfig, PPOTrainer
+
+    class FakePool:
+        def __init__(self):
+            self.sent = []
+
+        def set_stage(self, stage):
+            self.sent.append(stage)
+
+    pool = FakePool()
+    cfg = PPOConfig(num_envs=2, rollout=32, seq_len=16, total_steps=0, torch_threads=1)
+    trainer = PPOTrainer(pool, cfg, tmp_path / "run", log=lambda m: None)
+    trainer.steps, trainer.stage = 3_000_000, 2  # as restored by resume()
+    cfg.total_steps = 3_000_001
+    trainer.collect = lambda: (_ for _ in ()).throw(StopIteration)  # stop right after the stage check
+    try:
+        trainer.train([(0, 1), (2_000_000, 2)])
+    except (StopIteration, RuntimeError):
+        pass
+    assert pool.sent == [2]

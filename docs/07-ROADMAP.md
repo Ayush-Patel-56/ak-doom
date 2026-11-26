@@ -54,10 +54,11 @@ flowchart LR
 - [x] Ray, entity (attention) and vitals encoders (`submission/smriti/brain.py`)
 - [x] GRU memory (256)
 - [x] Simple flat policy (6 action groups → 9 buttons) + critic; `BrainPolicy` in the agent, random fallback without weights
-- [ ] Our recurrent PPO + parallel game runner
-- [ ] Reward calculator (§4.2) + count-based curiosity
-- [ ] Curriculum Stage 1 (combat) and Stage 2 (navigation)
-- [ ] TensorBoard logging + checkpoint → Mini-League → champion export
+- [x] Our recurrent PPO + parallel game runner (`training/ppo.py`, `training/envpool.py`)
+- [x] Reward calculator (§4.2) + count-based curiosity (`training/rewards.py`)
+- [x] Curriculum Stage 1 (combat) and Stage 2 (navigation) (`training/curriculum.py`, maps generated on the fly)
+- [x] TensorBoard logging + checkpoint → Mini-League → champion export (`scripts/train.py`, `scripts/export_champion.py`)
+- [ ] First champion exported (after the 6M-step run `p2-stage12-v1` finishes)
 
 **Done when:** the champion clearly beats random on Tier 1 and Tier 2 validation maps and stays within the speed budget.
 

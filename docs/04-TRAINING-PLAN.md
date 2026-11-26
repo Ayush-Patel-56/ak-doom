@@ -11,20 +11,29 @@
 3. **PPO** (our learning algorithm) nudges the brain: *"do more of what led to good rewards, less of what led to bad ones"*. It takes small, safe steps so learning doesn't fall apart.
 4. Repeat millions of times.
 
-### Our PPO setup (starting values)
+### Our PPO setup (what `training/ppo.py` uses now)
 
 | Setting | Value | Meaning |
 |---------|-------|---------|
-| Parallel games | 16–64 | More games = faster data collection |
+| Parallel games | 16 (one process each) | More games = faster data collection |
 | Steps per game per round | 128 | How much each game plays before learning |
 | Memory sequence length | 32 | How many steps the GRU learns across |
 | Discount (γ) | 0.995 | How much the agent cares about the future (long levels → high) |
 | GAE λ | 0.95 | Smooths reward estimates |
 | Clip | 0.2 | Keeps updates small and safe |
-| Learning rate | 3e-4 → decays | Step size |
-| Entropy bonus | 0.01 → 0.001 | Encourages trying new things early |
+| Learning rate | 3e-4 | Step size (Adam) |
+| Epochs × minibatch | 4 × 16 sequences | How often each batch is reused |
+| Reward normalisation | on | Rewards scaled by the running std of returns |
+| Entropy bonus | 0.01 → 0.002 (linear) | Encourages trying new things early |
 
 We write PPO **ourselves** (not a default Stable-Baselines3 script). This is required for innovation points, and it lets us add the manager, the curiosity reward and the asymmetric critic.
+
+**Speed on our laptop (20 cores):** ~450–500 steps/s with 16 workers (≈1.7M steps/hour). Three fixes got us there:
+1. **Windows timer:** workers ask for 1 ms timer resolution (`timeBeginPeriod(1)`). Without it, lockstep stepping was ~10× slower (2 workers: 100 steps/s in total vs 600 for one).
+2. **Fewer map loads:** a map takes ~0.6 s to load and stalls every worker, so each map is reused for 16 episodes (`--episodes-per-map`).
+3. **2 PyTorch threads** in the main process, leaving cores for the 16 games.
+
+**Robustness:** a map that fails to build or load is skipped with a warning (fixed maps are dropped for that worker), so one bad map can't end a multi-hour run. `--resume` continues from `latest.pt` + `train_state.pt`.
 
 ---
 

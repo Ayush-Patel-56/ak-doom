@@ -246,10 +246,15 @@ class PPOTrainer:
                                                               "stages": stage_schedule}, indent=2))
         next_keep = (self.steps // keep_every_steps + 1) * keep_every_steps
         t_start, steps_start = time.time(), self.steps
+        pool_stage = None
         while self.steps < self.cfg.total_steps:
             stage = max(s for frm, s in stage_schedule if frm <= self.steps)
-            if stage != self.stage:
+            if stage != pool_stage:
+                # Always tell the workers on the first pass: after --resume self.stage is restored from the
+                # checkpoint, but freshly started workers still play the pool's initial stage.
                 self.pool.set_stage(stage)
+                pool_stage = stage
+            if stage != self.stage:
                 self.stage = stage
                 self.log(f"[step {self.steps:,}] stage -> {stage}")
             t0 = time.time()

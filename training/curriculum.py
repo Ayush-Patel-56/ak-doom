@@ -58,14 +58,23 @@ class MapSampler:
     def __init__(self, stage: Stage, rng: random.Random, tmp_dir: Path):
         self.stage, self.rng, self.tmp_dir = stage, rng, Path(tmp_dir)
         self.tmp_dir.mkdir(parents=True, exist_ok=True)
+        self.dropped: set[str] = set()
+        self.last_source: str | None = None
 
     def set_stage(self, stage: Stage) -> None:
         self.stage = stage
 
+    def drop(self, source: str) -> None:
+        """Stop using a fixed map that failed to load (generated maps just get a new seed next time)."""
+        if not source.startswith("gen:"):
+            self.dropped.add(source)
+
     def next(self) -> tuple[str, str, int, str]:
         """-> (wad path, map name, episode tick cap, label for logs)."""
-        sources, weights = zip(*self.stage.mix.items())
+        mix = {s: w for s, w in self.stage.mix.items() if s not in self.dropped} or self.stage.mix
+        sources, weights = zip(*mix.items())
         source = self.rng.choices(sources, weights=weights)[0]
+        self.last_source = source
         if source.startswith("gen:"):
             from training.mapgen import generate, write_map
 

@@ -25,7 +25,7 @@ for _p in (str(REPO), str(REPO / "submission"), str(REPO / "scripts")):
 
 from smriti.features import extract, stack  # noqa: E402
 
-from training.curriculum import STAGES, MapSampler  # noqa: E402
+from training.curriculum import STAGES, MapSampler, Stage  # noqa: E402
 from training.rewards import RewardCalculator, RewardConfig  # noqa: E402
 from training.scorer import ScoreTracker  # noqa: E402
 
@@ -40,26 +40,52 @@ def fine_timer() -> None:
         ctypes.windll.winmm.timeBeginPeriod(1)
 
 
-def _worker(conn, worker_id: int, stage_id: int, seed: int, reward_cfg: RewardConfig, tmp_dir: str,
+def _as_stage(stage: "int | Stage") -> Stage:
+    """Stages can be passed by number (training/curriculum.py) or as a Stage object (tests, experiments)."""
+    return stage if isinstance(stage, Stage) else STAGES[stage]
+
+
+MAP_ATTEMPTS = 8  # a bad map must never end a multi-hour run: try other maps first
+
+
+def _worker(conn, worker_id: int, stage, seed: int, reward_cfg: RewardConfig, tmp_dir: str,
             episodes_per_map: int) -> None:
     os.environ.setdefault("OMP_NUM_THREADS", "1")
     fine_timer()
     from doom_env import make_env
 
     rng = random.Random(seed)
-    sampler = MapSampler(STAGES[stage_id], rng, Path(tmp_dir) / f"w{worker_id}")
+    sampler = MapSampler(_as_stage(stage), rng, Path(tmp_dir) / f"w{worker_id}")
     rewards = RewardCalculator(reward_cfg)
     tracker = ScoreTracker()
     env, label, episodes_left = None, "", 0
     ep_return, ep_len = 0.0, 0
+
+    def open_next_map():
+        """Load the sampler's next map; skip (with a warning) any map that fails to build or load."""
+        nonlocal env, label
+        last_error = None
+        for _ in range(MAP_ATTEMPTS):
+            try:
+                wad, map_name, ticks, name = sampler.next()
+                env = make_env(wad, map_name, episode_ticks=ticks, render_buffers=False)
+                label = name
+                return
+            except Exception as exc:  # noqa: BLE001
+                last_error = exc
+                if sampler.last_source:
+                    sampler.drop(sampler.last_source)
+                print(f"[worker {worker_id}] skipping a map that failed to load: {type(exc).__name__}: {exc}",
+                      file=sys.stderr, flush=True)
+        raise RuntimeError(f"{MAP_ATTEMPTS} maps in a row failed to load") from last_error
 
     def start_episode():
         nonlocal env, label, episodes_left, ep_return, ep_len
         if env is None or episodes_left <= 0:
             if env is not None:
                 env.close()
-            wad, map_name, ticks, label = sampler.next()
-            env = make_env(wad, map_name, episode_ticks=ticks, render_buffers=False)
+                env = None
+            open_next_map()
             episodes_left = episodes_per_map
         episodes_left -= 1
         obs, _ = env.reset(seed=rng.randrange(2**31))
@@ -97,7 +123,7 @@ def _worker(conn, worker_id: int, stage_id: int, seed: int, reward_cfg: RewardCo
                     feats = extract(obs, action)
                 conn.send((feats, r, done, info))
             elif cmd == "set_stage":
-                sampler.set_stage(STAGES[data])
+                sampler.set_stage(_as_stage(data))
                 episodes_left = 0  # switch map at the next episode
             elif cmd == "close":
                 break
@@ -110,7 +136,7 @@ def _worker(conn, worker_id: int, stage_id: int, seed: int, reward_cfg: RewardCo
 
 
 class EnvPool:
-    def __init__(self, num_envs: int, stage: int = 1, seed: int = 0, reward_cfg: RewardConfig | None = None,
+    def __init__(self, num_envs: int, stage: "int | Stage" = 1, seed: int = 0, reward_cfg: RewardConfig | None = None,
                  episodes_per_map: int = 2, tmp_dir: str | None = None):
         ctx = mp.get_context("spawn")
         self.tmp = tempfile.TemporaryDirectory(prefix="ak-doom-maps-") if tmp_dir is None else None
@@ -147,7 +173,7 @@ class EnvPool:
         infos = [r[3] for r in results]
         return feats, rewards, dones, infos
 
-    def set_stage(self, stage: int) -> None:
+    def set_stage(self, stage: "int | Stage") -> None:
         for c in self.conns:
             c.send(("set_stage", stage))
 
