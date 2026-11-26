@@ -26,7 +26,7 @@ def warm_start_from(target: SmritiNet, source: SmritiNet) -> dict[str, list[str]
     """Copy `source` weights into `target` (in place). Returns which parameters were copied / widened / new."""
     if target.cfg.hidden != source.cfg.hidden:
         raise ValueError("warm start needs the same hidden size")
-    for flag in ('use_mindmap', 'use_notebook', 'use_rgb', 'use_manager'):
+    for flag in ('use_mindmap', 'use_notebook', 'use_rgb', 'use_depth', 'use_manager'):
         if getattr(source.cfg, flag) and not getattr(target.cfg, flag):
             raise ValueError(f'warm start cannot remove {flag}')
 
@@ -36,6 +36,8 @@ def warm_start_from(target: SmritiNet, source: SmritiNet) -> dict[str, list[str]
             blocks.append(('map', cfg.map_out))
         if cfg.use_rgb:
             blocks.append(('rgb', cfg.rgb_out))
+        if cfg.use_depth:
+            blocks.append(('depth', cfg.depth_out))
         result, offset = {}, 0
         for name, width in blocks:
             result[name] = (offset, width)

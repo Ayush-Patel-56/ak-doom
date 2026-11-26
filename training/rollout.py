@@ -44,7 +44,7 @@ class Game:
     """One doom_env game + its memory, reward shaper and episode bookkeeping."""
 
     def __init__(self, sampler, use_mindmap: bool, use_notebook: bool, episode_ticks: int, switch_every: int, rng,
-                 use_rgb=False, goal_helpers=False, helper_weights=None):
+                 use_rgb=False, goal_helpers=False, helper_weights=None, use_depth=False):
         from smriti.memory import EpisodeMemory, Odometer
 
         self.sampler, self.ticks, self.switch_every, self.rng = sampler, episode_ticks, switch_every, rng
@@ -55,6 +55,7 @@ class Game:
 
         self.shaper = RewardShaper()
         self.use_rgb = use_rgb
+        self.use_depth = use_depth
         self.labeler = None
         from training.goal_rewards import GoalHelpers
         self.helpers = GoalHelpers(helper_weights) if goal_helpers else None
@@ -95,7 +96,10 @@ class Game:
         for _ in range(MAP_ATTEMPTS):
             try:
                 wad, map_name, kind = next(self.sampler)
-                self.env = make_env(wad, map_name, episode_ticks=self.ticks, render_buffers=self.use_rgb)
+                cap = self.ticks if self.ticks is not None else self.sampler.episode_ticks(wad, map_name)
+                self.env = make_env(wad, map_name, episode_ticks=cap,
+                                    render_buffers=self.use_rgb or self.use_depth)
+                self.current_episode_ticks = cap
                 self.wad, self.map, self.kind = wad, map_name, kind
                 if self.use_rgb:
                     from training.exit_visibility import ExitVisibility
@@ -119,7 +123,8 @@ class Game:
         info = None
         if done:
             info = {"map": Path(self.wad).name, "kind": self.kind, "ret": self.ret, "len": self.len,
-                    **self.shaper.stats(), 'helper_ret': self.helper_ret}
+                    **self.shaper.stats(), 'helper_ret': self.helper_ret,
+                    'map_name': self.map, 'episode_ticks': self.current_episode_ticks}
             self.episodes_on_map += 1
             feats = self.start()
         else:
@@ -133,7 +138,7 @@ class Game:
             self.env.close()
 
 
-def _worker(remote, wid, n_games, stage, seed, use_mindmap, use_notebook, episode_ticks, switch_every, kinds, use_rgb, goal_helpers, helper_weights, puzzle_share=None):
+def _worker(remote, wid, n_games, stage, seed, use_mindmap, use_notebook, episode_ticks, switch_every, kinds, use_rgb, goal_helpers, helper_weights, puzzle_share=None, use_depth=False, full_level_share=.8, catalog_path=None):
     _paths()
     os.environ.setdefault("OMP_NUM_THREADS", "1")
     fine_timer()
@@ -144,9 +149,11 @@ def _worker(remote, wid, n_games, stage, seed, use_mindmap, use_notebook, episod
         from smriti.policy.actions import groups_to_buttons
         from training.curriculum import MapSampler
 
-        sampler = MapSampler(stage, seed * 1009 + wid, kinds=kinds, puzzle_share=puzzle_share)
+        sampler = MapSampler(stage, seed * 1009 + wid, kinds=kinds, puzzle_share=puzzle_share,
+                             full_level_share=full_level_share,
+                             **({'catalog_path': catalog_path} if catalog_path is not None else {}))
         rng = np.random.default_rng(seed * 7919 + wid)
-        games = [Game(sampler, use_mindmap, use_notebook, episode_ticks, switch_every, rng, use_rgb, goal_helpers, helper_weights) for _ in range(n_games)]
+        games = [Game(sampler, use_mindmap, use_notebook, episode_ticks, switch_every, rng, use_rgb, goal_helpers, helper_weights, use_depth) for _ in range(n_games)]
         remote.send(("ok", stack([g.start() for g in games])))
         while True:
             cmd, data = remote.recv()
@@ -170,8 +177,9 @@ def _worker(remote, wid, n_games, stage, seed, use_mindmap, use_notebook, episod
 
 class VecGames:
     def __init__(self, workers: int, games_per_worker: int, stage: int, seed: int, use_mindmap: bool,
-                 use_notebook: bool, episode_ticks: int = 2100, switch_every: int = 2, kinds=None,
-                 use_rgb=False, goal_helpers=False, helper_weights=None, puzzle_share=None):
+                 use_notebook: bool, episode_ticks: int | None = None, switch_every: int = 2, kinds=None,
+                 use_rgb=False, goal_helpers=False, helper_weights=None, puzzle_share=None,
+                 use_depth=False, full_level_share=.8, catalog_path=None):
         ctx = mp.get_context("spawn")  # same on Linux, macOS and Windows
         self.k, self.n = games_per_worker, workers * games_per_worker
         self.remotes, self.procs = [], []
@@ -179,7 +187,8 @@ class VecGames:
             a, b = ctx.Pipe()
             p = ctx.Process(target=_worker, daemon=True,
                             args=(b, w, games_per_worker, stage, seed, use_mindmap, use_notebook, episode_ticks,
-                                  switch_every, kinds, use_rgb, goal_helpers, helper_weights, puzzle_share))
+                                  switch_every, kinds, use_rgb, goal_helpers, helper_weights, puzzle_share,
+                                  use_depth, full_level_share, catalog_path))
             p.start()
             self.remotes.append(a)
             self.procs.append(p)

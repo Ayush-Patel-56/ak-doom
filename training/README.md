@@ -45,8 +45,7 @@ uv run python -m training.train --stage 3 --memory on --manager on --rgb on \
 ```
 
 All new switches default off, preserving older architectures. This is a smoke configuration, not a
-recommended training budget for a champion. Depth, Stage 4 maps, and manager/curiosity ablations are
-separate roadmap work. The five goal identities are sampled from neural logits; no rules pick them.
+recommended training budget for a champion. Depth, Stage 4 maps, and manager/curiosity ablations are described below. The five goal identities are sampled from neural logits; no rules pick them.
 
 Worker PPO replays the exact stored goals. Manager PPO updates only on completed goal intervals,
 using discounted **extrinsic** rewards and the actual interval length (including terminal intervals).
@@ -90,3 +89,45 @@ Inference exposes `DoomAgent.active_goal` and `exit_probability` for future dash
 RND, helper rewards, label geometry, and their optimizer state are training-only. Export uses the
 existing inference checkpoint path; do not promote smoke weights to champion without held-out
 evaluation. See `configs/phase4-smoke.json` for measured smoke-run evidence and limitations.
+
+
+## Depth and full-level curriculum
+
+`--depth on` adds a small CNN over real rendered depth, downsampled to 1×60×80 and
+normalized from uint8 by 255. Values are renderer depth codes, not metric distances.
+RGB and depth independently enable image buffers in training and inference. Depth defaults off;
+use `--warm-start path.pt` to expand older models while preserving their initial outputs.
+
+`--stage 4 --full-level-share .8` samples usable **train** Tier 4 Freedoom2 levels from
+`maps/catalog.json`, with 20% generated-map replay. Catalog identities are checked for split
+aliases (including physical file aliases); invalid metadata, empty pools and missing assets fail.
+Full levels use catalog episode tick caps; replay uses 2100 ticks. `--ticks N` is an explicit
+smoke override. `--catalog PATH` selects a catalog. `curriculum.json` and checkpoints record the
+pool, catalog hash, mixture and tick override. Resume rejects changed provenance; Stage 4 and
+depth runs require saved provenance. Engine state itself is restarted on resume.
+
+```bash
+uv run python -m training.train --stage 4 --memory on --manager on --rgb on \
+  --depth on --rnd on --warm-start submission/weights/champion.pt --name stage4-depth
+```
+
+## Controlled Phase 4 comparisons
+
+```bash
+uv run python scripts/phase4_ablation.py run --name phase4-comparison \
+  --source submission/weights/champion.pt --depth on --rgb on
+```
+
+The full, no-manager, no-curiosity and Phase 3 architecture arms share initialization,
+training pool, seed and decision budget. Goal helpers are off in every arm to isolate the manager.
+The default 1,999,872 decisions is divisible by the default rollout batch; custom budgets must be
+exact multiples of T×workers×games. Repeat `--train-seed` for paired training seeds.
+Only held-out Tier 3/4 maps are evaluated. Strict checkpoint/config/budget validation prevents
+random fallback or mislabeled arms; raw episodes, errors, hashes and paired differences are saved
+under `runs/ablation/`. `--train-args` accepts only non-controlled training settings.
+`eval` supports explicit `--arm name=checkpoint` inputs; use `--help` for all options.
+
+`configs/depth-stage4-smoke.json` preserves measured pipeline evidence. Each arm trained for only
+512 decisions; all 16 shortened evaluation episodes had zero exits. This verifies execution,
+not policy effectiveness. Champion weights remain unchanged. Mac latency measurements are not
+an official pinned Linux scorer benchmark.

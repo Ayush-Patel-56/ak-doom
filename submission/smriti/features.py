@@ -2,7 +2,7 @@
 
 Phase 2 inputs (docs/03-SYSTEM-DESIGN.md §3.1): rays, visible entities, vitals and the previous
 action. Phase 3 adds the memory features (mind-map crop + notebook slots) from
-smriti/memory/episode.py; they are zeros when no memory is passed. Depth and RGB come later. Scaling to network-friendly ranges happens inside the network
+smriti/memory/episode.py; they are zeros when no memory is passed. Depth and RGB are extracted here too. Scaling to network-friendly ranges happens inside the network
 (smriti/brain.py) so this step stays a cheap, lossless repack into numpy arrays.
 """
 
@@ -35,6 +35,7 @@ FEATURE_SPEC: dict[str, tuple[tuple[int, ...], type]] = {
     "notes": ((NUM_SLOTS, NOTE_FEATURES), np.float32),
     "note_mask": ((NUM_SLOTS,), np.bool_),
     "rgb": ((3, 60, 80), np.uint8),
+    "depth": ((1, 60, 80), np.uint8),
 }
 MEMORY_KEYS = ("map", "notes", "note_mask")
 
@@ -60,6 +61,7 @@ def extract(obs: dict, prev_action: np.ndarray | None = None,
         shape, dtype = FEATURE_SPEC[k]
         out[k] = np.zeros(shape, dtype) if memory is None else np.asarray(memory[k], dtype)
     out['rgb'] = np.asarray(obs['rgb'], dtype=np.uint8)[::2, ::2].transpose(2, 0, 1).copy()
+    out['depth'] = np.asarray(obs['depth'], dtype=np.uint8)[None, ::2, ::2].copy()
     return out
 
 

@@ -245,3 +245,6 @@ The brain lives **inside `submission/`** so the validator and scorer can import 
 | `submission/agent.py` | `DoomAgent` + safety wrapper |
 
 See [Repo & Workflow](06-REPO-AND-WORKFLOW.md) for the full folder layout.
+
+
+Implemented depth path: `BrainConfig.use_depth` defaults off. A two-convolution CNN with adaptive pooling and a projection produces 32 features from real 1×60×80 uint8 renderer depth (scaled by 255, not metric distance). Named warm-start blocks preserve legacy outputs. The running model always executes its configured encoders; proposed adaptive encoder skipping above is not implemented.

@@ -1,7 +1,7 @@
 """Curriculum stages -> training map pools (docs/04-TRAINING-PLAN.md §4.4).
 
-Only Stage 3 (key & door puzzles) is defined in detail here (Phase 3). Earlier stages are listed so a
-Stage 3 run keeps replaying them (~20% of games) and does not forget navigation.
+Stage 4 samples catalog training full levels with earlier generated-map replay. Stage 3
+replays earlier stages (~20% of games) to retain navigation skills.
 
 Maps are generated on demand into maps/generated/ (git-ignored) from TRAINING seeds (< 100,000), so
 they never overlap the held-out val (100,000+) and test (200,000+) maps in maps/curated/.
@@ -12,9 +12,12 @@ linearly from `near_start` to `near_end` over the run; the rest of the puzzle sh
 
 from __future__ import annotations
 
+import hashlib
 import random
 from dataclasses import dataclass, replace
 from pathlib import Path
+
+from training.map_pool import DEFAULT_CATALOG, load_catalog_pool, map_identity
 
 REPO = Path(__file__).resolve().parent.parent
 GENERATED = REPO / "maps" / "generated"
@@ -33,6 +36,7 @@ class Stage:
 STAGES = {
     1: Stage("combat", {"arena": 1.0}),
     2: Stage("navigation", {"maze": 0.5, "rooms": 0.5}),
+    4: Stage("full levels", {"keydoor": 0.4, "rooms": 0.3, "maze": 0.15, "arena": 0.15}),
     3: Stage("key & door puzzles", {"rooms": 0.6, "maze": 0.2, "arena": 0.2}, puzzle_share=0.8),
 }
 
@@ -55,7 +59,29 @@ class MapSampler:
     """Picks (wad, map, kind) for the next game of a stage. progress() in [0, 1] moves the schedule."""
 
     def __init__(self, stage: int, seed: int, seeds_per_kind: int = 200, kinds: list[str] | None = None,
-                 puzzle_share: float | None = None):
+                 puzzle_share: float | None = None, full_level_share: float = 0.8,
+                 catalog_path=DEFAULT_CATALOG):
+        from training.mapgen import KINDS
+
+        if stage not in STAGES:
+            raise ValueError(f"unknown curriculum stage: {stage}")
+        if not 0 <= full_level_share <= 1:
+            raise ValueError("full_level_share must be in [0, 1]")
+        if not 0 < seeds_per_kind <= TRAIN_SEED_LIMIT:
+            raise ValueError("seeds_per_kind must use the training seed range")
+        if kinds is not None and (not kinds or any(k not in KINDS and k != 'full' for k in kinds)):
+            raise ValueError("invalid curriculum kinds")
+        if kinds and 'full' in kinds and stage != 4:
+            raise ValueError("full maps require stage 4")
+        self.stage_number = stage
+        self.full_level_share = full_level_share
+        self.catalog_path = Path(catalog_path)
+        self.full_pool = []
+        if stage == 4 and (kinds is None or 'full' in kinds):
+            self.full_pool = load_catalog_pool('train', [4], source='freedoom2', catalog_path=catalog_path)
+            if not self.full_pool:
+                raise ValueError("empty Stage 4 full-level training pool")
+        self._caps = {map_identity(r['id']): r['episode_ticks'] for r in self.full_pool}
         self.stage = STAGES[stage]
         if puzzle_share is not None:  # e.g. more replay when warm-starting from a brain that must not forget
             self.stage = replace(self.stage, puzzle_share=puzzle_share)
@@ -72,6 +98,8 @@ class MapSampler:
         if self.kinds:
             return self.rng.choice(self.kinds)
         s = self.stage
+        if self.stage_number == 4 and self.rng.random() < self.full_level_share:
+            return "full"
         if self.rng.random() < s.puzzle_share:
             return "keynear" if self.rng.random() < self.near_share() else "keydoor"
         kinds, weights = zip(*s.replay.items())
@@ -79,5 +107,50 @@ class MapSampler:
 
     def __next__(self) -> tuple[str, str, str]:
         kind = self.pick_kind()
+        if kind == 'full':
+            row = self.rng.choice(self.full_pool)
+            return row['resolved_wad'], row['map_name'], kind
         seed = self.rng.randrange(self.seeds_per_kind)
         return str(map_path(kind, seed)), "MAP01", kind
+
+    def episode_ticks(self, wad: str, map_name: str) -> int:
+        """Catalog cap for full levels, legacy 2100 ticks for generated replay."""
+        return self._caps.get(map_identity(f"{wad}:{map_name}"), 2100)
+
+    @property
+    def pool_manifest(self) -> dict:
+        """Serializable sampling provenance saved alongside experiment configs."""
+        return {
+            'stage': self.stage_number,
+            'catalog_sha256': hashlib.sha256(self.catalog_path.read_bytes()).hexdigest() if self.full_pool else None,
+            'full_level_share': self.full_level_share if self.stage_number == 4 else 0.0,
+            'kinds_override': list(self.kinds) if self.kinds else None,
+            'seeds_per_kind': self.seeds_per_kind,
+            'generated_seed_range': [0, self.seeds_per_kind],
+            'replay_weights': dict(self.stage.replay),
+            'puzzle_share': self.stage.puzzle_share,
+            'near_start': self.stage.near_start,
+            'near_end': self.stage.near_end,
+            'full_pool': [dict(id=r['id'], source=r['source'], tier=r['tier'],
+                               episode_ticks=r['episode_ticks'],
+                               canonical_identity=self._portable_identity(r['id'])) for r in self.full_pool],
+        }
+
+    def map_metadata(self, wad: str, map_name: str) -> dict | None:
+        """Copy full-level metadata for rollout diagnostics; replay has no catalog row."""
+        identity = map_identity(f"{wad}:{map_name}")
+        return next((dict(row) for row in self.full_pool if map_identity(row['id']) == identity), None)
+
+    @staticmethod
+    def _portable_identity(spec: str) -> list[str]:
+        """Canonical identity without machine-specific repository/package roots."""
+        from scripts.map_spec import vizdoom_dir
+
+        wad, name = map_identity(spec)
+        path = Path(wad)
+        for root, prefix in ((vizdoom_dir().resolve(), '@vizdoom/'), (REPO.resolve(), '')):
+            try:
+                return [prefix + path.relative_to(root).as_posix(), name]
+            except ValueError:
+                pass
+        return [wad, name]
