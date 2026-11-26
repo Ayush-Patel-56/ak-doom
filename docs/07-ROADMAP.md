@@ -98,7 +98,8 @@ The 512-decision smoke comparison had zero exits in every arm; improvement is no
 - [x] Broader training tiers and full training seed namespace
 - [x] Optional frozen legal-observation teacher distillation (privileged teacher deferred)
 - [x] Optional real-transition dynamics auxiliary task (terminal/reset masked)
-- [ ] Full §5.7 acceptance: stress/chaos tooling implemented; platform resource and policy-quality criteria still require evidence
+- [x] Automated stress & chaos coverage: `tests/agent/stress/` (4 brain types), upstream 20-map soak, and Phase 5 real-engine stress measurements in `configs/phase5-smoke.json`
+- [ ] Full §5.7 acceptance: platform resource and policy-quality criteria still require evidence; passing robustness tests does not establish gameplay skill
 - [ ] Official CPU speed acceptance <20 ms average; Mac measurements available, no unmeasured optimisation claimed
 
 **Done when (still open):** useful performance on locked **test maps** is close to validation under declared acceptance thresholds and sufficient samples. Development does not run test maps; future test use is ledgered, historical freshness is unknown.
