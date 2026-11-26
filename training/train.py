@@ -73,8 +73,15 @@ def build_args(argv=None):
     ap.add_argument('--rnd-coef', type=float, default=.01, help='initial intrinsic weight; linearly decays to zero')
     ap.add_argument('--exit-aux', type=float, default=.1)
     ap.add_argument('--full-level-share', type=float, default=None)
+    ap.add_argument('--teacher', type=Path)
+    ap.add_argument('--distill-coef', type=float, default=0.)
+    ap.add_argument('--distill-temperature', type=float, default=1.)
     ap.add_argument('--catalog', type=Path, default=REPO / 'maps/catalog.json')
     a = ap.parse_args(argv)
+    if not np.isfinite(a.distill_coef) or a.distill_coef < 0 or not np.isfinite(a.distill_temperature) or a.distill_temperature <= 0:
+        ap.error('distillation coefficient must be nonnegative and temperature positive (finite)')
+    if a.distill_coef and a.teacher is None:
+        ap.error('--distill-coef requires --teacher checkpoint')
     if a.ticks is not None and a.ticks < 1:
         ap.error('--ticks must be positive')
     if a.full_level_share is not None and (not np.isfinite(a.full_level_share) or not 0 <= a.full_level_share <= 1):
@@ -176,7 +183,8 @@ def main(argv=None) -> int:
             transferred = warm_start_from(net, source)
             print('[train] explicit warm start: ' + json.dumps(transferred), flush=True)
     net.eval()
-    cfg = PPOConfig(T=a.T, lr=a.lr, ent_coef=a.ent, epochs=a.epochs, minibatches=a.minibatches, exit_aux_coef=a.exit_aux)
+    cfg = PPOConfig(T=a.T, lr=a.lr, ent_coef=a.ent, epochs=a.epochs, minibatches=a.minibatches, exit_aux_coef=a.exit_aux,
+                    distill_coef=a.distill_coef, distill_temperature=a.distill_temperature)
     kinds = a.kinds.split(",") if a.kinds else None
     from training.curriculum import MapSampler
     curriculum = MapSampler(a.stage, a.seed, kinds=kinds, puzzle_share=a.puzzle_share,
@@ -187,12 +195,19 @@ def main(argv=None) -> int:
     ppo.training_config = dict(rnd=a.rnd, rnd_coef=a.rnd_coef, helpers=a.goal_helpers,
                                helper_weights=a.helper_weights, exit_aux=a.exit_aux)
 
+    teacher = None
+    if a.distill_coef:
+        from training.distill import FrozenTeacher
+        teacher = FrozenTeacher(a.teacher, n, dev, seed=a.seed+9187)
+        ppo.training_config['distillation'] = dict(teacher=teacher.provenance, coefficient=a.distill_coef,
+                                                  temperature=a.distill_temperature)
     ppo.curriculum_config = {'pool': curriculum, 'ticks_override': a.ticks}
     resumed = load_train_state(resume_state, ppo, n) if a.resume else None
-    vec = VecGames(a.workers, a.games, a.stage, a.seed, use_map, use_notes, episode_ticks=a.ticks,
-                   switch_every=a.switch_every, kinds=kinds, use_rgb=net.cfg.use_rgb,
+    vec = VecGames(a.workers, a.games, a.stage, a.seed, use_map or (teacher is not None and teacher.net.cfg.use_mindmap),
+                   use_notes or (teacher is not None and teacher.net.cfg.use_notebook), episode_ticks=a.ticks,
+                   switch_every=a.switch_every, kinds=kinds, use_rgb=net.cfg.use_rgb or (teacher is not None and teacher.net.cfg.use_rgb),
                    goal_helpers=a.goal_helpers == 'on', helper_weights=a.helper_weights, puzzle_share=a.puzzle_share,
-                   use_depth=net.cfg.use_depth, full_level_share=a.full_level_share, catalog_path=a.catalog)
+                   use_depth=net.cfg.use_depth or (teacher is not None and teacher.net.cfg.use_depth), full_level_share=a.full_level_share, catalog_path=a.catalog)
 
     print(f"[train] {name}: stage {a.stage}, memory {a.memory}, {n} games, "
           f"{sum(p.numel() for p in net.parameters()):,} params", flush=True)
@@ -218,6 +233,9 @@ def main(argv=None) -> int:
         while steps < a.steps:
             progress = steps / a.steps
             buf = Rollout(cfg.T, n)
+            if teacher is not None:
+                from smriti.policy.actions import NUM_LOGITS
+                buf.teacher_logits = np.zeros((cfg.T,n,NUM_LOGITS),np.float32)
             h0 = state.clone()
             t0 = time.time()
             rnd_inputs = []
@@ -231,6 +249,8 @@ def main(argv=None) -> int:
                 buf.exit_known[t] = feats['_exit_known']
                 label_counts[0] += int(feats['_exit_known'].sum())
                 label_counts[1] += int((feats['_exit_target'] * feats['_exit_known']).sum())
+                if teacher is not None:
+                    buf.teacher_logits[t] = teacher.logits(feats,starts).cpu().numpy()
                 choices, logp, v, state = ppo.act(feats, state, starts)
                 goals = ppo.goals.goal.cpu().numpy() if net.cfg.use_manager else None
                 if goals is not None:

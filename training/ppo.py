@@ -20,7 +20,7 @@ from smriti.brain import log_prob_and_entropy
 from smriti.features import empty, FEATURE_SPEC
 from smriti.hierarchy import GoalState, policy_step
 from training.manager import ManagerIntervals
-from smriti.policy.actions import NUM_GROUPS
+from smriti.policy.actions import NUM_GROUPS, NUM_LOGITS
 
 
 @dataclass
@@ -37,6 +37,8 @@ class PPOConfig:
     vf_coef: float = 0.5
     max_grad: float = 0.5
     exit_aux_coef: float = 0.1
+    distill_coef: float = 0.0
+    distill_temperature: float = 1.0
 
 
 def to_torch(d: dict, device) -> dict:
@@ -54,6 +56,7 @@ class Rollout:
         self.goals = np.zeros((T, N), np.int64)
         self.exit_target = np.zeros((T, N), np.float32)
         self.exit_known = np.zeros((T, N), np.bool_)
+        self.teacher_logits = None  # allocated only when distillation is enabled
         self.start = np.zeros((T, N), np.bool_)  # observation t is the first of an episode
 
 
@@ -164,6 +167,7 @@ class PPO:
         mb = max(1, N // c.minibatches)
         stats = []
         auxiliary = []
+        distill_losses = []
         self.net.train()
         for _ in range(c.epochs):
             np.random.shuffle(idx)
@@ -187,6 +191,14 @@ class PPO:
                     if mask.any():
                         exit_loss = torch.nn.functional.binary_cross_entropy_with_logits(aux['exit_logits'][mask], target[mask])
                 loss = pg + c.vf_coef * vl - ent * en.mean() + c.exit_aux_coef * exit_loss
+                distill_loss = torch.zeros((),device=dev)
+                if c.distill_coef:
+                    from training.distill import distillation_loss
+                    if buf.teacher_logits is None: raise ValueError('missing teacher rollout targets')
+                    target = torch.as_tensor(buf.teacher_logits[:,j.cpu().numpy()],device=dev)
+                    distill_loss = distillation_loss(logits,target,c.distill_temperature)
+                    loss = loss + c.distill_coef * distill_loss
+                distill_losses.append(float(distill_loss.detach()))
                 auxiliary.append(float(exit_loss.detach()))
                 self.opt.zero_grad(set_to_none=True)
                 loss.backward()
@@ -198,6 +210,7 @@ class PPO:
                 stats.append((pg.item(), vl.item(), en.mean().item(), kl, cf, float(gn)))
         self.net.eval()
         result = dict(zip(("pg", "vf", "ent", "kl", "clipfrac", "gradnorm"), np.mean(stats, 0).tolist()))
+        result['distill_loss'] = float(np.mean(distill_losses))
         result['exit_aux_loss'] = float(np.mean(auxiliary))
         result.update(self.update_manager(ent))
         return result
