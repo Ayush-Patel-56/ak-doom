@@ -167,19 +167,25 @@ def evaluation_pool(split, limit=None):
     return pool
 
 
-def evaluate_arm(weights, pool, seeds, expected, eval_ticks=None):
+def evaluate_arm(weights, pool, seeds, expected, eval_ticks=None, final_test=False, allow_repeat_test=False):
     import evaluate as league
     agent, cfg, extra = strict_agent(weights, expected)
     rows = []
-    for entry in pool:
-        meta = dict(entry)
-        if eval_ticks is not None:
-            meta['episode_ticks'] = eval_ticks
-        for seed in range(seeds):
-            row = league.play(agent, entry['spec'], meta, seed,
-                              render_buffers=cfg['use_rgb'] or cfg.get('use_depth',False))
-            row.update(map=entry['spec'], seed=seed, tier=entry['tier'])
-            rows.append(row)
+    from scripts.test_use import reserve_test_use, finish_test_use
+    token = reserve_test_use([entry['spec'] for entry in pool], weights,
+                             final_test=final_test, allow_repeat=allow_repeat_test)
+    try:
+        for entry in pool:
+            meta = dict(entry)
+            if eval_ticks is not None:
+                meta['episode_ticks'] = eval_ticks
+            for seed in range(seeds):
+                row = league.play(agent, entry['spec'], meta, seed,
+                                  render_buffers=cfg['use_rgb'] or cfg.get('use_depth',False))
+                row.update(map=entry['spec'], seed=seed, tier=entry['tier'])
+                rows.append(row)
+    finally:
+        finish_test_use(token, status='completed' if len(rows)==len(pool)*seeds and not any(r.get('stopped') for r in rows) else 'partial')
     return dict(checkpoint=str(weights), sha256=digest(weights), config=cfg, training=extra, rows=rows)
 
 
@@ -213,6 +219,8 @@ def parser():
         p = subs.add_parser(mode, allow_abbrev=False)
         p.add_argument('--name', default=time.strftime('phase4-%Y%m%d-%H%M%S'))
         p.add_argument('--split', choices=['val','test'], default='val')
+        p.add_argument('--final-test', action='store_true')
+        p.add_argument('--allow-repeat-test', action='store_true')
         p.add_argument('--seeds', type=int, default=3)
         p.add_argument('--rgb', choices=['on','off'], default='on')
         p.add_argument('--depth', choices=['on','off'], default='off')
@@ -319,7 +327,8 @@ def main(argv=None):
                     checkpoint=str(weights), sha256=digest(weights),
                     requested_decisions=a.steps, actual_decisions=checkpoint_extra.get('steps'))
                 validate_checkpoint_budget(checkpoint_extra, a.steps)
-            result = evaluate_arm(weights,pool,a.seeds,configs[arm],a.eval_ticks)
+            result = evaluate_arm(weights,pool,a.seeds,configs[arm],a.eval_ticks,
+                                  final_test=a.final_test, allow_repeat_test=a.allow_repeat_test)
             results[label] = result
             errors.extend(episode_errors(label,result['rows']))
             if seed is not None:
