@@ -88,6 +88,11 @@ class SafetyGuard:
                 return template.copy()
             if arr.dtype.kind == "f":
                 arr = np.nan_to_num(arr, nan=0.0, posinf=0.0, neginf=0.0)
+            if arr.dtype.kind in 'fiu' and template.dtype.kind in 'fiu':
+                bounds = np.finfo(template.dtype) if template.dtype.kind == 'f' else np.iinfo(template.dtype)
+                # Replace unrepresentable values before casting; never create inf or integer wraparound.
+                upper = np.nextafter(float(bounds.max), 0.) if arr.dtype.kind == 'f' and template.dtype.kind in 'iu' and template.dtype.itemsize == 8 else bounds.max
+                arr = np.where((arr < bounds.min) | (arr > upper), 0, arr)
             return arr.astype(template.dtype, copy=False)
         except Exception:  # noqa: BLE001
             return template.copy()
