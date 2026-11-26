@@ -63,10 +63,16 @@ class BrainConfig:
     goal_dim: int = 16
     use_rgb: bool = False
     rgb_out: int = 64
+    use_depth: bool = False
+    depth_out: int = 32
 
     def __post_init__(self):
-        if self.goal_interval < 1 or self.goal_dim < 1 or self.rgb_out < 1:
+        if self.goal_interval < 1 or self.goal_dim < 1 or self.rgb_out < 1 or self.depth_out < 1:
             raise ValueError('goal interval and feature sizes must be positive')
+
+    @property
+    def uses_pixels(self) -> bool:
+        return self.use_rgb or self.use_depth
 
     @property
     def uses_memory(self) -> bool:
@@ -195,6 +201,13 @@ class SmritiNet(nn.Module):
                 nn.Linear(32 * 3 * 4, c.rgb_out), nn.ReLU())
             self.exit_head = nn.Linear(c.rgb_out, 1)
             fuse_in += c.rgb_out
+        if c.use_depth:
+            self.depth = nn.Sequential(
+                nn.Conv2d(1, 8, 5, stride=2, padding=2), nn.ReLU(),
+                nn.Conv2d(8, 16, 3, stride=2, padding=1), nn.ReLU(),
+                nn.AdaptiveAvgPool2d((3, 4)), nn.Flatten(),
+                nn.Linear(16 * 3 * 4, c.depth_out), nn.ReLU())
+            fuse_in += c.depth_out
         self.fuse = nn.Sequential(nn.Linear(fuse_in, c.hidden), nn.ReLU())
         if c.use_notebook:
             self.notebook = NotebookReader(c)
@@ -225,6 +238,8 @@ class SmritiNet(nn.Module):
         visual = self.rgb(x['rgb'].float() / 255.0) if self.cfg.use_rgb else None
         if visual is not None:
             parts.append(visual)
+        if self.cfg.use_depth:
+            parts.append(self.depth(x['depth'].float() / 255.0))
         fused = self.fuse(torch.cat(parts, dim=-1))
         return (fused, visual) if return_visual else fused
 

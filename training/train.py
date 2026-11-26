@@ -38,7 +38,7 @@ from training.rollout import VecGames, fine_timer  # noqa: E402
 
 def build_args(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--stage", type=int, default=3, choices=[1, 2, 3])
+    ap.add_argument("--stage", type=int, default=3, choices=[1, 2, 3, 4])
     ap.add_argument("--memory", choices=["on", "off", "map", "notebook"], default="on",
                     help="on = mind map + notebook; off = GRU only (ablation); map / notebook = one of them")
     ap.add_argument("--kinds", help="comma list of map kinds overriding the stage mix (smoke tests)")
@@ -50,7 +50,7 @@ def build_args(argv=None):
     ap.add_argument("--minibatches", type=int, default=4)
     ap.add_argument("--lr", type=float, default=3e-4)
     ap.add_argument("--ent", type=float, default=0.01, help="entropy bonus at start (decays to ent/10)")
-    ap.add_argument("--ticks", type=int, default=2100, help="episode tick cap")
+    ap.add_argument("--ticks", type=int, default=None, help="explicit tick override; default: catalog cap for full levels, 2100 for replay")
     ap.add_argument("--device", default="cpu")
     ap.add_argument("--init", type=Path, help="start from this checkpoint (must have the same memory config)")
     ap.add_argument("--warm-start", type=Path,
@@ -66,14 +66,20 @@ def build_args(argv=None):
     ap.add_argument("--switch-every", type=int, default=8,
                     help="episodes per map before loading a new one (a map load stalls every game ~0.6 s)")
     ap.add_argument("--resume", action="store_true", help="continue runs/<name> from latest.pt + train_state.pt")
-    for flag in ('manager', 'rgb', 'rnd', 'goal-helpers'):
+    for flag in ('manager', 'rgb', 'depth', 'rnd', 'goal-helpers'):
         ap.add_argument('--' + flag, choices=['on', 'off'], default='off')
     ap.add_argument('--goal-interval', type=int, default=8)
     ap.add_argument('--helper-weights', type=json.loads, help='JSON object overriding goal helper weights')
     ap.add_argument('--rnd-coef', type=float, default=.01, help='initial intrinsic weight; linearly decays to zero')
     ap.add_argument('--exit-aux', type=float, default=.1)
+    ap.add_argument('--full-level-share', type=float, default=.8)
+    ap.add_argument('--catalog', type=Path, default=REPO / 'maps/catalog.json')
     a = ap.parse_args(argv)
-    if any(getattr(a, k) < 1 for k in ('workers','games','steps','T','epochs','minibatches','threads','goal_interval','save_every','switch_every','ticks')):
+    if a.ticks is not None and a.ticks < 1:
+        ap.error('--ticks must be positive')
+    if not np.isfinite(a.full_level_share) or not 0 <= a.full_level_share <= 1:
+        ap.error('--full-level-share must be in [0, 1]')
+    if any(getattr(a, k) < 1 for k in ('workers','games','steps','T','epochs','minibatches','threads','goal_interval','save_every','switch_every')):
         ap.error('counts and goal interval must be positive')
     if a.goal_helpers == 'on' and a.manager != 'on':
         ap.error('goal helpers require --manager on')
@@ -105,6 +111,7 @@ def save_train_state(path: Path, ppo: PPO, steps: int, it: int, next_save: int) 
                 "manager_opt": ppo.manager_opt.state_dict() if ppo.manager_opt else None,
                 "rnd": ppo.rnd.state_dict() if ppo.rnd else None,
                 "training_config": ppo.training_config,
+                "curriculum_config": ppo.curriculum_config,
                 "torch_rng": torch.get_rng_state(), "numpy_rng": np.random.get_state(),
                 "steps": steps, "it": it, "next_save": next_save}, tmp)
     tmp.replace(path)
@@ -116,6 +123,11 @@ def load_train_state(path: Path, ppo: PPO, n_games: int) -> dict:
     legacy_config = dict(rnd='off', rnd_coef=.01, helpers='off', helper_weights=None, exit_aux=.1)
     if (saved_config if saved_config is not None else legacy_config) != ppo.training_config:
         raise ValueError('--resume training feature/reward config differs from saved run')
+    if 'curriculum_config' in st and st['curriculum_config'] != ppo.curriculum_config:
+        raise ValueError('--resume curriculum/tick configuration differs from saved run')
+    needs_provenance = ppo.net.cfg.use_depth or ppo.curriculum_config['pool']['stage'] == 4
+    if 'curriculum_config' not in st and needs_provenance:
+        raise ValueError('Stage 4/depth resume requires saved curriculum provenance')
     ppo.opt.load_state_dict(st["opt"])
     if ppo.manager_opt is not None:
         ppo.manager_opt.load_state_dict(st['manager_opt'])
@@ -148,11 +160,12 @@ def main(argv=None) -> int:
             raise SystemExit(f"--resume: no latest.pt + train_state.pt in {out}")
         a.init = out / "latest.pt"
     requested = BrainConfig(use_mindmap=use_map, use_notebook=use_notes,
-                            use_manager=a.manager == 'on', use_rgb=a.rgb == 'on', goal_interval=a.goal_interval)
+                            use_manager=a.manager == 'on', use_rgb=a.rgb == 'on', use_depth=a.depth == 'on',
+                            goal_interval=a.goal_interval)
     transferred = None
     if a.init:
         net, _ = load_checkpoint(a.init, dev)
-        flags = ('use_mindmap', 'use_notebook', 'use_manager', 'use_rgb', 'goal_interval')
+        flags = ('use_mindmap', 'use_notebook', 'use_manager', 'use_rgb', 'use_depth', 'goal_interval')
         if any(getattr(net.cfg, k) != getattr(requested, k) for k in flags):
             raise SystemExit('--init architecture does not match flags; use --warm-start PATH to expand it')
     else:
@@ -165,16 +178,21 @@ def main(argv=None) -> int:
     net.eval()
     cfg = PPOConfig(T=a.T, lr=a.lr, ent_coef=a.ent, epochs=a.epochs, minibatches=a.minibatches, exit_aux_coef=a.exit_aux)
     kinds = a.kinds.split(",") if a.kinds else None
+    from training.curriculum import MapSampler
+    curriculum = MapSampler(a.stage, a.seed, kinds=kinds, puzzle_share=a.puzzle_share,
+                            full_level_share=a.full_level_share, catalog_path=a.catalog).pool_manifest
     n = a.workers * a.games
     ppo = PPO(net, cfg, n, dev)
     ppo.rnd = RND(NUM_RAYS + NUM_VITALS, dev, seed=a.seed) if a.rnd == 'on' else None
     ppo.training_config = dict(rnd=a.rnd, rnd_coef=a.rnd_coef, helpers=a.goal_helpers,
                                helper_weights=a.helper_weights, exit_aux=a.exit_aux)
 
+    ppo.curriculum_config = {'pool': curriculum, 'ticks_override': a.ticks}
     resumed = load_train_state(resume_state, ppo, n) if a.resume else None
     vec = VecGames(a.workers, a.games, a.stage, a.seed, use_map, use_notes, episode_ticks=a.ticks,
                    switch_every=a.switch_every, kinds=kinds, use_rgb=net.cfg.use_rgb,
-                   goal_helpers=a.goal_helpers == 'on', helper_weights=a.helper_weights, puzzle_share=a.puzzle_share)
+                   goal_helpers=a.goal_helpers == 'on', helper_weights=a.helper_weights, puzzle_share=a.puzzle_share,
+                   use_depth=net.cfg.use_depth, full_level_share=a.full_level_share, catalog_path=a.catalog)
 
     print(f"[train] {name}: stage {a.stage}, memory {a.memory}, {n} games, "
           f"{sum(p.numel() for p in net.parameters()):,} params", flush=True)
@@ -187,6 +205,7 @@ def main(argv=None) -> int:
     metrics = (out / "metrics.jsonl").open("a", encoding="utf-8")
     (out / "args.json").write_text(json.dumps({k: str(v) for k, v in vars(a).items()}, indent=2), encoding="utf-8")
 
+    (out / 'curriculum.json').write_text(json.dumps(curriculum, indent=2), encoding='utf-8')
     feats = vec.first
     state = net.initial_state(n, dev)
     starts = np.ones(n, np.bool_)
@@ -257,7 +276,7 @@ def main(argv=None) -> int:
                         tb.add_scalar(k, v, steps)
             print(" ".join(f"{k}={v}" for k, v in row.items()), flush=True)
             extra = {"steps": steps, "stage": a.stage, "memory": a.memory, "name": name,
-                     "manager": a.manager, "rgb": a.rgb, "training": ppo.training_config, "warm_start": transferred}
+                     "manager": a.manager, "rgb": a.rgb, "depth": a.depth, "curriculum": ppo.curriculum_config, "training": ppo.training_config, "warm_start": transferred}
             save_checkpoint(out / "latest.pt", net, extra)
             save_train_state(resume_state, ppo, steps, it, next_save)
             if steps >= next_save:

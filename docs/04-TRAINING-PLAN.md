@@ -198,3 +198,6 @@ They're removed (or simply unused) on game day.
 - Every run gets a name: `stage{N}_{short-idea}_{date}`, e.g. `stage3_notebook-v2_1127`.
 - Every run saves its **config file** next to its checkpoints so it can be reproduced.
 - Notes on what we tried and learned go into `docs/experiments.md` (one line per run).
+
+
+Stage 4 is implemented through `training/map_pool.py` and `MapSampler`: usable train Tier 4 Freedoom2 entries only, default 80% full levels plus generated replay, catalog episode caps, canonical identity leakage checks and checkpointed pool provenance. See `training/README.md` for flags and `scripts/phase4_ablation.py` for matched held-out comparisons. Scientific completion still requires improved Tier 3/4 exit rates; the recorded short smoke does not demonstrate this.

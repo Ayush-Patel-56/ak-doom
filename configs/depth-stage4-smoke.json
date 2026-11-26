@@ -1,0 +1,5248 @@
+{
+  "purpose": "Measured pipeline smoke only; no improvement established; no champion promotion",
+  "path_normalization": "Repository absolute path prefixes removed; measurements unchanged",
+  "training_decisions_per_arm": 512,
+  "training_seed": 19,
+  "evaluation_ticks_override": 420,
+  "limitations": [
+    "One training seed",
+    "Four held-out maps per arm: one Tier 3, three Tier 4",
+    "Short training and evaluation",
+    "Mac CPU latency, not pinned Linux scorer"
+  ],
+  "training_and_evaluation": {
+    "manifest": {
+      "mode": "run",
+      "split": "val",
+      "evaluation_pool": [
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP17",
+          "source": "freedoom2",
+          "sectors": 198,
+          "format": "doom",
+          "doors": 6,
+          "locked_doors": 3,
+          "monsters": 51,
+          "keys": 2,
+          "exit_lines": 4,
+          "tier": 3,
+          "episode_ticks": 3500,
+          "has_exit": true,
+          "usable": true,
+          "split": "val",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP17",
+          "spec": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP17"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP08",
+          "source": "freedoom2",
+          "sectors": 238,
+          "format": "doom",
+          "doors": 25,
+          "locked_doors": 5,
+          "monsters": 88,
+          "keys": 3,
+          "exit_lines": 1,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "val",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP08",
+          "spec": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP08"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP24",
+          "source": "freedoom2",
+          "sectors": 195,
+          "format": "doom",
+          "doors": 11,
+          "locked_doors": 4,
+          "monsters": 98,
+          "keys": 3,
+          "exit_lines": 4,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "val",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP24",
+          "spec": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP24"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP26",
+          "source": "freedoom2",
+          "sectors": 348,
+          "format": "doom",
+          "doors": 3,
+          "locked_doors": 3,
+          "monsters": 242,
+          "keys": 2,
+          "exit_lines": 3,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "val",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP26",
+          "spec": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP26"
+        }
+      ],
+      "seeds_per_map": 1,
+      "configs": {
+        "full": {
+          "memory": "on",
+          "manager": "on",
+          "rnd": "on",
+          "rgb": "on",
+          "depth": "on",
+          "goal-helpers": "off"
+        },
+        "no-manager": {
+          "memory": "on",
+          "manager": "off",
+          "rnd": "on",
+          "rgb": "on",
+          "depth": "on",
+          "goal-helpers": "off"
+        },
+        "no-curiosity": {
+          "memory": "on",
+          "manager": "on",
+          "rnd": "off",
+          "rgb": "on",
+          "depth": "on",
+          "goal-helpers": "off"
+        },
+        "phase3": {
+          "memory": "on",
+          "manager": "off",
+          "rnd": "off",
+          "rgb": "off",
+          "depth": "off",
+          "goal-helpers": "off"
+        }
+      },
+      "goal_helpers": "off",
+      "smoke_overrides": {
+        "eval_ticks": 420,
+        "limit_maps": 4,
+        "train_ticks": null
+      },
+      "arguments": {
+        "cmd": "run",
+        "name": "depth-stage4-smoke",
+        "split": "val",
+        "seeds": 1,
+        "rgb": "on",
+        "depth": "on",
+        "limit_maps": 4,
+        "eval_ticks": 420,
+        "steps": 512,
+        "workers": 1,
+        "games": 1,
+        "seed": 19,
+        "train_seed": null,
+        "ticks": null,
+        "init": "submission/weights/champion.pt",
+        "full_level_share": 1.0,
+        "train_args": "--T 16 --epochs 2 --minibatches 1 --threads 1"
+      },
+      "training_pool": [
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP03",
+          "source": "freedoom2",
+          "sectors": 315,
+          "format": "doom",
+          "doors": 15,
+          "locked_doors": 3,
+          "monsters": 73,
+          "keys": 3,
+          "exit_lines": 5,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "train",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP03"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP04",
+          "source": "freedoom2",
+          "sectors": 139,
+          "format": "doom",
+          "doors": 9,
+          "locked_doors": 3,
+          "monsters": 123,
+          "keys": 2,
+          "exit_lines": 1,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "train",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP04"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP05",
+          "source": "freedoom2",
+          "sectors": 185,
+          "format": "doom",
+          "doors": 9,
+          "locked_doors": 6,
+          "monsters": 76,
+          "keys": 3,
+          "exit_lines": 1,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "train",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP05"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP06",
+          "source": "freedoom2",
+          "sectors": 109,
+          "format": "doom",
+          "doors": 4,
+          "locked_doors": 2,
+          "monsters": 73,
+          "keys": 2,
+          "exit_lines": 4,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "train",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP06"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP09",
+          "source": "freedoom2",
+          "sectors": 347,
+          "format": "doom",
+          "doors": 16,
+          "locked_doors": 5,
+          "monsters": 140,
+          "keys": 3,
+          "exit_lines": 4,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "train",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP09"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP10",
+          "source": "freedoom2",
+          "sectors": 423,
+          "format": "doom",
+          "doors": 5,
+          "locked_doors": 3,
+          "monsters": 113,
+          "keys": 3,
+          "exit_lines": 10,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "train",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP10"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP11",
+          "source": "freedoom2",
+          "sectors": 648,
+          "format": "doom",
+          "doors": 30,
+          "locked_doors": 5,
+          "monsters": 262,
+          "keys": 15,
+          "exit_lines": 4,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "train",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP11"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP12",
+          "source": "freedoom2",
+          "sectors": 863,
+          "format": "doom",
+          "doors": 51,
+          "locked_doors": 10,
+          "monsters": 137,
+          "keys": 3,
+          "exit_lines": 1,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "train",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP12"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP13",
+          "source": "freedoom2",
+          "sectors": 243,
+          "format": "doom",
+          "doors": 2,
+          "locked_doors": 3,
+          "monsters": 115,
+          "keys": 3,
+          "exit_lines": 6,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "train",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP13"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP15",
+          "source": "freedoom2",
+          "sectors": 777,
+          "format": "doom",
+          "doors": 54,
+          "locked_doors": 3,
+          "monsters": 153,
+          "keys": 3,
+          "exit_lines": 8,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "train",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP15"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP16",
+          "source": "freedoom2",
+          "sectors": 207,
+          "format": "doom",
+          "doors": 6,
+          "locked_doors": 5,
+          "monsters": 78,
+          "keys": 2,
+          "exit_lines": 1,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "train",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP16"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP18",
+          "source": "freedoom2",
+          "sectors": 278,
+          "format": "doom",
+          "doors": 10,
+          "locked_doors": 2,
+          "monsters": 118,
+          "keys": 2,
+          "exit_lines": 4,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "train",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP18"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP19",
+          "source": "freedoom2",
+          "sectors": 289,
+          "format": "doom",
+          "doors": 2,
+          "locked_doors": 4,
+          "monsters": 146,
+          "keys": 3,
+          "exit_lines": 4,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "train",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP19"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP20",
+          "source": "freedoom2",
+          "sectors": 414,
+          "format": "doom",
+          "doors": 11,
+          "locked_doors": 4,
+          "monsters": 141,
+          "keys": 3,
+          "exit_lines": 7,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "train",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP20"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP21",
+          "source": "freedoom2",
+          "sectors": 196,
+          "format": "doom",
+          "doors": 9,
+          "locked_doors": 1,
+          "monsters": 81,
+          "keys": 1,
+          "exit_lines": 1,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "train",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP21"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP23",
+          "source": "freedoom2",
+          "sectors": 539,
+          "format": "doom",
+          "doors": 30,
+          "locked_doors": 2,
+          "monsters": 219,
+          "keys": 2,
+          "exit_lines": 1,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "train",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP23"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP25",
+          "source": "freedoom2",
+          "sectors": 666,
+          "format": "doom",
+          "doors": 15,
+          "locked_doors": 3,
+          "monsters": 122,
+          "keys": 3,
+          "exit_lines": 2,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "train",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP25"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP27",
+          "source": "freedoom2",
+          "sectors": 503,
+          "format": "doom",
+          "doors": 22,
+          "locked_doors": 3,
+          "monsters": 139,
+          "keys": 3,
+          "exit_lines": 4,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "train",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP27"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP28",
+          "source": "freedoom2",
+          "sectors": 589,
+          "format": "doom",
+          "doors": 28,
+          "locked_doors": 3,
+          "monsters": 194,
+          "keys": 3,
+          "exit_lines": 4,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "train",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP28"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP29",
+          "source": "freedoom2",
+          "sectors": 131,
+          "format": "doom",
+          "doors": 9,
+          "locked_doors": 4,
+          "monsters": 97,
+          "keys": 3,
+          "exit_lines": 1,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "train",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP29"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP32",
+          "source": "freedoom2",
+          "sectors": 146,
+          "format": "doom",
+          "doors": 17,
+          "locked_doors": 3,
+          "monsters": 81,
+          "keys": 3,
+          "exit_lines": 4,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "train",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP32"
+        }
+      ],
+      "initializations": {
+        "19": {
+          "path": "submission/weights/champion.pt",
+          "sha256": "3196b6098ed359f2dfd47eca85ad4105272834e3703bea4fe553236e56d37093"
+        }
+      },
+      "resolved_training": {
+        "depth-stage4-smoke-full-s19": {
+          "stage": 4,
+          "memory": "on",
+          "kinds": null,
+          "workers": 1,
+          "games": 1,
+          "steps": 512,
+          "T": 16,
+          "epochs": 2,
+          "minibatches": 1,
+          "lr": 0.0003,
+          "ent": 0.01,
+          "ticks": null,
+          "device": "cpu",
+          "init": null,
+          "warm_start": "submission/weights/champion.pt",
+          "puzzle_share": null,
+          "seed": 19,
+          "name": "depth-stage4-smoke-full-s19",
+          "save_every": 50000,
+          "threads": 1,
+          "switch_every": 8,
+          "resume": false,
+          "manager": "on",
+          "rgb": "on",
+          "depth": "on",
+          "rnd": "on",
+          "goal_helpers": "off",
+          "goal_interval": 8,
+          "helper_weights": null,
+          "rnd_coef": 0.01,
+          "exit_aux": 0.1,
+          "full_level_share": 1.0,
+          "catalog": "maps/catalog.json"
+        },
+        "depth-stage4-smoke-no-manager-s19": {
+          "stage": 4,
+          "memory": "on",
+          "kinds": null,
+          "workers": 1,
+          "games": 1,
+          "steps": 512,
+          "T": 16,
+          "epochs": 2,
+          "minibatches": 1,
+          "lr": 0.0003,
+          "ent": 0.01,
+          "ticks": null,
+          "device": "cpu",
+          "init": null,
+          "warm_start": "submission/weights/champion.pt",
+          "puzzle_share": null,
+          "seed": 19,
+          "name": "depth-stage4-smoke-no-manager-s19",
+          "save_every": 50000,
+          "threads": 1,
+          "switch_every": 8,
+          "resume": false,
+          "manager": "off",
+          "rgb": "on",
+          "depth": "on",
+          "rnd": "on",
+          "goal_helpers": "off",
+          "goal_interval": 8,
+          "helper_weights": null,
+          "rnd_coef": 0.01,
+          "exit_aux": 0.1,
+          "full_level_share": 1.0,
+          "catalog": "maps/catalog.json"
+        },
+        "depth-stage4-smoke-no-curiosity-s19": {
+          "stage": 4,
+          "memory": "on",
+          "kinds": null,
+          "workers": 1,
+          "games": 1,
+          "steps": 512,
+          "T": 16,
+          "epochs": 2,
+          "minibatches": 1,
+          "lr": 0.0003,
+          "ent": 0.01,
+          "ticks": null,
+          "device": "cpu",
+          "init": null,
+          "warm_start": "submission/weights/champion.pt",
+          "puzzle_share": null,
+          "seed": 19,
+          "name": "depth-stage4-smoke-no-curiosity-s19",
+          "save_every": 50000,
+          "threads": 1,
+          "switch_every": 8,
+          "resume": false,
+          "manager": "on",
+          "rgb": "on",
+          "depth": "on",
+          "rnd": "off",
+          "goal_helpers": "off",
+          "goal_interval": 8,
+          "helper_weights": null,
+          "rnd_coef": 0.01,
+          "exit_aux": 0.1,
+          "full_level_share": 1.0,
+          "catalog": "maps/catalog.json"
+        },
+        "depth-stage4-smoke-phase3-s19": {
+          "stage": 4,
+          "memory": "on",
+          "kinds": null,
+          "workers": 1,
+          "games": 1,
+          "steps": 512,
+          "T": 16,
+          "epochs": 2,
+          "minibatches": 1,
+          "lr": 0.0003,
+          "ent": 0.01,
+          "ticks": null,
+          "device": "cpu",
+          "init": null,
+          "warm_start": "submission/weights/champion.pt",
+          "puzzle_share": null,
+          "seed": 19,
+          "name": "depth-stage4-smoke-phase3-s19",
+          "save_every": 50000,
+          "threads": 1,
+          "switch_every": 8,
+          "resume": false,
+          "manager": "off",
+          "rgb": "off",
+          "depth": "off",
+          "rnd": "off",
+          "goal_helpers": "off",
+          "goal_interval": 8,
+          "helper_weights": null,
+          "rnd_coef": 0.01,
+          "exit_aux": 0.1,
+          "full_level_share": 1.0,
+          "catalog": "maps/catalog.json"
+        }
+      },
+      "resolved_ppo": {
+        "depth-stage4-smoke-full-s19": {
+          "T": 16,
+          "gamma": 0.995,
+          "lam": 0.95,
+          "clip": 0.2,
+          "vclip": 0.2,
+          "lr": 0.0003,
+          "epochs": 2,
+          "minibatches": 1,
+          "ent_coef": 0.01,
+          "vf_coef": 0.5,
+          "max_grad": 0.5,
+          "exit_aux_coef": 0.1
+        },
+        "depth-stage4-smoke-no-manager-s19": {
+          "T": 16,
+          "gamma": 0.995,
+          "lam": 0.95,
+          "clip": 0.2,
+          "vclip": 0.2,
+          "lr": 0.0003,
+          "epochs": 2,
+          "minibatches": 1,
+          "ent_coef": 0.01,
+          "vf_coef": 0.5,
+          "max_grad": 0.5,
+          "exit_aux_coef": 0.1
+        },
+        "depth-stage4-smoke-no-curiosity-s19": {
+          "T": 16,
+          "gamma": 0.995,
+          "lam": 0.95,
+          "clip": 0.2,
+          "vclip": 0.2,
+          "lr": 0.0003,
+          "epochs": 2,
+          "minibatches": 1,
+          "ent_coef": 0.01,
+          "vf_coef": 0.5,
+          "max_grad": 0.5,
+          "exit_aux_coef": 0.1
+        },
+        "depth-stage4-smoke-phase3-s19": {
+          "T": 16,
+          "gamma": 0.995,
+          "lam": 0.95,
+          "clip": 0.2,
+          "vclip": 0.2,
+          "lr": 0.0003,
+          "epochs": 2,
+          "minibatches": 1,
+          "ent_coef": 0.01,
+          "vf_coef": 0.5,
+          "max_grad": 0.5,
+          "exit_aux_coef": 0.1
+        }
+      },
+      "commands": {
+        "depth-stage4-smoke-full-s19": [
+          ".venv/bin/python",
+          "-m",
+          "training.train",
+          "--stage",
+          "4",
+          "--name",
+          "depth-stage4-smoke-full-s19",
+          "--steps",
+          "512",
+          "--seed",
+          "19",
+          "--workers",
+          "1",
+          "--games",
+          "1",
+          "--full-level-share",
+          "1.0",
+          "--warm-start",
+          "submission/weights/champion.pt",
+          "--memory",
+          "on",
+          "--manager",
+          "on",
+          "--rnd",
+          "on",
+          "--rgb",
+          "on",
+          "--depth",
+          "on",
+          "--goal-helpers",
+          "off",
+          "--T",
+          "16",
+          "--epochs",
+          "2",
+          "--minibatches",
+          "1",
+          "--threads",
+          "1"
+        ],
+        "depth-stage4-smoke-no-manager-s19": [
+          ".venv/bin/python",
+          "-m",
+          "training.train",
+          "--stage",
+          "4",
+          "--name",
+          "depth-stage4-smoke-no-manager-s19",
+          "--steps",
+          "512",
+          "--seed",
+          "19",
+          "--workers",
+          "1",
+          "--games",
+          "1",
+          "--full-level-share",
+          "1.0",
+          "--warm-start",
+          "submission/weights/champion.pt",
+          "--memory",
+          "on",
+          "--manager",
+          "off",
+          "--rnd",
+          "on",
+          "--rgb",
+          "on",
+          "--depth",
+          "on",
+          "--goal-helpers",
+          "off",
+          "--T",
+          "16",
+          "--epochs",
+          "2",
+          "--minibatches",
+          "1",
+          "--threads",
+          "1"
+        ],
+        "depth-stage4-smoke-no-curiosity-s19": [
+          ".venv/bin/python",
+          "-m",
+          "training.train",
+          "--stage",
+          "4",
+          "--name",
+          "depth-stage4-smoke-no-curiosity-s19",
+          "--steps",
+          "512",
+          "--seed",
+          "19",
+          "--workers",
+          "1",
+          "--games",
+          "1",
+          "--full-level-share",
+          "1.0",
+          "--warm-start",
+          "submission/weights/champion.pt",
+          "--memory",
+          "on",
+          "--manager",
+          "on",
+          "--rnd",
+          "off",
+          "--rgb",
+          "on",
+          "--depth",
+          "on",
+          "--goal-helpers",
+          "off",
+          "--T",
+          "16",
+          "--epochs",
+          "2",
+          "--minibatches",
+          "1",
+          "--threads",
+          "1"
+        ],
+        "depth-stage4-smoke-phase3-s19": [
+          ".venv/bin/python",
+          "-m",
+          "training.train",
+          "--stage",
+          "4",
+          "--name",
+          "depth-stage4-smoke-phase3-s19",
+          "--steps",
+          "512",
+          "--seed",
+          "19",
+          "--workers",
+          "1",
+          "--games",
+          "1",
+          "--full-level-share",
+          "1.0",
+          "--warm-start",
+          "submission/weights/champion.pt",
+          "--memory",
+          "on",
+          "--manager",
+          "off",
+          "--rnd",
+          "off",
+          "--rgb",
+          "off",
+          "--depth",
+          "off",
+          "--goal-helpers",
+          "off",
+          "--T",
+          "16",
+          "--epochs",
+          "2",
+          "--minibatches",
+          "1",
+          "--threads",
+          "1"
+        ]
+      },
+      "paired_by_train_seed": {
+        "19": {
+          "arms": {
+            "full": {
+              "episodes": 4,
+              "tiers": {
+                "3": {
+                  "episodes": 1,
+                  "exits": 0,
+                  "exit_rate": 0.0
+                },
+                "4": {
+                  "episodes": 3,
+                  "exits": 0,
+                  "exit_rate": 0.0
+                }
+              },
+              "stopped": []
+            },
+            "no-manager": {
+              "episodes": 4,
+              "tiers": {
+                "3": {
+                  "episodes": 1,
+                  "exits": 0,
+                  "exit_rate": 0.0
+                },
+                "4": {
+                  "episodes": 3,
+                  "exits": 0,
+                  "exit_rate": 0.0
+                }
+              },
+              "stopped": []
+            },
+            "no-curiosity": {
+              "episodes": 4,
+              "tiers": {
+                "3": {
+                  "episodes": 1,
+                  "exits": 0,
+                  "exit_rate": 0.0
+                },
+                "4": {
+                  "episodes": 3,
+                  "exits": 0,
+                  "exit_rate": 0.0
+                }
+              },
+              "stopped": []
+            },
+            "phase3": {
+              "episodes": 4,
+              "tiers": {
+                "3": {
+                  "episodes": 1,
+                  "exits": 0,
+                  "exit_rate": 0.0
+                },
+                "4": {
+                  "episodes": 3,
+                  "exits": 0,
+                  "exit_rate": 0.0
+                }
+              },
+              "stopped": []
+            }
+          },
+          "paired": {
+            "full-minus-no-manager": {
+              "episodes": 4,
+              "exit_rate_delta": 0.0,
+              "tiers": {
+                "3": {
+                  "episodes": 1,
+                  "exit_rate_delta": 0.0
+                },
+                "4": {
+                  "episodes": 3,
+                  "exit_rate_delta": 0.0
+                }
+              }
+            },
+            "full-minus-no-curiosity": {
+              "episodes": 4,
+              "exit_rate_delta": 0.0,
+              "tiers": {
+                "3": {
+                  "episodes": 1,
+                  "exit_rate_delta": 0.0
+                },
+                "4": {
+                  "episodes": 3,
+                  "exit_rate_delta": 0.0
+                }
+              }
+            },
+            "full-minus-phase3": {
+              "episodes": 4,
+              "exit_rate_delta": 0.0,
+              "tiers": {
+                "3": {
+                  "episodes": 1,
+                  "exit_rate_delta": 0.0
+                },
+                "4": {
+                  "episodes": 3,
+                  "exit_rate_delta": 0.0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "results": {
+      "full-s19": {
+        "checkpoint": "runs/depth-stage4-smoke-full-s19/latest.pt",
+        "sha256": "a7a912aa40a559bb4819a2bdb960ec77e3e033ecae9acdbe5ec50f148a0e54d1",
+        "config": {
+          "ray_channels": 32,
+          "ray_out": 128,
+          "entity_dim": 64,
+          "entity_heads": 4,
+          "vitals_out": 32,
+          "hidden": 256,
+          "use_mindmap": true,
+          "use_notebook": true,
+          "map_out": 128,
+          "note_dim": 64,
+          "use_manager": true,
+          "goal_interval": 8,
+          "goal_dim": 16,
+          "use_rgb": true,
+          "rgb_out": 64,
+          "use_depth": true,
+          "depth_out": 32
+        },
+        "training": {
+          "steps": 512,
+          "stage": 4,
+          "memory": "on",
+          "name": "depth-stage4-smoke-full-s19",
+          "manager": "on",
+          "rgb": "on",
+          "depth": "on",
+          "curriculum": {
+            "pool": {
+              "stage": 4,
+              "catalog_sha256": "42158ce805f2b997ccb1408f2c4260b94a11b84776174053d0bf9ff70c9f30ed",
+              "full_level_share": 1.0,
+              "kinds_override": null,
+              "seeds_per_kind": 200,
+              "generated_seed_range": [
+                0,
+                200
+              ],
+              "replay_weights": {
+                "keydoor": 0.4,
+                "rooms": 0.3,
+                "maze": 0.15,
+                "arena": 0.15
+              },
+              "puzzle_share": 0.0,
+              "near_start": 1.0,
+              "near_end": 0.3,
+              "full_pool": [
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP03",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP03"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP04",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP04"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP05",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP05"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP06",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP06"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP09",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP09"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP10",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP10"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP11",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP11"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP12",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP12"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP13",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP13"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP15",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP15"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP16",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP16"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP18",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP18"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP19",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP19"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP20",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP20"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP21",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP21"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP23",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP23"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP25",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP25"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP27",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP27"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP28",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP28"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP29",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP29"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP32",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP32"
+                  ]
+                }
+              ]
+            },
+            "ticks_override": null
+          },
+          "training": {
+            "rnd": "on",
+            "rnd_coef": 0.01,
+            "helpers": "off",
+            "helper_weights": null,
+            "exit_aux": 0.1
+          },
+          "warm_start": {
+            "copied": [
+              "rays.hit_emb.weight",
+              "rays.conv1.weight",
+              "rays.conv1.bias",
+              "rays.conv2.weight",
+              "rays.conv2.bias",
+              "rays.conv3.weight",
+              "rays.conv3.bias",
+              "rays.out.weight",
+              "rays.out.bias",
+              "entities.null",
+              "entities.query",
+              "entities.type_emb.weight",
+              "entities.mlp.0.weight",
+              "entities.mlp.0.bias",
+              "entities.mlp.2.weight",
+              "entities.mlp.2.bias",
+              "entities.attn.in_proj_weight",
+              "entities.attn.in_proj_bias",
+              "entities.attn.out_proj.weight",
+              "entities.attn.out_proj.bias",
+              "vitals.0.weight",
+              "vitals.0.bias",
+              "vitals.2.weight",
+              "vitals.2.bias",
+              "fuse.0.bias",
+              "gru.weight_hh",
+              "gru.bias_ih",
+              "gru.bias_hh",
+              "policy.weight",
+              "policy.bias",
+              "value.weight",
+              "value.bias"
+            ],
+            "widened": [
+              "fuse.0.weight",
+              "gru.weight_ih"
+            ],
+            "new": [
+              "mindmap.net.0.weight",
+              "mindmap.net.0.bias",
+              "mindmap.net.2.weight",
+              "mindmap.net.2.bias",
+              "mindmap.net.4.weight",
+              "mindmap.net.4.bias",
+              "mindmap.net.7.weight",
+              "mindmap.net.7.bias",
+              "rgb.0.weight",
+              "rgb.0.bias",
+              "rgb.2.weight",
+              "rgb.2.bias",
+              "rgb.4.weight",
+              "rgb.4.bias",
+              "rgb.8.weight",
+              "rgb.8.bias",
+              "exit_head.weight",
+              "exit_head.bias",
+              "depth.0.weight",
+              "depth.0.bias",
+              "depth.2.weight",
+              "depth.2.bias",
+              "depth.6.weight",
+              "depth.6.bias",
+              "notebook.null_k",
+              "notebook.null_v",
+              "notebook.slot.0.weight",
+              "notebook.slot.0.bias",
+              "notebook.slot.2.weight",
+              "notebook.slot.2.bias",
+              "notebook.k.weight",
+              "notebook.k.bias",
+              "notebook.v.weight",
+              "notebook.v.bias",
+              "notebook.q.weight",
+              "notebook.q.bias",
+              "manager.weight",
+              "manager.bias",
+              "manager_value.weight",
+              "manager_value.bias",
+              "goal_embedding.weight",
+              "worker_fuse.0.weight",
+              "worker_fuse.0.bias"
+            ]
+          }
+        },
+        "rows": [
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP17",
+            "tier": 3,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 2.343,
+            "agent_max_ms": 3.94,
+            "weighted_score": 6.0,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 4,
+            "kills": 0,
+            "damage": 0.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 100.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 2.0,
+              "combat": 0.0
+            },
+            "score": 2.0
+          },
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP08",
+            "tier": 4,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 2.822,
+            "agent_max_ms": 5.59,
+            "weighted_score": 20.0,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 10,
+            "kills": 0,
+            "damage": 0.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 100.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 5.0,
+              "combat": 0.0
+            },
+            "score": 5.0
+          },
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP24",
+            "tier": 4,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 2.714,
+            "agent_max_ms": 6.56,
+            "weighted_score": 24.0,
+            "exit": false,
+            "keys": 0,
+            "doors": 1,
+            "locked_doors": 0,
+            "areas": 6,
+            "kills": 0,
+            "damage": 0.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 100.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 3.0,
+              "exploration": 3.0,
+              "combat": 0.0
+            },
+            "score": 6.0
+          },
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP26",
+            "tier": 4,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 2.664,
+            "agent_max_ms": 7.02,
+            "weighted_score": 7.4,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 5,
+            "kills": 2,
+            "damage": 93.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 9.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 2.5,
+              "combat": -0.65
+            },
+            "score": 1.85
+          }
+        ],
+        "train_seed": 19,
+        "requested_decisions": 512,
+        "actual_decisions": 512
+      },
+      "no-manager-s19": {
+        "checkpoint": "runs/depth-stage4-smoke-no-manager-s19/latest.pt",
+        "sha256": "a1b8efc169b13957116429702ff02302436eeaa30da3148c27171c060e2a294e",
+        "config": {
+          "ray_channels": 32,
+          "ray_out": 128,
+          "entity_dim": 64,
+          "entity_heads": 4,
+          "vitals_out": 32,
+          "hidden": 256,
+          "use_mindmap": true,
+          "use_notebook": true,
+          "map_out": 128,
+          "note_dim": 64,
+          "use_manager": false,
+          "goal_interval": 8,
+          "goal_dim": 16,
+          "use_rgb": true,
+          "rgb_out": 64,
+          "use_depth": true,
+          "depth_out": 32
+        },
+        "training": {
+          "steps": 512,
+          "stage": 4,
+          "memory": "on",
+          "name": "depth-stage4-smoke-no-manager-s19",
+          "manager": "off",
+          "rgb": "on",
+          "depth": "on",
+          "curriculum": {
+            "pool": {
+              "stage": 4,
+              "catalog_sha256": "42158ce805f2b997ccb1408f2c4260b94a11b84776174053d0bf9ff70c9f30ed",
+              "full_level_share": 1.0,
+              "kinds_override": null,
+              "seeds_per_kind": 200,
+              "generated_seed_range": [
+                0,
+                200
+              ],
+              "replay_weights": {
+                "keydoor": 0.4,
+                "rooms": 0.3,
+                "maze": 0.15,
+                "arena": 0.15
+              },
+              "puzzle_share": 0.0,
+              "near_start": 1.0,
+              "near_end": 0.3,
+              "full_pool": [
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP03",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP03"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP04",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP04"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP05",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP05"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP06",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP06"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP09",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP09"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP10",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP10"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP11",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP11"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP12",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP12"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP13",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP13"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP15",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP15"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP16",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP16"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP18",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP18"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP19",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP19"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP20",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP20"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP21",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP21"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP23",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP23"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP25",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP25"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP27",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP27"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP28",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP28"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP29",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP29"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP32",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP32"
+                  ]
+                }
+              ]
+            },
+            "ticks_override": null
+          },
+          "training": {
+            "rnd": "on",
+            "rnd_coef": 0.01,
+            "helpers": "off",
+            "helper_weights": null,
+            "exit_aux": 0.1
+          },
+          "warm_start": {
+            "copied": [
+              "rays.hit_emb.weight",
+              "rays.conv1.weight",
+              "rays.conv1.bias",
+              "rays.conv2.weight",
+              "rays.conv2.bias",
+              "rays.conv3.weight",
+              "rays.conv3.bias",
+              "rays.out.weight",
+              "rays.out.bias",
+              "entities.null",
+              "entities.query",
+              "entities.type_emb.weight",
+              "entities.mlp.0.weight",
+              "entities.mlp.0.bias",
+              "entities.mlp.2.weight",
+              "entities.mlp.2.bias",
+              "entities.attn.in_proj_weight",
+              "entities.attn.in_proj_bias",
+              "entities.attn.out_proj.weight",
+              "entities.attn.out_proj.bias",
+              "vitals.0.weight",
+              "vitals.0.bias",
+              "vitals.2.weight",
+              "vitals.2.bias",
+              "fuse.0.bias",
+              "gru.weight_hh",
+              "gru.bias_ih",
+              "gru.bias_hh",
+              "policy.weight",
+              "policy.bias",
+              "value.weight",
+              "value.bias"
+            ],
+            "widened": [
+              "fuse.0.weight",
+              "gru.weight_ih"
+            ],
+            "new": [
+              "mindmap.net.0.weight",
+              "mindmap.net.0.bias",
+              "mindmap.net.2.weight",
+              "mindmap.net.2.bias",
+              "mindmap.net.4.weight",
+              "mindmap.net.4.bias",
+              "mindmap.net.7.weight",
+              "mindmap.net.7.bias",
+              "rgb.0.weight",
+              "rgb.0.bias",
+              "rgb.2.weight",
+              "rgb.2.bias",
+              "rgb.4.weight",
+              "rgb.4.bias",
+              "rgb.8.weight",
+              "rgb.8.bias",
+              "exit_head.weight",
+              "exit_head.bias",
+              "depth.0.weight",
+              "depth.0.bias",
+              "depth.2.weight",
+              "depth.2.bias",
+              "depth.6.weight",
+              "depth.6.bias",
+              "notebook.null_k",
+              "notebook.null_v",
+              "notebook.slot.0.weight",
+              "notebook.slot.0.bias",
+              "notebook.slot.2.weight",
+              "notebook.slot.2.bias",
+              "notebook.k.weight",
+              "notebook.k.bias",
+              "notebook.v.weight",
+              "notebook.v.bias",
+              "notebook.q.weight",
+              "notebook.q.bias"
+            ]
+          }
+        },
+        "rows": [
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP17",
+            "tier": 3,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 2.87,
+            "agent_max_ms": 5.2,
+            "weighted_score": 9.0,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 6,
+            "kills": 0,
+            "damage": 0.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 100.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 3.0,
+              "combat": 0.0
+            },
+            "score": 3.0
+          },
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP08",
+            "tier": 4,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 2.747,
+            "agent_max_ms": 6.23,
+            "weighted_score": 44.4,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 20,
+            "kills": 1,
+            "damage": 18.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 82.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 10.0,
+              "combat": 1.1
+            },
+            "score": 11.1
+          },
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP24",
+            "tier": 4,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 2.881,
+            "agent_max_ms": 5.33,
+            "weighted_score": 11.8,
+            "exit": false,
+            "keys": 0,
+            "doors": 1,
+            "locked_doors": 0,
+            "areas": 9,
+            "kills": 0,
+            "damage": 91.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 9.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 3.0,
+              "exploration": 4.5,
+              "combat": -4.55
+            },
+            "score": 2.95
+          },
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP26",
+            "tier": 4,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 2.811,
+            "agent_max_ms": 6.48,
+            "weighted_score": 27.8,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 6,
+            "kills": 3,
+            "damage": 41.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 65.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 3.0,
+              "combat": 3.95
+            },
+            "score": 6.95
+          }
+        ],
+        "train_seed": 19,
+        "requested_decisions": 512,
+        "actual_decisions": 512
+      },
+      "no-curiosity-s19": {
+        "checkpoint": "runs/depth-stage4-smoke-no-curiosity-s19/latest.pt",
+        "sha256": "aa1aa3037a9c15f2e4ffca92f95790b2aa936f81d3d7d4d87694f4fe30d7ab96",
+        "config": {
+          "ray_channels": 32,
+          "ray_out": 128,
+          "entity_dim": 64,
+          "entity_heads": 4,
+          "vitals_out": 32,
+          "hidden": 256,
+          "use_mindmap": true,
+          "use_notebook": true,
+          "map_out": 128,
+          "note_dim": 64,
+          "use_manager": true,
+          "goal_interval": 8,
+          "goal_dim": 16,
+          "use_rgb": true,
+          "rgb_out": 64,
+          "use_depth": true,
+          "depth_out": 32
+        },
+        "training": {
+          "steps": 512,
+          "stage": 4,
+          "memory": "on",
+          "name": "depth-stage4-smoke-no-curiosity-s19",
+          "manager": "on",
+          "rgb": "on",
+          "depth": "on",
+          "curriculum": {
+            "pool": {
+              "stage": 4,
+              "catalog_sha256": "42158ce805f2b997ccb1408f2c4260b94a11b84776174053d0bf9ff70c9f30ed",
+              "full_level_share": 1.0,
+              "kinds_override": null,
+              "seeds_per_kind": 200,
+              "generated_seed_range": [
+                0,
+                200
+              ],
+              "replay_weights": {
+                "keydoor": 0.4,
+                "rooms": 0.3,
+                "maze": 0.15,
+                "arena": 0.15
+              },
+              "puzzle_share": 0.0,
+              "near_start": 1.0,
+              "near_end": 0.3,
+              "full_pool": [
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP03",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP03"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP04",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP04"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP05",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP05"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP06",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP06"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP09",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP09"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP10",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP10"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP11",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP11"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP12",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP12"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP13",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP13"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP15",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP15"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP16",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP16"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP18",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP18"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP19",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP19"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP20",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP20"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP21",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP21"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP23",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP23"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP25",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP25"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP27",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP27"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP28",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP28"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP29",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP29"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP32",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP32"
+                  ]
+                }
+              ]
+            },
+            "ticks_override": null
+          },
+          "training": {
+            "rnd": "off",
+            "rnd_coef": 0.01,
+            "helpers": "off",
+            "helper_weights": null,
+            "exit_aux": 0.1
+          },
+          "warm_start": {
+            "copied": [
+              "rays.hit_emb.weight",
+              "rays.conv1.weight",
+              "rays.conv1.bias",
+              "rays.conv2.weight",
+              "rays.conv2.bias",
+              "rays.conv3.weight",
+              "rays.conv3.bias",
+              "rays.out.weight",
+              "rays.out.bias",
+              "entities.null",
+              "entities.query",
+              "entities.type_emb.weight",
+              "entities.mlp.0.weight",
+              "entities.mlp.0.bias",
+              "entities.mlp.2.weight",
+              "entities.mlp.2.bias",
+              "entities.attn.in_proj_weight",
+              "entities.attn.in_proj_bias",
+              "entities.attn.out_proj.weight",
+              "entities.attn.out_proj.bias",
+              "vitals.0.weight",
+              "vitals.0.bias",
+              "vitals.2.weight",
+              "vitals.2.bias",
+              "fuse.0.bias",
+              "gru.weight_hh",
+              "gru.bias_ih",
+              "gru.bias_hh",
+              "policy.weight",
+              "policy.bias",
+              "value.weight",
+              "value.bias"
+            ],
+            "widened": [
+              "fuse.0.weight",
+              "gru.weight_ih"
+            ],
+            "new": [
+              "mindmap.net.0.weight",
+              "mindmap.net.0.bias",
+              "mindmap.net.2.weight",
+              "mindmap.net.2.bias",
+              "mindmap.net.4.weight",
+              "mindmap.net.4.bias",
+              "mindmap.net.7.weight",
+              "mindmap.net.7.bias",
+              "rgb.0.weight",
+              "rgb.0.bias",
+              "rgb.2.weight",
+              "rgb.2.bias",
+              "rgb.4.weight",
+              "rgb.4.bias",
+              "rgb.8.weight",
+              "rgb.8.bias",
+              "exit_head.weight",
+              "exit_head.bias",
+              "depth.0.weight",
+              "depth.0.bias",
+              "depth.2.weight",
+              "depth.2.bias",
+              "depth.6.weight",
+              "depth.6.bias",
+              "notebook.null_k",
+              "notebook.null_v",
+              "notebook.slot.0.weight",
+              "notebook.slot.0.bias",
+              "notebook.slot.2.weight",
+              "notebook.slot.2.bias",
+              "notebook.k.weight",
+              "notebook.k.bias",
+              "notebook.v.weight",
+              "notebook.v.bias",
+              "notebook.q.weight",
+              "notebook.q.bias",
+              "manager.weight",
+              "manager.bias",
+              "manager_value.weight",
+              "manager_value.bias",
+              "goal_embedding.weight",
+              "worker_fuse.0.weight",
+              "worker_fuse.0.bias"
+            ]
+          }
+        },
+        "rows": [
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP17",
+            "tier": 3,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 2.673,
+            "agent_max_ms": 14.28,
+            "weighted_score": 9.0,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 6,
+            "kills": 0,
+            "damage": 0.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 100.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 3.0,
+              "combat": 0.0
+            },
+            "score": 3.0
+          },
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP08",
+            "tier": 4,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 3.758,
+            "agent_max_ms": 7.24,
+            "weighted_score": 14.0,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 7,
+            "kills": 0,
+            "damage": 0.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 100.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 3.5,
+              "combat": 0.0
+            },
+            "score": 3.5
+          },
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP24",
+            "tier": 4,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 2.922,
+            "agent_max_ms": 5.47,
+            "weighted_score": 8.0,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 4,
+            "kills": 0,
+            "damage": 0.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 100.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 2.0,
+              "combat": 0.0
+            },
+            "score": 2.0
+          },
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP26",
+            "tier": 4,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 2.617,
+            "agent_max_ms": 6.62,
+            "weighted_score": 8.8,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 6,
+            "kills": 1,
+            "damage": 56.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 50.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 3.0,
+              "combat": -0.8
+            },
+            "score": 2.2
+          }
+        ],
+        "train_seed": 19,
+        "requested_decisions": 512,
+        "actual_decisions": 512
+      },
+      "phase3-s19": {
+        "checkpoint": "runs/depth-stage4-smoke-phase3-s19/latest.pt",
+        "sha256": "ef8a059d847b7184c7e3e78452dc17fa0cf0f6a2fa0bec18e3b5fc895f6822a6",
+        "config": {
+          "ray_channels": 32,
+          "ray_out": 128,
+          "entity_dim": 64,
+          "entity_heads": 4,
+          "vitals_out": 32,
+          "hidden": 256,
+          "use_mindmap": true,
+          "use_notebook": true,
+          "map_out": 128,
+          "note_dim": 64,
+          "use_manager": false,
+          "goal_interval": 8,
+          "goal_dim": 16,
+          "use_rgb": false,
+          "rgb_out": 64,
+          "use_depth": false,
+          "depth_out": 32
+        },
+        "training": {
+          "steps": 512,
+          "stage": 4,
+          "memory": "on",
+          "name": "depth-stage4-smoke-phase3-s19",
+          "manager": "off",
+          "rgb": "off",
+          "depth": "off",
+          "curriculum": {
+            "pool": {
+              "stage": 4,
+              "catalog_sha256": "42158ce805f2b997ccb1408f2c4260b94a11b84776174053d0bf9ff70c9f30ed",
+              "full_level_share": 1.0,
+              "kinds_override": null,
+              "seeds_per_kind": 200,
+              "generated_seed_range": [
+                0,
+                200
+              ],
+              "replay_weights": {
+                "keydoor": 0.4,
+                "rooms": 0.3,
+                "maze": 0.15,
+                "arena": 0.15
+              },
+              "puzzle_share": 0.0,
+              "near_start": 1.0,
+              "near_end": 0.3,
+              "full_pool": [
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP03",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP03"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP04",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP04"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP05",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP05"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP06",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP06"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP09",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP09"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP10",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP10"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP11",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP11"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP12",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP12"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP13",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP13"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP15",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP15"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP16",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP16"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP18",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP18"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP19",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP19"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP20",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP20"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP21",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP21"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP23",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP23"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP25",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP25"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP27",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP27"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP28",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP28"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP29",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP29"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP32",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP32"
+                  ]
+                }
+              ]
+            },
+            "ticks_override": null
+          },
+          "training": {
+            "rnd": "off",
+            "rnd_coef": 0.01,
+            "helpers": "off",
+            "helper_weights": null,
+            "exit_aux": 0.1
+          },
+          "warm_start": {
+            "copied": [
+              "rays.hit_emb.weight",
+              "rays.conv1.weight",
+              "rays.conv1.bias",
+              "rays.conv2.weight",
+              "rays.conv2.bias",
+              "rays.conv3.weight",
+              "rays.conv3.bias",
+              "rays.out.weight",
+              "rays.out.bias",
+              "entities.null",
+              "entities.query",
+              "entities.type_emb.weight",
+              "entities.mlp.0.weight",
+              "entities.mlp.0.bias",
+              "entities.mlp.2.weight",
+              "entities.mlp.2.bias",
+              "entities.attn.in_proj_weight",
+              "entities.attn.in_proj_bias",
+              "entities.attn.out_proj.weight",
+              "entities.attn.out_proj.bias",
+              "vitals.0.weight",
+              "vitals.0.bias",
+              "vitals.2.weight",
+              "vitals.2.bias",
+              "fuse.0.bias",
+              "gru.weight_hh",
+              "gru.bias_ih",
+              "gru.bias_hh",
+              "policy.weight",
+              "policy.bias",
+              "value.weight",
+              "value.bias"
+            ],
+            "widened": [
+              "fuse.0.weight",
+              "gru.weight_ih"
+            ],
+            "new": [
+              "mindmap.net.0.weight",
+              "mindmap.net.0.bias",
+              "mindmap.net.2.weight",
+              "mindmap.net.2.bias",
+              "mindmap.net.4.weight",
+              "mindmap.net.4.bias",
+              "mindmap.net.7.weight",
+              "mindmap.net.7.bias",
+              "notebook.null_k",
+              "notebook.null_v",
+              "notebook.slot.0.weight",
+              "notebook.slot.0.bias",
+              "notebook.slot.2.weight",
+              "notebook.slot.2.bias",
+              "notebook.k.weight",
+              "notebook.k.bias",
+              "notebook.v.weight",
+              "notebook.v.bias",
+              "notebook.q.weight",
+              "notebook.q.bias"
+            ]
+          }
+        },
+        "rows": [
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP17",
+            "tier": 3,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 1.69,
+            "agent_max_ms": 3.49,
+            "weighted_score": 16.5,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 11,
+            "kills": 0,
+            "damage": 0.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 100.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 5.5,
+              "combat": 0.0
+            },
+            "score": 5.5
+          },
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP08",
+            "tier": 4,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 1.781,
+            "agent_max_ms": 3.54,
+            "weighted_score": 29.8,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 17,
+            "kills": 0,
+            "damage": 21.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 79.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 8.5,
+              "combat": -1.05
+            },
+            "score": 7.45
+          },
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP24",
+            "tier": 4,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 1.564,
+            "agent_max_ms": 2.65,
+            "weighted_score": 19.2,
+            "exit": false,
+            "keys": 0,
+            "doors": 1,
+            "locked_doors": 0,
+            "areas": 7,
+            "kills": 0,
+            "damage": 34.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 66.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 3.0,
+              "exploration": 3.5,
+              "combat": -1.7
+            },
+            "score": 4.8
+          },
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP26",
+            "tier": 4,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 1.524,
+            "agent_max_ms": 2.7,
+            "weighted_score": 24.6,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 4,
+            "kills": 4,
+            "damage": 77.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 29.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 2.0,
+              "combat": 4.15
+            },
+            "score": 6.15
+          }
+        ],
+        "train_seed": 19,
+        "requested_decisions": 512,
+        "actual_decisions": 512
+      }
+    },
+    "summary": {
+      "arms": {
+        "full-s19": {
+          "episodes": 4,
+          "tiers": {
+            "3": {
+              "episodes": 1,
+              "exits": 0,
+              "exit_rate": 0.0
+            },
+            "4": {
+              "episodes": 3,
+              "exits": 0,
+              "exit_rate": 0.0
+            }
+          },
+          "stopped": []
+        },
+        "no-manager-s19": {
+          "episodes": 4,
+          "tiers": {
+            "3": {
+              "episodes": 1,
+              "exits": 0,
+              "exit_rate": 0.0
+            },
+            "4": {
+              "episodes": 3,
+              "exits": 0,
+              "exit_rate": 0.0
+            }
+          },
+          "stopped": []
+        },
+        "no-curiosity-s19": {
+          "episodes": 4,
+          "tiers": {
+            "3": {
+              "episodes": 1,
+              "exits": 0,
+              "exit_rate": 0.0
+            },
+            "4": {
+              "episodes": 3,
+              "exits": 0,
+              "exit_rate": 0.0
+            }
+          },
+          "stopped": []
+        },
+        "phase3-s19": {
+          "episodes": 4,
+          "tiers": {
+            "3": {
+              "episodes": 1,
+              "exits": 0,
+              "exit_rate": 0.0
+            },
+            "4": {
+              "episodes": 3,
+              "exits": 0,
+              "exit_rate": 0.0
+            }
+          },
+          "stopped": []
+        }
+      },
+      "paired": {},
+      "paired_by_train_seed": {
+        "19": {
+          "arms": {
+            "full": {
+              "episodes": 4,
+              "tiers": {
+                "3": {
+                  "episodes": 1,
+                  "exits": 0,
+                  "exit_rate": 0.0
+                },
+                "4": {
+                  "episodes": 3,
+                  "exits": 0,
+                  "exit_rate": 0.0
+                }
+              },
+              "stopped": []
+            },
+            "no-manager": {
+              "episodes": 4,
+              "tiers": {
+                "3": {
+                  "episodes": 1,
+                  "exits": 0,
+                  "exit_rate": 0.0
+                },
+                "4": {
+                  "episodes": 3,
+                  "exits": 0,
+                  "exit_rate": 0.0
+                }
+              },
+              "stopped": []
+            },
+            "no-curiosity": {
+              "episodes": 4,
+              "tiers": {
+                "3": {
+                  "episodes": 1,
+                  "exits": 0,
+                  "exit_rate": 0.0
+                },
+                "4": {
+                  "episodes": 3,
+                  "exits": 0,
+                  "exit_rate": 0.0
+                }
+              },
+              "stopped": []
+            },
+            "phase3": {
+              "episodes": 4,
+              "tiers": {
+                "3": {
+                  "episodes": 1,
+                  "exits": 0,
+                  "exit_rate": 0.0
+                },
+                "4": {
+                  "episodes": 3,
+                  "exits": 0,
+                  "exit_rate": 0.0
+                }
+              },
+              "stopped": []
+            }
+          },
+          "paired": {
+            "full-minus-no-manager": {
+              "episodes": 4,
+              "exit_rate_delta": 0.0,
+              "tiers": {
+                "3": {
+                  "episodes": 1,
+                  "exit_rate_delta": 0.0
+                },
+                "4": {
+                  "episodes": 3,
+                  "exit_rate_delta": 0.0
+                }
+              }
+            },
+            "full-minus-no-curiosity": {
+              "episodes": 4,
+              "exit_rate_delta": 0.0,
+              "tiers": {
+                "3": {
+                  "episodes": 1,
+                  "exit_rate_delta": 0.0
+                },
+                "4": {
+                  "episodes": 3,
+                  "exit_rate_delta": 0.0
+                }
+              }
+            },
+            "full-minus-phase3": {
+              "episodes": 4,
+              "exit_rate_delta": 0.0,
+              "tiers": {
+                "3": {
+                  "episodes": 1,
+                  "exit_rate_delta": 0.0
+                },
+                "4": {
+                  "episodes": 3,
+                  "exit_rate_delta": 0.0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "errors": [],
+    "interpretation": "Pipeline verification only when smoke overrides or short training are used. Exit-rate differences do not establish robust improvement; effectiveness remains unproven."
+  },
+  "fresh_evaluation": {
+    "manifest": {
+      "mode": "eval",
+      "split": "val",
+      "evaluation_pool": [
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP17",
+          "source": "freedoom2",
+          "sectors": 198,
+          "format": "doom",
+          "doors": 6,
+          "locked_doors": 3,
+          "monsters": 51,
+          "keys": 2,
+          "exit_lines": 4,
+          "tier": 3,
+          "episode_ticks": 3500,
+          "has_exit": true,
+          "usable": true,
+          "split": "val",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP17",
+          "spec": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP17"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP08",
+          "source": "freedoom2",
+          "sectors": 238,
+          "format": "doom",
+          "doors": 25,
+          "locked_doors": 5,
+          "monsters": 88,
+          "keys": 3,
+          "exit_lines": 1,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "val",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP08",
+          "spec": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP08"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP24",
+          "source": "freedoom2",
+          "sectors": 195,
+          "format": "doom",
+          "doors": 11,
+          "locked_doors": 4,
+          "monsters": 98,
+          "keys": 3,
+          "exit_lines": 4,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "val",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP24",
+          "spec": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP24"
+        },
+        {
+          "id": "@vizdoom/freedoom2.wad:MAP26",
+          "source": "freedoom2",
+          "sectors": 348,
+          "format": "doom",
+          "doors": 3,
+          "locked_doors": 3,
+          "monsters": 242,
+          "keys": 2,
+          "exit_lines": 3,
+          "tier": 4,
+          "episode_ticks": 4200,
+          "has_exit": true,
+          "usable": true,
+          "split": "val",
+          "resolved_wad": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad",
+          "map_name": "MAP26",
+          "spec": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP26"
+        }
+      ],
+      "seeds_per_map": 1,
+      "configs": {
+        "full": {
+          "memory": "on",
+          "manager": "on",
+          "rnd": "on",
+          "rgb": "on",
+          "depth": "on",
+          "goal-helpers": "off"
+        },
+        "no-manager": {
+          "memory": "on",
+          "manager": "off",
+          "rnd": "on",
+          "rgb": "on",
+          "depth": "on",
+          "goal-helpers": "off"
+        },
+        "no-curiosity": {
+          "memory": "on",
+          "manager": "on",
+          "rnd": "off",
+          "rgb": "on",
+          "depth": "on",
+          "goal-helpers": "off"
+        },
+        "phase3": {
+          "memory": "on",
+          "manager": "off",
+          "rnd": "off",
+          "rgb": "off",
+          "depth": "off",
+          "goal-helpers": "off"
+        }
+      },
+      "goal_helpers": "off",
+      "smoke_overrides": {
+        "eval_ticks": 420,
+        "limit_maps": 4,
+        "train_ticks": null
+      },
+      "arguments": {
+        "cmd": "eval",
+        "name": "depth-stage4-final-eval",
+        "split": "val",
+        "seeds": 1,
+        "rgb": "on",
+        "depth": "on",
+        "limit_maps": 4,
+        "eval_ticks": 420,
+        "arm": [
+          "full=runs/depth-stage4-smoke-full-s19/latest.pt",
+          "no-manager=runs/depth-stage4-smoke-no-manager-s19/latest.pt",
+          "no-curiosity=runs/depth-stage4-smoke-no-curiosity-s19/latest.pt",
+          "phase3=runs/depth-stage4-smoke-phase3-s19/latest.pt"
+        ]
+      }
+    },
+    "results": {
+      "full": {
+        "checkpoint": "runs/depth-stage4-smoke-full-s19/latest.pt",
+        "sha256": "a7a912aa40a559bb4819a2bdb960ec77e3e033ecae9acdbe5ec50f148a0e54d1",
+        "config": {
+          "ray_channels": 32,
+          "ray_out": 128,
+          "entity_dim": 64,
+          "entity_heads": 4,
+          "vitals_out": 32,
+          "hidden": 256,
+          "use_mindmap": true,
+          "use_notebook": true,
+          "map_out": 128,
+          "note_dim": 64,
+          "use_manager": true,
+          "goal_interval": 8,
+          "goal_dim": 16,
+          "use_rgb": true,
+          "rgb_out": 64,
+          "use_depth": true,
+          "depth_out": 32
+        },
+        "training": {
+          "steps": 512,
+          "stage": 4,
+          "memory": "on",
+          "name": "depth-stage4-smoke-full-s19",
+          "manager": "on",
+          "rgb": "on",
+          "depth": "on",
+          "curriculum": {
+            "pool": {
+              "stage": 4,
+              "catalog_sha256": "42158ce805f2b997ccb1408f2c4260b94a11b84776174053d0bf9ff70c9f30ed",
+              "full_level_share": 1.0,
+              "kinds_override": null,
+              "seeds_per_kind": 200,
+              "generated_seed_range": [
+                0,
+                200
+              ],
+              "replay_weights": {
+                "keydoor": 0.4,
+                "rooms": 0.3,
+                "maze": 0.15,
+                "arena": 0.15
+              },
+              "puzzle_share": 0.0,
+              "near_start": 1.0,
+              "near_end": 0.3,
+              "full_pool": [
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP03",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP03"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP04",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP04"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP05",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP05"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP06",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP06"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP09",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP09"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP10",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP10"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP11",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP11"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP12",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP12"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP13",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP13"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP15",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP15"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP16",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP16"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP18",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP18"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP19",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP19"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP20",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP20"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP21",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP21"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP23",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP23"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP25",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP25"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP27",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP27"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP28",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP28"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP29",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP29"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP32",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP32"
+                  ]
+                }
+              ]
+            },
+            "ticks_override": null
+          },
+          "training": {
+            "rnd": "on",
+            "rnd_coef": 0.01,
+            "helpers": "off",
+            "helper_weights": null,
+            "exit_aux": 0.1
+          },
+          "warm_start": {
+            "copied": [
+              "rays.hit_emb.weight",
+              "rays.conv1.weight",
+              "rays.conv1.bias",
+              "rays.conv2.weight",
+              "rays.conv2.bias",
+              "rays.conv3.weight",
+              "rays.conv3.bias",
+              "rays.out.weight",
+              "rays.out.bias",
+              "entities.null",
+              "entities.query",
+              "entities.type_emb.weight",
+              "entities.mlp.0.weight",
+              "entities.mlp.0.bias",
+              "entities.mlp.2.weight",
+              "entities.mlp.2.bias",
+              "entities.attn.in_proj_weight",
+              "entities.attn.in_proj_bias",
+              "entities.attn.out_proj.weight",
+              "entities.attn.out_proj.bias",
+              "vitals.0.weight",
+              "vitals.0.bias",
+              "vitals.2.weight",
+              "vitals.2.bias",
+              "fuse.0.bias",
+              "gru.weight_hh",
+              "gru.bias_ih",
+              "gru.bias_hh",
+              "policy.weight",
+              "policy.bias",
+              "value.weight",
+              "value.bias"
+            ],
+            "widened": [
+              "fuse.0.weight",
+              "gru.weight_ih"
+            ],
+            "new": [
+              "mindmap.net.0.weight",
+              "mindmap.net.0.bias",
+              "mindmap.net.2.weight",
+              "mindmap.net.2.bias",
+              "mindmap.net.4.weight",
+              "mindmap.net.4.bias",
+              "mindmap.net.7.weight",
+              "mindmap.net.7.bias",
+              "rgb.0.weight",
+              "rgb.0.bias",
+              "rgb.2.weight",
+              "rgb.2.bias",
+              "rgb.4.weight",
+              "rgb.4.bias",
+              "rgb.8.weight",
+              "rgb.8.bias",
+              "exit_head.weight",
+              "exit_head.bias",
+              "depth.0.weight",
+              "depth.0.bias",
+              "depth.2.weight",
+              "depth.2.bias",
+              "depth.6.weight",
+              "depth.6.bias",
+              "notebook.null_k",
+              "notebook.null_v",
+              "notebook.slot.0.weight",
+              "notebook.slot.0.bias",
+              "notebook.slot.2.weight",
+              "notebook.slot.2.bias",
+              "notebook.k.weight",
+              "notebook.k.bias",
+              "notebook.v.weight",
+              "notebook.v.bias",
+              "notebook.q.weight",
+              "notebook.q.bias",
+              "manager.weight",
+              "manager.bias",
+              "manager_value.weight",
+              "manager_value.bias",
+              "goal_embedding.weight",
+              "worker_fuse.0.weight",
+              "worker_fuse.0.bias"
+            ]
+          }
+        },
+        "rows": [
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP17",
+            "tier": 3,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 2.212,
+            "agent_max_ms": 3.87,
+            "weighted_score": 6.0,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 4,
+            "kills": 0,
+            "damage": 0.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 100.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 2.0,
+              "combat": 0.0
+            },
+            "score": 2.0
+          },
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP08",
+            "tier": 4,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 2.888,
+            "agent_max_ms": 5.56,
+            "weighted_score": 20.0,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 10,
+            "kills": 0,
+            "damage": 0.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 100.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 5.0,
+              "combat": 0.0
+            },
+            "score": 5.0
+          },
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP24",
+            "tier": 4,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 2.753,
+            "agent_max_ms": 5.33,
+            "weighted_score": 24.0,
+            "exit": false,
+            "keys": 0,
+            "doors": 1,
+            "locked_doors": 0,
+            "areas": 6,
+            "kills": 0,
+            "damage": 0.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 100.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 3.0,
+              "exploration": 3.0,
+              "combat": 0.0
+            },
+            "score": 6.0
+          },
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP26",
+            "tier": 4,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 2.552,
+            "agent_max_ms": 4.05,
+            "weighted_score": 7.4,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 5,
+            "kills": 2,
+            "damage": 93.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 9.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 2.5,
+              "combat": -0.65
+            },
+            "score": 1.85
+          }
+        ]
+      },
+      "no-manager": {
+        "checkpoint": "runs/depth-stage4-smoke-no-manager-s19/latest.pt",
+        "sha256": "a1b8efc169b13957116429702ff02302436eeaa30da3148c27171c060e2a294e",
+        "config": {
+          "ray_channels": 32,
+          "ray_out": 128,
+          "entity_dim": 64,
+          "entity_heads": 4,
+          "vitals_out": 32,
+          "hidden": 256,
+          "use_mindmap": true,
+          "use_notebook": true,
+          "map_out": 128,
+          "note_dim": 64,
+          "use_manager": false,
+          "goal_interval": 8,
+          "goal_dim": 16,
+          "use_rgb": true,
+          "rgb_out": 64,
+          "use_depth": true,
+          "depth_out": 32
+        },
+        "training": {
+          "steps": 512,
+          "stage": 4,
+          "memory": "on",
+          "name": "depth-stage4-smoke-no-manager-s19",
+          "manager": "off",
+          "rgb": "on",
+          "depth": "on",
+          "curriculum": {
+            "pool": {
+              "stage": 4,
+              "catalog_sha256": "42158ce805f2b997ccb1408f2c4260b94a11b84776174053d0bf9ff70c9f30ed",
+              "full_level_share": 1.0,
+              "kinds_override": null,
+              "seeds_per_kind": 200,
+              "generated_seed_range": [
+                0,
+                200
+              ],
+              "replay_weights": {
+                "keydoor": 0.4,
+                "rooms": 0.3,
+                "maze": 0.15,
+                "arena": 0.15
+              },
+              "puzzle_share": 0.0,
+              "near_start": 1.0,
+              "near_end": 0.3,
+              "full_pool": [
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP03",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP03"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP04",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP04"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP05",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP05"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP06",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP06"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP09",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP09"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP10",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP10"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP11",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP11"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP12",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP12"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP13",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP13"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP15",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP15"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP16",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP16"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP18",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP18"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP19",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP19"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP20",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP20"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP21",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP21"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP23",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP23"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP25",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP25"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP27",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP27"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP28",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP28"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP29",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP29"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP32",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP32"
+                  ]
+                }
+              ]
+            },
+            "ticks_override": null
+          },
+          "training": {
+            "rnd": "on",
+            "rnd_coef": 0.01,
+            "helpers": "off",
+            "helper_weights": null,
+            "exit_aux": 0.1
+          },
+          "warm_start": {
+            "copied": [
+              "rays.hit_emb.weight",
+              "rays.conv1.weight",
+              "rays.conv1.bias",
+              "rays.conv2.weight",
+              "rays.conv2.bias",
+              "rays.conv3.weight",
+              "rays.conv3.bias",
+              "rays.out.weight",
+              "rays.out.bias",
+              "entities.null",
+              "entities.query",
+              "entities.type_emb.weight",
+              "entities.mlp.0.weight",
+              "entities.mlp.0.bias",
+              "entities.mlp.2.weight",
+              "entities.mlp.2.bias",
+              "entities.attn.in_proj_weight",
+              "entities.attn.in_proj_bias",
+              "entities.attn.out_proj.weight",
+              "entities.attn.out_proj.bias",
+              "vitals.0.weight",
+              "vitals.0.bias",
+              "vitals.2.weight",
+              "vitals.2.bias",
+              "fuse.0.bias",
+              "gru.weight_hh",
+              "gru.bias_ih",
+              "gru.bias_hh",
+              "policy.weight",
+              "policy.bias",
+              "value.weight",
+              "value.bias"
+            ],
+            "widened": [
+              "fuse.0.weight",
+              "gru.weight_ih"
+            ],
+            "new": [
+              "mindmap.net.0.weight",
+              "mindmap.net.0.bias",
+              "mindmap.net.2.weight",
+              "mindmap.net.2.bias",
+              "mindmap.net.4.weight",
+              "mindmap.net.4.bias",
+              "mindmap.net.7.weight",
+              "mindmap.net.7.bias",
+              "rgb.0.weight",
+              "rgb.0.bias",
+              "rgb.2.weight",
+              "rgb.2.bias",
+              "rgb.4.weight",
+              "rgb.4.bias",
+              "rgb.8.weight",
+              "rgb.8.bias",
+              "exit_head.weight",
+              "exit_head.bias",
+              "depth.0.weight",
+              "depth.0.bias",
+              "depth.2.weight",
+              "depth.2.bias",
+              "depth.6.weight",
+              "depth.6.bias",
+              "notebook.null_k",
+              "notebook.null_v",
+              "notebook.slot.0.weight",
+              "notebook.slot.0.bias",
+              "notebook.slot.2.weight",
+              "notebook.slot.2.bias",
+              "notebook.k.weight",
+              "notebook.k.bias",
+              "notebook.v.weight",
+              "notebook.v.bias",
+              "notebook.q.weight",
+              "notebook.q.bias"
+            ]
+          }
+        },
+        "rows": [
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP17",
+            "tier": 3,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 2.707,
+            "agent_max_ms": 6.87,
+            "weighted_score": 9.0,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 6,
+            "kills": 0,
+            "damage": 0.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 100.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 3.0,
+              "combat": 0.0
+            },
+            "score": 3.0
+          },
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP08",
+            "tier": 4,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 3.241,
+            "agent_max_ms": 7.11,
+            "weighted_score": 44.4,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 20,
+            "kills": 1,
+            "damage": 18.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 82.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 10.0,
+              "combat": 1.1
+            },
+            "score": 11.1
+          },
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP24",
+            "tier": 4,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 3.712,
+            "agent_max_ms": 30.75,
+            "weighted_score": 11.8,
+            "exit": false,
+            "keys": 0,
+            "doors": 1,
+            "locked_doors": 0,
+            "areas": 9,
+            "kills": 0,
+            "damage": 91.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 9.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 3.0,
+              "exploration": 4.5,
+              "combat": -4.55
+            },
+            "score": 2.95
+          },
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP26",
+            "tier": 4,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 3.459,
+            "agent_max_ms": 7.53,
+            "weighted_score": 27.8,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 6,
+            "kills": 3,
+            "damage": 41.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 65.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 3.0,
+              "combat": 3.95
+            },
+            "score": 6.95
+          }
+        ]
+      },
+      "no-curiosity": {
+        "checkpoint": "runs/depth-stage4-smoke-no-curiosity-s19/latest.pt",
+        "sha256": "aa1aa3037a9c15f2e4ffca92f95790b2aa936f81d3d7d4d87694f4fe30d7ab96",
+        "config": {
+          "ray_channels": 32,
+          "ray_out": 128,
+          "entity_dim": 64,
+          "entity_heads": 4,
+          "vitals_out": 32,
+          "hidden": 256,
+          "use_mindmap": true,
+          "use_notebook": true,
+          "map_out": 128,
+          "note_dim": 64,
+          "use_manager": true,
+          "goal_interval": 8,
+          "goal_dim": 16,
+          "use_rgb": true,
+          "rgb_out": 64,
+          "use_depth": true,
+          "depth_out": 32
+        },
+        "training": {
+          "steps": 512,
+          "stage": 4,
+          "memory": "on",
+          "name": "depth-stage4-smoke-no-curiosity-s19",
+          "manager": "on",
+          "rgb": "on",
+          "depth": "on",
+          "curriculum": {
+            "pool": {
+              "stage": 4,
+              "catalog_sha256": "42158ce805f2b997ccb1408f2c4260b94a11b84776174053d0bf9ff70c9f30ed",
+              "full_level_share": 1.0,
+              "kinds_override": null,
+              "seeds_per_kind": 200,
+              "generated_seed_range": [
+                0,
+                200
+              ],
+              "replay_weights": {
+                "keydoor": 0.4,
+                "rooms": 0.3,
+                "maze": 0.15,
+                "arena": 0.15
+              },
+              "puzzle_share": 0.0,
+              "near_start": 1.0,
+              "near_end": 0.3,
+              "full_pool": [
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP03",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP03"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP04",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP04"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP05",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP05"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP06",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP06"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP09",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP09"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP10",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP10"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP11",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP11"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP12",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP12"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP13",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP13"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP15",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP15"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP16",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP16"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP18",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP18"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP19",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP19"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP20",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP20"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP21",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP21"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP23",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP23"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP25",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP25"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP27",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP27"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP28",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP28"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP29",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP29"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP32",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP32"
+                  ]
+                }
+              ]
+            },
+            "ticks_override": null
+          },
+          "training": {
+            "rnd": "off",
+            "rnd_coef": 0.01,
+            "helpers": "off",
+            "helper_weights": null,
+            "exit_aux": 0.1
+          },
+          "warm_start": {
+            "copied": [
+              "rays.hit_emb.weight",
+              "rays.conv1.weight",
+              "rays.conv1.bias",
+              "rays.conv2.weight",
+              "rays.conv2.bias",
+              "rays.conv3.weight",
+              "rays.conv3.bias",
+              "rays.out.weight",
+              "rays.out.bias",
+              "entities.null",
+              "entities.query",
+              "entities.type_emb.weight",
+              "entities.mlp.0.weight",
+              "entities.mlp.0.bias",
+              "entities.mlp.2.weight",
+              "entities.mlp.2.bias",
+              "entities.attn.in_proj_weight",
+              "entities.attn.in_proj_bias",
+              "entities.attn.out_proj.weight",
+              "entities.attn.out_proj.bias",
+              "vitals.0.weight",
+              "vitals.0.bias",
+              "vitals.2.weight",
+              "vitals.2.bias",
+              "fuse.0.bias",
+              "gru.weight_hh",
+              "gru.bias_ih",
+              "gru.bias_hh",
+              "policy.weight",
+              "policy.bias",
+              "value.weight",
+              "value.bias"
+            ],
+            "widened": [
+              "fuse.0.weight",
+              "gru.weight_ih"
+            ],
+            "new": [
+              "mindmap.net.0.weight",
+              "mindmap.net.0.bias",
+              "mindmap.net.2.weight",
+              "mindmap.net.2.bias",
+              "mindmap.net.4.weight",
+              "mindmap.net.4.bias",
+              "mindmap.net.7.weight",
+              "mindmap.net.7.bias",
+              "rgb.0.weight",
+              "rgb.0.bias",
+              "rgb.2.weight",
+              "rgb.2.bias",
+              "rgb.4.weight",
+              "rgb.4.bias",
+              "rgb.8.weight",
+              "rgb.8.bias",
+              "exit_head.weight",
+              "exit_head.bias",
+              "depth.0.weight",
+              "depth.0.bias",
+              "depth.2.weight",
+              "depth.2.bias",
+              "depth.6.weight",
+              "depth.6.bias",
+              "notebook.null_k",
+              "notebook.null_v",
+              "notebook.slot.0.weight",
+              "notebook.slot.0.bias",
+              "notebook.slot.2.weight",
+              "notebook.slot.2.bias",
+              "notebook.k.weight",
+              "notebook.k.bias",
+              "notebook.v.weight",
+              "notebook.v.bias",
+              "notebook.q.weight",
+              "notebook.q.bias",
+              "manager.weight",
+              "manager.bias",
+              "manager_value.weight",
+              "manager_value.bias",
+              "goal_embedding.weight",
+              "worker_fuse.0.weight",
+              "worker_fuse.0.bias"
+            ]
+          }
+        },
+        "rows": [
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP17",
+            "tier": 3,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 3.404,
+            "agent_max_ms": 7.12,
+            "weighted_score": 9.0,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 6,
+            "kills": 0,
+            "damage": 0.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 100.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 3.0,
+              "combat": 0.0
+            },
+            "score": 3.0
+          },
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP08",
+            "tier": 4,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 3.134,
+            "agent_max_ms": 7.09,
+            "weighted_score": 14.0,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 7,
+            "kills": 0,
+            "damage": 0.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 100.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 3.5,
+              "combat": 0.0
+            },
+            "score": 3.5
+          },
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP24",
+            "tier": 4,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 2.192,
+            "agent_max_ms": 3.24,
+            "weighted_score": 8.0,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 4,
+            "kills": 0,
+            "damage": 0.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 100.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 2.0,
+              "combat": 0.0
+            },
+            "score": 2.0
+          },
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP26",
+            "tier": 4,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 2.319,
+            "agent_max_ms": 3.12,
+            "weighted_score": 8.8,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 6,
+            "kills": 1,
+            "damage": 56.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 50.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 3.0,
+              "combat": -0.8
+            },
+            "score": 2.2
+          }
+        ]
+      },
+      "phase3": {
+        "checkpoint": "runs/depth-stage4-smoke-phase3-s19/latest.pt",
+        "sha256": "ef8a059d847b7184c7e3e78452dc17fa0cf0f6a2fa0bec18e3b5fc895f6822a6",
+        "config": {
+          "ray_channels": 32,
+          "ray_out": 128,
+          "entity_dim": 64,
+          "entity_heads": 4,
+          "vitals_out": 32,
+          "hidden": 256,
+          "use_mindmap": true,
+          "use_notebook": true,
+          "map_out": 128,
+          "note_dim": 64,
+          "use_manager": false,
+          "goal_interval": 8,
+          "goal_dim": 16,
+          "use_rgb": false,
+          "rgb_out": 64,
+          "use_depth": false,
+          "depth_out": 32
+        },
+        "training": {
+          "steps": 512,
+          "stage": 4,
+          "memory": "on",
+          "name": "depth-stage4-smoke-phase3-s19",
+          "manager": "off",
+          "rgb": "off",
+          "depth": "off",
+          "curriculum": {
+            "pool": {
+              "stage": 4,
+              "catalog_sha256": "42158ce805f2b997ccb1408f2c4260b94a11b84776174053d0bf9ff70c9f30ed",
+              "full_level_share": 1.0,
+              "kinds_override": null,
+              "seeds_per_kind": 200,
+              "generated_seed_range": [
+                0,
+                200
+              ],
+              "replay_weights": {
+                "keydoor": 0.4,
+                "rooms": 0.3,
+                "maze": 0.15,
+                "arena": 0.15
+              },
+              "puzzle_share": 0.0,
+              "near_start": 1.0,
+              "near_end": 0.3,
+              "full_pool": [
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP03",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP03"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP04",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP04"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP05",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP05"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP06",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP06"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP09",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP09"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP10",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP10"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP11",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP11"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP12",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP12"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP13",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP13"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP15",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP15"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP16",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP16"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP18",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP18"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP19",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP19"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP20",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP20"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP21",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP21"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP23",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP23"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP25",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP25"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP27",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP27"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP28",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP28"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP29",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP29"
+                  ]
+                },
+                {
+                  "id": "@vizdoom/freedoom2.wad:MAP32",
+                  "source": "freedoom2",
+                  "tier": 4,
+                  "episode_ticks": 4200,
+                  "canonical_identity": [
+                    "@vizdoom/freedoom2.wad",
+                    "MAP32"
+                  ]
+                }
+              ]
+            },
+            "ticks_override": null
+          },
+          "training": {
+            "rnd": "off",
+            "rnd_coef": 0.01,
+            "helpers": "off",
+            "helper_weights": null,
+            "exit_aux": 0.1
+          },
+          "warm_start": {
+            "copied": [
+              "rays.hit_emb.weight",
+              "rays.conv1.weight",
+              "rays.conv1.bias",
+              "rays.conv2.weight",
+              "rays.conv2.bias",
+              "rays.conv3.weight",
+              "rays.conv3.bias",
+              "rays.out.weight",
+              "rays.out.bias",
+              "entities.null",
+              "entities.query",
+              "entities.type_emb.weight",
+              "entities.mlp.0.weight",
+              "entities.mlp.0.bias",
+              "entities.mlp.2.weight",
+              "entities.mlp.2.bias",
+              "entities.attn.in_proj_weight",
+              "entities.attn.in_proj_bias",
+              "entities.attn.out_proj.weight",
+              "entities.attn.out_proj.bias",
+              "vitals.0.weight",
+              "vitals.0.bias",
+              "vitals.2.weight",
+              "vitals.2.bias",
+              "fuse.0.bias",
+              "gru.weight_hh",
+              "gru.bias_ih",
+              "gru.bias_hh",
+              "policy.weight",
+              "policy.bias",
+              "value.weight",
+              "value.bias"
+            ],
+            "widened": [
+              "fuse.0.weight",
+              "gru.weight_ih"
+            ],
+            "new": [
+              "mindmap.net.0.weight",
+              "mindmap.net.0.bias",
+              "mindmap.net.2.weight",
+              "mindmap.net.2.bias",
+              "mindmap.net.4.weight",
+              "mindmap.net.4.bias",
+              "mindmap.net.7.weight",
+              "mindmap.net.7.bias",
+              "notebook.null_k",
+              "notebook.null_v",
+              "notebook.slot.0.weight",
+              "notebook.slot.0.bias",
+              "notebook.slot.2.weight",
+              "notebook.slot.2.bias",
+              "notebook.k.weight",
+              "notebook.k.bias",
+              "notebook.v.weight",
+              "notebook.v.bias",
+              "notebook.q.weight",
+              "notebook.q.bias"
+            ]
+          }
+        },
+        "rows": [
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP17",
+            "tier": 3,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 1.652,
+            "agent_max_ms": 2.45,
+            "weighted_score": 16.5,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 11,
+            "kills": 0,
+            "damage": 0.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 100.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 5.5,
+              "combat": 0.0
+            },
+            "score": 5.5
+          },
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP08",
+            "tier": 4,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 1.535,
+            "agent_max_ms": 2.31,
+            "weighted_score": 29.8,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 17,
+            "kills": 0,
+            "damage": 21.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 79.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 8.5,
+              "combat": -1.05
+            },
+            "score": 7.45
+          },
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP24",
+            "tier": 4,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 1.584,
+            "agent_max_ms": 2.53,
+            "weighted_score": 19.2,
+            "exit": false,
+            "keys": 0,
+            "doors": 1,
+            "locked_doors": 0,
+            "areas": 7,
+            "kills": 0,
+            "damage": 34.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 66.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 3.0,
+              "exploration": 3.5,
+              "combat": -1.7
+            },
+            "score": 4.8
+          },
+          {
+            "map": ".venv/lib/python3.13/site-packages/vizdoom/freedoom2.wad:MAP26",
+            "tier": 4,
+            "seed": 0,
+            "steps": 105,
+            "stopped": null,
+            "agent_mean_ms": 1.616,
+            "agent_max_ms": 2.33,
+            "weighted_score": 24.6,
+            "exit": false,
+            "keys": 0,
+            "doors": 0,
+            "locked_doors": 0,
+            "areas": 4,
+            "kills": 4,
+            "damage": 77.0,
+            "dead": false,
+            "tic": 421,
+            "episode_ticks": 420,
+            "health": 29.0,
+            "buckets": {
+              "exit": 0.0,
+              "progression": 0.0,
+              "exploration": 2.0,
+              "combat": 4.15
+            },
+            "score": 6.15
+          }
+        ]
+      }
+    },
+    "summary": {
+      "arms": {
+        "full": {
+          "episodes": 4,
+          "tiers": {
+            "3": {
+              "episodes": 1,
+              "exits": 0,
+              "exit_rate": 0.0
+            },
+            "4": {
+              "episodes": 3,
+              "exits": 0,
+              "exit_rate": 0.0
+            }
+          },
+          "stopped": []
+        },
+        "no-manager": {
+          "episodes": 4,
+          "tiers": {
+            "3": {
+              "episodes": 1,
+              "exits": 0,
+              "exit_rate": 0.0
+            },
+            "4": {
+              "episodes": 3,
+              "exits": 0,
+              "exit_rate": 0.0
+            }
+          },
+          "stopped": []
+        },
+        "no-curiosity": {
+          "episodes": 4,
+          "tiers": {
+            "3": {
+              "episodes": 1,
+              "exits": 0,
+              "exit_rate": 0.0
+            },
+            "4": {
+              "episodes": 3,
+              "exits": 0,
+              "exit_rate": 0.0
+            }
+          },
+          "stopped": []
+        },
+        "phase3": {
+          "episodes": 4,
+          "tiers": {
+            "3": {
+              "episodes": 1,
+              "exits": 0,
+              "exit_rate": 0.0
+            },
+            "4": {
+              "episodes": 3,
+              "exits": 0,
+              "exit_rate": 0.0
+            }
+          },
+          "stopped": []
+        }
+      },
+      "paired": {
+        "full-minus-no-manager": {
+          "episodes": 4,
+          "exit_rate_delta": 0.0,
+          "tiers": {
+            "3": {
+              "episodes": 1,
+              "exit_rate_delta": 0.0
+            },
+            "4": {
+              "episodes": 3,
+              "exit_rate_delta": 0.0
+            }
+          }
+        },
+        "full-minus-no-curiosity": {
+          "episodes": 4,
+          "exit_rate_delta": 0.0,
+          "tiers": {
+            "3": {
+              "episodes": 1,
+              "exit_rate_delta": 0.0
+            },
+            "4": {
+              "episodes": 3,
+              "exit_rate_delta": 0.0
+            }
+          }
+        },
+        "full-minus-phase3": {
+          "episodes": 4,
+          "exit_rate_delta": 0.0,
+          "tiers": {
+            "3": {
+              "episodes": 1,
+              "exit_rate_delta": 0.0
+            },
+            "4": {
+              "episodes": 3,
+              "exit_rate_delta": 0.0
+            }
+          }
+        }
+      }
+    },
+    "errors": [],
+    "interpretation": "Pipeline verification only when smoke overrides or short training are used. Exit-rate differences do not establish robust improvement; effectiveness remains unproven."
+  },
+  "latency": {
+    "device": "cpu",
+    "pinned_one_cpu": false,
+    "init_s": 0.281,
+    "runs": [
+      {
+        "map": "two_rooms.wad:MAP01",
+        "episode": 0,
+        "steps": 105,
+        "reset_s": 0.0005,
+        "first_act_ms": 4.03,
+        "mean_ms": 2.227,
+        "p50_ms": 2.195,
+        "p99_ms": 2.936,
+        "max_ms": 3.2,
+        "agent_time_s": 0.236,
+        "budget_s": 4.2
+      },
+      {
+        "map": "freedoom2.wad:MAP08",
+        "episode": 0,
+        "steps": 105,
+        "reset_s": 0.0003,
+        "first_act_ms": 3.34,
+        "mean_ms": 2.253,
+        "p50_ms": 2.194,
+        "p99_ms": 2.906,
+        "max_ms": 2.97,
+        "agent_time_s": 0.238,
+        "budget_s": 4.2
+      }
+    ],
+    "failures": []
+  },
+  "validator": {
+    "exit_code": 0,
+    "map": "maps/two_rooms.wad:MAP01",
+    "steps": 525,
+    "p99_ms": 2.9,
+    "warnings": [
+      "Temporary snapshot has no Git metadata",
+      "Mac could not pin one CPU",
+      "Linux /proc RAM measurement unavailable"
+    ]
+  }
+}

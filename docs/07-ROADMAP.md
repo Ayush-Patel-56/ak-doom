@@ -83,11 +83,12 @@ flowchart LR
 - [x] Goal helper rewards (training-only scorer events)
 - [x] RND curiosity (optional; checkpointed predictor/target/statistics)
 - [x] RGB encoder + masked "exit in view?" auxiliary task (real geometry/render labels; detector effectiveness not established)
-- [ ] Depth encoder (if speed allows)
-- [ ] Curriculum Stage 4 (full levels)
-- [ ] Ablations: − manager, − curiosity
+- [x] Optional real-depth encoder; measured Mac latency in configs/depth-stage4-smoke.json
+- [x] Curriculum Stage 4 (catalog train-only full levels, replay and recorded caps)
+- [x] Controlled ablation runner: − manager, − curiosity, Phase 3 reference; smoke execution verified
 
-**Done when:** exit rate on Tier 3/4 validation maps improves over Phase 3.
+**Done when (still open):** exit rate on Tier 3/4 validation maps improves over Phase 3.
+The 512-decision smoke comparison had zero exits in every arm; improvement is not established.
 
 ---
 
