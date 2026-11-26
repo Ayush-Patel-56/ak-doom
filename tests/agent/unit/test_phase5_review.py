@@ -17,9 +17,18 @@ def test_copied_and_linked_test_wads_are_guarded_and_keep_metadata(tmp_path):
     row=next(r for r in load_catalog_pool('test',[1,2,3,4]) if r['tier']==3)
     original=Path(row['resolved_wad'])
     copy=tmp_path/'copy.wad';shutil.copyfile(original,copy)
-    hard=tmp_path/'hard.wad';os.link(original,hard)
-    sym=tmp_path/'sym.wad';sym.symlink_to(original)
-    for path in (copy,hard,sym):
+    hard=tmp_path/'hard.wad'
+    try:
+        os.link(original,hard)
+    except OSError:  # hard links can't cross drives/filesystems (e.g. Windows F: -> C:); identity is by content
+        os.link(copy,hard)
+    paths=[copy,hard]
+    sym=tmp_path/'sym.wad'
+    try:
+        sym.symlink_to(original);paths.append(sym)
+    except OSError:  # Windows needs Developer Mode or admin rights for symlinks
+        pass
+    for path in paths:
         spec=f"{path}:{row['map_name'].lower()}"
         with pytest.raises(ValueError,match='final-test'):
             reserve_test_use([spec],REPO/'submission/weights/champion.pt',ledger=tmp_path/'ledger')
