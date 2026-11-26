@@ -62,8 +62,9 @@ def main() -> int:
         print(f"too slow: {mean_ms:.1f} ms > {args.target_ms} ms")
         return 1
 
-    info = {"source": str(args.checkpoint.resolve().relative_to(REPO)) if args.checkpoint.resolve().is_relative_to(REPO)
-            else str(args.checkpoint), "mean_ms": round(mean_ms, 2), "meta": agent.policy.meta}
+    src = args.checkpoint.resolve()
+    info = {"source": (src.relative_to(REPO) if src.is_relative_to(REPO) else src).as_posix(),
+            "mean_ms": round(mean_ms, 2), "meta": agent.policy.meta}
     if args.eval:
         ev = json.loads(args.eval.read_text(encoding="utf-8"))
         crashes = sum(1 for r in ev["runs"] if r.get("stopped"))
