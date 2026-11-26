@@ -55,14 +55,14 @@ def play(agent, spec: str, meta: dict, seed: int, render_buffers: bool) -> dict:
     env = make_env(wad, map_name, episode_ticks=ticks, render_buffers=render_buffers)
     tracker = ScoreTracker()
     budget_s = limits.agent_budget_s(ticks)
-    stopped, agent_s, steps, slowest = None, 0.0, 0, 0.0
+    stopped, zeroed, agent_s, steps, slowest = None, None, 0.0, 0, 0.0
     try:
         obs, _ = env.reset(seed=seed)
         tracker.reset(env.privileged_state())
         t0 = time.perf_counter()
         agent.reset()
         if time.perf_counter() - t0 > limits.RESET_TIMEOUT_S:
-            stopped = "reset timeout"
+            stopped = zeroed = "reset timeout"  # official rule: 0 points for this map
         done = False
         while not done:
             action = STAND_STILL
@@ -91,6 +91,9 @@ def play(agent, spec: str, meta: dict, seed: int, render_buffers: bool) -> dict:
     finally:
         env.close()
     res = tracker.result()
+    if zeroed:
+        res.buckets = {k: 0.0 for k in res.buckets}
+        res.score = 0.0
     tier = int(meta.get("tier", 1))
     return {
         "map": spec,
@@ -125,7 +128,11 @@ def main() -> int:
             return 2
         specs = [ln.strip() for ln in lst.read_text(encoding="utf-8").splitlines() if ln.strip()]
 
+    t0 = time.perf_counter()
     agent = agent_loader.load_agent_class()(observation_space(), action_space(), args.device)
+    init_s = time.perf_counter() - t0
+    if init_s > limits.INIT_TIMEOUT_S:  # official rule: 0 points on every map
+        print(f"WARNING: __init__ took {init_s:.1f}s > {limits.INIT_TIMEOUT_S:.0f}s: the scorer would give 0 points")
     rows = []
     for spec in specs:
         for seed in range(args.seeds):
