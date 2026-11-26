@@ -5,7 +5,7 @@
 > **Agent name:** *Smriti* (स्मृति), which means "memory".
 > **Track:** Yugaantar 2026 · DevForge — Track 1, *"Can It Play DOOM?"*
 > **Built on:** the official [`devforge-doom-template`](https://github.com/Reinforce-SST/devforge-doom-template).
-> **Status:** 📝 Planning. The agent in `submission/agent.py` is still the template's random baseline.
+> **Status:** 🎮 Playing. The submitted agent runs our first trained champion (`submission/weights/champion.pt`, Phase 2 brain: **+2,021** on our 20 validation maps vs **−201** for random). Phase 3 memory is built; training it is next.
 
 ## What is this?
 

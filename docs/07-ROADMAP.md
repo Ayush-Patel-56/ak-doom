@@ -58,7 +58,7 @@ flowchart LR
 - [x] Reward calculator (§4.2) + helpers (`training/rewards.py`)
 - [x] Curriculum Stage 1 (combat) and Stage 2 (navigation) (`training/curriculum.py`); first 6M-step run: val **+2,021** vs random −201
 - [x] TensorBoard logging + checkpoint → Mini-League → champion export (`scripts/export_champion.py`); `--resume` for long runs
-- [ ] First champion exported (`p2-stage12-v1` final, +2,021 on val)
+- [x] First champion exported (`p2-stage12-v1` final, +2,021 on val): `submission/weights/champion.pt` + `champion.json`; passes `validate.py --docker` (init 7.4 s, 1.2 ms per decision, 968 MB RAM)
 
 **Done when:** the champion clearly beats random on Tier 1 and Tier 2 validation maps and stays within the speed budget.
 
