@@ -2,7 +2,7 @@
 
 Phase 2 inputs (docs/03-SYSTEM-DESIGN.md §3.1): rays, visible entities, vitals and the previous
 action. Phase 3 adds the memory features (mind-map crop + notebook slots) from
-smriti/memory/episode.py; they are zeros when no memory is passed. Depth and RGB come later. Scaling to network-friendly ranges happens inside the network
+smriti/memory/episode.py; they are zeros when no memory is passed. Depth and RGB are extracted here too. Scaling to network-friendly ranges happens inside the network
 (smriti/brain.py) so this step stays a cheap, lossless repack into numpy arrays.
 """
 
