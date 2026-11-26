@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AK-Doom Project Brief</title>
+<style>
+  :root {
+    --ink: #1b1f24;
+    --muted: #57606a;
+    --accent: #9a2a1c;
+    --accent-soft: #f6e7e4;
+    --line: #d0d7de;
+    --box: #f4f6f8;
+    --mem: #e7f0fb;
+    --mem-line: #2f6db5;
+  }
+  @page { size: A4; margin: 1.6cm; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #fff; color: var(--ink); }
+  body {
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.3;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .sheet { max-width: 17.8cm; margin: 0 auto; }
+  @media screen { .sheet { padding: 16px; } .page { margin-bottom: 28px; } }
+  .page2 { break-before: page; page-break-before: always; }
+  header { border-bottom: 2px solid var(--accent); padding-bottom: 4pt; margin-bottom: 5pt; }
+  h1 { font-size: 17pt; margin: 0; letter-spacing: .2px; }
+  h1 .deva { font-family: "Nirmala UI", "Mangal", sans-serif; font-weight: 600; }
+  .sub { color: var(--muted); font-size: 9pt; margin-top: 1pt; }
+  .pitch { background: var(--accent-soft); border-left: 3px solid var(--accent); padding: 4pt 7pt; margin: 5pt 0 4pt; font-size: 10pt; }
+  .pitch b { color: var(--accent); }
+  h2 { font-size: 10.6pt; color: var(--accent); margin: 6pt 0 2pt; border-bottom: 1px solid var(--line); padding-bottom: 1pt; }
+  h2 .n { display: inline-block; min-width: 1.2em; }
+  p { margin: 2pt 0 3pt; }
+  ul, ol { margin: 2pt 0 3pt; padding-left: 1.25em; }
+  li { margin: 1.2pt 0; }
+  code { font-family: Consolas, "Courier New", monospace; font-size: 8.8pt; background: var(--box); padding: 0 2px; border-radius: 2px; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14pt; }
+  figure { margin: 4pt 0 2pt; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption { font-size: 8pt; color: var(--muted); margin-top: 1pt; }
+  table { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 8.8pt; margin: 3pt 0 3pt; }
+  th, td { border-bottom: 1px solid var(--line); padding: 2pt 4pt; text-align: left; vertical-align: top; }
+  th { background: var(--box); font-weight: 600; }
+  td.num, th.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  tr.hl td { background: var(--accent-soft); font-weight: 600; }
+  td .ph { word-break: break-all; white-space: normal; font-size: 7.4pt; }
+  .ph { color: var(--accent); font-family: Consolas, monospace; font-size: 8.2pt; font-weight: 600; }
+  .note { font-size: 8.4pt; color: var(--muted); margin: 1pt 0 3pt; }
+  .abl { display: grid; grid-template-columns: 12.5em 1fr; gap: 3pt 6pt; align-items: center; font-size: 8.6pt; margin: 3pt 0 2pt; }
+  .bars { display: flex; flex-direction: column; gap: 1.2pt; }
+  .bar { height: 8.5pt; display: flex; align-items: center; font-size: 7pt; line-height: 1; color: #fff; padding-left: 3pt; white-space: nowrap; }
+  .bar.on { background: var(--mem-line); }
+  .bar.off { background: #8c959f; }
+  .legend { font-size: 8pt; color: var(--muted); white-space: nowrap; }
+  .legend i { display: inline-block; width: 8pt; height: 7pt; vertical-align: -0.5pt; margin: 0 2pt 0 6pt; }
+  footer { margin-top: 6pt; font-size: 7.8pt; color: var(--muted); border-top: 1px solid var(--line); padding-top: 2pt; }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+<!-- ======================= PAGE 1 ======================= -->
+<section class="page page1">
+  <header>
+    <h1>AK-Doom: Smriti <span class="deva">(स्मृति)</span> <span style="font-weight:400;font-size:12pt;color:var(--muted)">"memory"</span></h1>
+    <div class="sub">Project Brief · Yugaantar DevForge, Track 1 "Can It Play DOOM?" · Team AK-Doom (<span class="ph">{{TEAM_NAMES}}</span>)</div>
+  </header>
+
+  <div class="pitch"><b>A DOOM agent that draws its own map and remembers where the locked door was.</b>
+    It senses only what a player could sense, gets no coordinates, and every button press comes from one small neural network.</div>
+
+  <h2><span class="n">1</span>Our USP</h2>
+  <ul>
+    <li><b>Spatial memory without coordinates.</b> The game never says where the agent is. Smriti estimates it with a <i>calibrated odometer</i>, draws a <i>mind map</i> of walls, doors and visited places, and keeps a <i>landmark notebook</i> of keys and doors. That is what Tier 3 needs: <i>"I have the key; where was that locked door?"</i></li>
+    <li><b>Every action comes from the network.</b> The mind map and notebook are preprocessing and learned memory, which the rules allow. There is <b>no pathfinding, no BFS and no <code>atan2</code> aiming</b>.</li>
+    <li><b>Built from scratch, measured honestly.</b> Our own recurrent PPO (no RL library), procedural map generator and "Mini-League" evaluator (scores are only compared on the same map set). A learned manager/worker, RND curiosity and image encoders are built as optional switches (Phase 4).</li>
+  </ul>
+
+  <div class="cols">
+    <div>
+      <h2><span class="n">2</span>What it sees</h2>
+      <p>Ego-centric only, <b>no global position</b>: <b>64 rays</b> all around (distance + hit type: wall, door, locked door, enemy, item), <b>up to 32 visible entities</b> (distance, direction, speed, type) and <b>17 vitals</b> (health, armour, ammo, key flags, own velocity).</p>
+    </div>
+    <div>
+      <h2><span class="n">&nbsp;</span>What it does</h2>
+      <p>One decision every <b>4 game ticks</b>. The 9 buttons are chosen as <b>6 action groups</b> (move, strafe, turn, attack, use, next weapon), one option per group, so contradictions like forward + back are impossible.</p>
+    </div>
+  </div>
+
+  <h2><span class="n">3</span>Neural architecture: SmritiNet</h2>
+  <figure>
+    <svg viewBox="0 0 915 310" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SmritiNet architecture: rays, entities and vitals go through encoders, are fused, pass through a GRU together with the mind map and landmark notebook, and a worker policy (optionally guided by a manager) outputs 9 buttons.">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#57606a"/>
+        </marker>
+        <marker id="arb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#2f6db5"/>
+        </marker>
+        <style>
+          .b { fill: #f4f6f8; stroke: #8c959f; stroke-width: 1.2; }
+          .m { fill: #e7f0fb; stroke: #2f6db5; stroke-width: 1.6; }
+          .k { fill: #f6e7e4; stroke: #9a2a1c; stroke-width: 1.6; }
+          .o { fill: #f4f6f8; stroke: #8c959f; stroke-width: 1.2; stroke-dasharray: 5 3; }
+          .t { font: 600 13px "Segoe UI", Arial, sans-serif; fill: #1b1f24; }
+          .s { font: 11.5px "Segoe UI", Arial, sans-serif; fill: #57606a; }
+          .tag { font: 600 11px "Segoe UI", Arial, sans-serif; fill: #57606a; letter-spacing: .6px; }
+          .l { stroke: #57606a; stroke-width: 1.3; fill: none; marker-end: url(#ar); }
+          .lb { stroke: #2f6db5; stroke-width: 1.5; fill: none; marker-end: url(#arb); }
+          .ld { stroke: #2f6db5; stroke-width: 1.3; fill: none; stroke-dasharray: 4 3; marker-end: url(#arb); }
+        </style>
+      </defs>
+      <!-- column tags -->
+      <text class="tag" x="8" y="12">INPUTS</text>
+      <text class="tag" x="178" y="12">ENCODERS</text>
+      <text class="tag" x="505" y="12">FUSE</text>
+      <text class="tag" x="596" y="12">MEMORY</text>
+      <text class="tag" x="702" y="12">DECIDE</text>
+      <text class="tag" x="846" y="12">OUTPUT</text>
+
+      <!-- inputs -->
+      <rect class="b" x="8" y="20" width="150" height="40" rx="4"/>
+      <text class="t" x="16" y="37">64 rays (360°)</text><text class="s" x="16" y="52">distance + hit type</text>
+      <rect class="b" x="8" y="70" width="150" height="40" rx="4"/>
+      <text class="t" x="16" y="87">0–32 entities</text><text class="s" x="16" y="102">features + type + mask</text>
+      <rect class="b" x="8" y="120" width="150" height="40" rx="4"/>
+      <text class="t" x="16" y="137">17 vitals</text><text class="s" x="16" y="152">+ previous action (9)</text>
+      <rect class="o" x="8" y="170" width="150" height="40" rx="4"/>
+      <text class="t" x="16" y="187">RGB / depth</text><text class="s" x="16" y="202">optional (Phase 4)</text>
+      <rect class="b" x="8" y="218" width="150" height="40" rx="4"/>
+      <text class="t" x="16" y="235">Own buttons</text><text class="s" x="16" y="250">+ own velocity</text>
+
+      <!-- encoders -->
+      <rect class="b" x="178" y="20" width="214" height="40" rx="4"/>
+      <text class="t" x="186" y="37">Circular 1-D conv</text><text class="s" x="186" y="52">over the ray ring → 128</text>
+      <rect class="b" x="178" y="70" width="214" height="40" rx="4"/>
+      <text class="t" x="186" y="87">Entity attention</text><text class="s" x="186" y="102">learned query + "nothing here" → 128</text>
+      <rect class="b" x="178" y="120" width="214" height="40" rx="4"/>
+      <text class="t" x="186" y="137">Vitals MLP</text><text class="s" x="186" y="152">→ 32</text>
+      <rect class="o" x="178" y="170" width="122" height="40" rx="4"/>
+      <text class="t" x="186" y="187">Small CNNs</text><text class="s" x="186" y="202">+ exit-in-view head</text>
+      <rect class="m" x="178" y="218" width="112" height="40" rx="4"/>
+      <text class="t" x="186" y="235">Odometer</text><text class="s" x="186" y="250">pose from spawn</text>
+
+      <!-- memory structures -->
+      <rect class="m" x="310" y="200" width="172" height="48" rx="4"/>
+      <text class="t" x="318" y="216">Mind map</text><text class="s" x="318" y="230">256×256 grid, 8 layers</text><text class="s" x="318" y="243">rotated 32×32 crop → CNN</text>
+      <rect class="m" x="310" y="256" width="172" height="50" rx="4"/>
+      <text class="t" x="318" y="272">Landmark notebook</text><text class="s" x="318" y="286">16 slots: key / locked / door</text><text class="s" x="318" y="299">read by attention</text>
+
+      <!-- arrows inputs -> encoders -->
+      <path class="l" d="M158,40 H176"/><path class="l" d="M158,90 H176"/><path class="l" d="M158,140 H176"/>
+      <path class="l" d="M158,190 H176"/><path class="lb" d="M158,238 H176"/>
+      <!-- odometer -> map & notebook ; rays also drawn into map -->
+      <path class="lb" d="M290,230 H308"/><path class="lb" d="M290,246 L299,246 L299,278 H308"/>
+
+      <!-- fuse -->
+      <rect class="k" x="505" y="20" width="66" height="228" rx="4"/>
+      <text class="t" x="538" y="140" text-anchor="middle">Fuse</text><text class="s" x="538" y="156" text-anchor="middle">→ 256</text>
+      <path class="l" d="M392,40 H503"/><path class="l" d="M392,90 H503"/><path class="l" d="M392,140 H503"/><path class="l" d="M300,190 H503"/>
+      <path class="lb" d="M482,224 H503"/>
+
+      <!-- GRU -->
+      <rect class="k" x="594" y="95" width="88" height="90" rx="4"/>
+      <text class="t" x="638" y="134" text-anchor="middle">GRU 256</text><text class="s" x="638" y="150" text-anchor="middle">short-term</text><text class="s" x="638" y="163" text-anchor="middle">memory</text>
+      <path class="l" d="M571,140 H592"/>
+      <!-- notebook read -> GRU input -->
+      <path class="lb" d="M482,274 H626 V187"/>
+      <!-- query from GRU state -> notebook -->
+      <path class="ld" d="M652,185 V292 H484"/>
+      <text class="s" x="560" y="305" text-anchor="middle" style="fill:#2f6db5">query = GRU state</text>
+
+      <!-- decide -->
+      <rect class="o" x="702" y="22" width="126" height="48" rx="4"/>
+      <text class="t" x="710" y="39">Manager</text><text class="s" x="710" y="53">1 of 5 goals / 8 steps</text><text class="s" x="710" y="66">Phase 4, optional</text>
+      <rect class="k" x="702" y="100" width="126" height="48" rx="4"/>
+      <text class="t" x="710" y="118">Worker policy</text><text class="s" x="710" y="133">6 groups, 15 logits</text>
+      <rect class="b" x="702" y="168" width="126" height="40" rx="4"/>
+      <text class="t" x="710" y="185">Value head</text><text class="s" x="710" y="200">training only</text>
+      <path class="l" d="M682,120 L691,120 L691,46 H700"/>
+      <path class="l" d="M682,124 H700"/>
+      <path class="l" d="M682,160 L691,160 L691,188 H700"/>
+      <path class="l" d="M765,70 V98"/><text class="s" x="770" y="88">goal</text>
+
+      <!-- output -->
+      <rect class="k" x="844" y="100" width="68" height="48" rx="4"/>
+      <text class="t" x="878" y="118" text-anchor="middle">9 buttons</text><text class="s" x="878" y="133" text-anchor="middle">every</text><text class="s" x="878" y="145" text-anchor="middle">4 ticks</text>
+      <path class="l" d="M828,124 H842"/>
+
+      <!-- legend -->
+      <rect class="m" x="702" y="230" width="14" height="10"/><text class="s" x="721" y="239">Phase 3 spatial memory</text>
+      <rect class="o" x="702" y="248" width="14" height="10"/><text class="s" x="721" y="257">built, optional (Phase 4)</text>
+    </svg>
+    <figcaption>SmritiNet. Grey = Phase 2 brain (557,632 parameters); blue = Phase 3 spatial memory (memory brain: 749,968 parameters); dashed = built, optional Phase 4 parts. Rays are also drawn into the mind map at the odometer's pose.</figcaption>
+  </figure>
+
+  <div class="cols">
+    <div>
+      <p><b>Rays:</b> a <b>circular 1-D convolution</b> wraps around the 360° ring and spots shapes like "corridor ahead" or "door on the left". <b>Entities:</b> an MLP per entity, then <b>attention with a learned query</b> plus a learned <b>"nothing here" token</b>, so 0 to 32 entities all work.</p>
+    </div>
+    <div>
+      <p><b>Vitals + previous action:</b> an MLP (USE only fires when the button goes <i>down</i>, so the brain must know what it pressed). Everything is fused into a <b>GRU (256)</b>; the policy head gives <b>15 logits = 6 action groups</b>, the value head is used only in training.</p>
+    </div>
+  </div>
+
+  <h2><span class="n">4</span>Spatial memory design (Phase 3)</h2>
+  <ol>
+    <li><b>Odometer: "how did I move?"</b> Turning is predicted from our own buttons: a held turn rotates <b>7.03°, then 12.30°, then 14.06°</b> per step (measured in the engine). Movement uses the reported velocity with Doom's friction: <b>step distance = 2.86·v<sub>now</sub> + 1.56·v<sub>prev</sub></b>. The sum is our pose relative to the spawn point; drift on fresh held-out runs was <b>0.4–0.7%</b> of the distance on open maps and mazes, <b>~4%</b> on a key-door map.</li>
+    <li><b>Mind map: "what have I seen?"</b> A spawn-anchored grid (256 × 256 cells of 32 map units; 8 layers: free, wall, door, locked door, item, enemy, visited, recently visited). Every ray is drawn in each step. The brain reads a <b>32 × 32 crop rotated so "up" = the facing direction</b> through a small CNN, so it always sees the map "through its own eyes".</li>
+    <li><b>Landmark notebook: "what must I remember?"</b> 16 slots for <b>keys, locked doors and doors</b> (spawn-frame position, age, done flag). Each step they become distance and direction <i>from where the agent is now</i>, read by <b>attention with the query from the GRU state</b>: after picking up a key, the brain can "ask" for the locked door.</li>
+  </ol>
+  <p>All memory is wiped at the start of every map, and the <b>same memory code</b> runs in the agent and in training.</p>
+</section>
+
+<!-- ======================= PAGE 2 ======================= -->
+<section class="page page2">
+  <div class="cols">
+    <div>
+      <h2 style="margin-top:0"><span class="n">5</span>Training pipeline</h2>
+      <ul>
+        <li><b>Our own recurrent PPO</b> (no RL library): GAE advantages, clipped objective, the GRU replayed from the memory stored at the start of each training sequence, and reward normalisation.</li>
+        <li><b>Rewards mirror the scorer:</b> exit, keys, doors, locked doors, new areas and kills earn reward; damage, death and getting stuck cost reward. A <b>count-based novelty bonus</b> pays for new places.</li>
+        <li><b>Parallel game workers.</b> On Windows the default 15.6 ms timer made lock-step stepping ~10× slower; requesting 1 ms timer resolution took training from <b>~110 to ~375–450 steps/s</b>.</li>
+        <li><b>Warm start.</b> The memory brain copies <i>every</i> weight of the Phase 2 champion and starts its new memory inputs at zero, so it begins playing exactly like the champion (tested) and only has to learn <i>how to use</i> memory.</li>
+      </ul>
+    </div>
+    <div>
+      <h2 style="margin-top:0"><span class="n">6</span>Exploration &amp; generalisation</h2>
+      <ul>
+        <li><b>Own procedural maps</b> (text drawing → UDMF): arenas (T1), mazes and rooms (T2), key-door puzzles (T3: <code>keynear</code>, key close; <code>keydoor</code>, key in another branch, so the agent must remember the door and backtrack).</li>
+        <li><b>Seed ranges never overlap:</b> train 0–99,999, validation 100,000+, test 200,000+. Test maps are never used for decisions.</li>
+        <li><b>Curriculum:</b> stage 1 combat → stage 2 navigation → stage 3 key &amp; door (<code>keynear</code> → <code>keydoor</code>), with <b>replay of older maps</b> so earlier skills are not forgotten.</li>
+        <li><b>Built (Phase 5):</b> stage 5 mixed / randomised maps, teacher distillation, a dynamics auxiliary task, and a guard that records any use of test maps.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2><span class="n">7</span>Results: Mini-League</h2>
+  <p>The Mini-League is our copy of the published scoring rules (exit, progression, exploration, combat) with <b>guessed weights</b> and tier weights ×1 to ×4. Validation = <b>24 maps</b> (4 Freedoom 2 levels + 20 generated), 2 seeds each = 48 runs. Totals are only compared on the same map set (map fingerprint + weights SHA-256).</p>
+  <table>
+    <colgroup><col style="width:31%"><col style="width:7%"><col style="width:13%"><col style="width:9.5%"><col style="width:9.5%"><col style="width:9.5%"><col style="width:9.5%"><col style="width:11%"></colgroup>
+    <thead>
+      <tr><th>Agent (24-map validation set)</th><th class="num">Steps</th><th class="num">Total</th><th class="num">T1</th><th class="num">T2</th><th class="num">T3</th><th class="num">T4</th><th class="num">Crashes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Champion #1 (Phase 2 brain)</td><td class="num">6.0 M</td><td class="num">+2,511.03</td><td class="num">+498.1</td><td class="num">+1,390.4</td><td class="num">+721.5</td><td class="num">−98.9</td><td class="num">0 / 48</td></tr>
+      <tr><td>Memory brain, early check</td><td class="num">0.39 M</td><td class="num">+2,463.58</td><td class="num">+446.7</td><td class="num">+879.7</td><td class="num">+1,200.4</td><td class="num">−63.2</td><td class="num">0 / 48</td></tr>
+      <tr class="hl"><td>Champion #2 (memory brain)</td><td class="num">4.5 M</td><td class="num"><b>+5,182.69</b></td><td class="num">+526.1</td><td class="num">+1,949.6</td><td class="num">+2,736.4</td><td class="num">−29.3</td><td class="num">0 / 48</td></tr>
+    </tbody>
+  </table>
+  <p class="note">Random agent: −201.16 on the older 20-map set, where champion #1 scores +2,021.28 (different map sets are never compared).</p>
+  <ul>
+    <li><b>Champion #1</b> (6 M steps, stages 1–2) reaches the exit on every arena and maze, but on 0 of 8 runs of the full key-door maps.</li>
+    <li><b>Champion #2</b> is the memory brain warm-started from champion #1 and trained on stage 3 for 4.5 M steps. It <b>doubles</b> champion #1's total and is better on every tier: it solves <b>all 4 <code>keynear</code> maps</b> on both seeds (key → locked door → exit; champion #1: 1 of 4), one far-key <code>keydoor</code> map, and <b>5 of 8</b> doored-room runs (was 1 of 8), while keeping every arena and maze. An early check (387k steps) had briefly forgotten mazes; replay brought them back.</li>
+  </ul>
+
+  <p style="margin-top:4pt"><b>Memory ablation</b>: same PPO and seed, ~1 M steps per arm, held-out Tier 3 maps (40 episodes per split). <span class="legend"><i style="background:var(--mem-line)"></i>memory on <i style="background:#8c959f"></i>GRU only</span></p>
+  <div class="abl">
+    <div>Key picked up (val)</div>
+    <div class="bars"><div class="bar on" style="width:45%">45%</div><div class="bar off" style="width:27.5%">27.5%</div></div>
+    <div>Deaths (val; lower is better)</div>
+    <div class="bars"><div class="bar on" style="width:12.5%">12.5%</div><div class="bar off" style="width:62.5%">62.5%</div></div>
+    <div>Exit reached (test)</div>
+    <div class="bars"><div class="bar on" style="width:45%">45%</div><div class="bar off" style="width:12.5%">12.5%</div></div>
+    <div>Score (val)</div>
+    <div class="bars"><div class="bar on" style="width:56.9%">56.9</div><div class="bar off" style="width:19.9%">19.9</div></div>
+  </div>
+  <p class="note">One training seed only: we treat this as evidence, not proof.</p>
+
+  <div class="cols">
+    <div>
+      <h2><span class="n">8</span>Speed &amp; robustness</h2>
+      <p>Official Docker image, <b>1 CPU pinned</b>, median time per decision: champion #1 <b>1.2–2.7 ms</b>, memory brain <b>2.1 ms</b>, full Phase 4 brain <b>4.8 ms</b>, champion #2 <b>2.4 ms</b>; budget ~40 ms. Start-up ≤ ~14 s (limit 60 s); RAM &lt;&nbsp;1&nbsp;GB.</p>
+      <p><b>Stress tests:</b> 600 chaos observations × 4 brain types and a 20-map soak with flat speed and memory use: <b>0 fallbacks</b> to the safety action.</p>
+    </div>
+    <div>
+      <h2><span class="n">9</span>Honest limitations &amp; next steps</h2>
+      <ul>
+        <li><b>Big Freedoom levels</b> still score worse than random (T4 negative): the agent rushes in and dies.</li>
+        <li><b>Doored rooms</b>: 5 of 8 exits; <b>far-key <code>keydoor</code></b>: 1 of 4 solved.</li>
+        <li><b>Phase 4</b> (manager/worker, RND curiosity, RGB "exit in view" head) is built but not yet trained to completion; images make CPU training ~45% slower. Next: train it on a GPU.</li>
+        <li>Most results are <b>single training seeds</b>. Next: 3 seeds per ablation arm and longer runs.</li>
+      </ul>
+    </div>
+  </div>
+
+</section>
+
+</div>
+</body>
+</html>
