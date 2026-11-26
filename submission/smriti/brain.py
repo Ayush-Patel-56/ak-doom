@@ -65,6 +65,7 @@ class BrainConfig:
     rgb_out: int = 64
     use_depth: bool = False
     depth_out: int = 32
+    use_dynamics: bool = False  # training-only next-observation head; unused during inference
 
     def __post_init__(self):
         if self.goal_interval < 1 or self.goal_dim < 1 or self.rgb_out < 1 or self.depth_out < 1:
@@ -221,6 +222,9 @@ class SmritiNet(nn.Module):
             self.worker_fuse = nn.Sequential(nn.Linear(c.hidden + c.goal_dim, c.hidden), nn.ReLU())
         nn.init.orthogonal_(self.policy.weight, gain=0.01)  # start close to uniform choices
         nn.init.zeros_(self.policy.bias)
+        if c.use_dynamics:
+            self.dynamics = nn.Sequential(nn.Linear(c.hidden + NUM_LOGITS, 128), nn.ReLU(),
+                                          nn.Linear(128, NUM_RAYS + NUM_VITALS))
 
     def initial_state(self, batch: int, device=None) -> torch.Tensor:
         return torch.zeros(batch, self.cfg.hidden, device=device)

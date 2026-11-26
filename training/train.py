@@ -38,7 +38,7 @@ from training.rollout import VecGames, fine_timer  # noqa: E402
 
 def build_args(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--stage", type=int, default=3, choices=[1, 2, 3, 4])
+    ap.add_argument("--stage", type=int, default=3, choices=[1, 2, 3, 4, 5])
     ap.add_argument("--memory", choices=["on", "off", "map", "notebook"], default="on",
                     help="on = mind map + notebook; off = GRU only (ablation); map / notebook = one of them")
     ap.add_argument("--kinds", help="comma list of map kinds overriding the stage mix (smoke tests)")
@@ -72,12 +72,22 @@ def build_args(argv=None):
     ap.add_argument('--helper-weights', type=json.loads, help='JSON object overriding goal helper weights')
     ap.add_argument('--rnd-coef', type=float, default=.01, help='initial intrinsic weight; linearly decays to zero')
     ap.add_argument('--exit-aux', type=float, default=.1)
-    ap.add_argument('--full-level-share', type=float, default=.8)
+    ap.add_argument('--full-level-share', type=float, default=None)
+    ap.add_argument('--dynamics-coef', type=float, default=0.)
+    ap.add_argument('--teacher', type=Path)
+    ap.add_argument('--distill-coef', type=float, default=0.)
+    ap.add_argument('--distill-temperature', type=float, default=1.)
     ap.add_argument('--catalog', type=Path, default=REPO / 'maps/catalog.json')
     a = ap.parse_args(argv)
+    if not np.isfinite(a.dynamics_coef) or a.dynamics_coef < 0:
+        ap.error('dynamics coefficient must be finite and nonnegative')
+    if not np.isfinite(a.distill_coef) or a.distill_coef < 0 or not np.isfinite(a.distill_temperature) or a.distill_temperature <= 0:
+        ap.error('distillation coefficient must be nonnegative and temperature positive (finite)')
+    if a.distill_coef and a.teacher is None:
+        ap.error('--distill-coef requires --teacher checkpoint')
     if a.ticks is not None and a.ticks < 1:
         ap.error('--ticks must be positive')
-    if not np.isfinite(a.full_level_share) or not 0 <= a.full_level_share <= 1:
+    if a.full_level_share is not None and (not np.isfinite(a.full_level_share) or not 0 <= a.full_level_share <= 1):
         ap.error('--full-level-share must be in [0, 1]')
     if any(getattr(a, k) < 1 for k in ('workers','games','steps','T','epochs','minibatches','threads','goal_interval','save_every','switch_every')):
         ap.error('counts and goal interval must be positive')
@@ -125,9 +135,9 @@ def load_train_state(path: Path, ppo: PPO, n_games: int) -> dict:
         raise ValueError('--resume training feature/reward config differs from saved run')
     if 'curriculum_config' in st and st['curriculum_config'] != ppo.curriculum_config:
         raise ValueError('--resume curriculum/tick configuration differs from saved run')
-    needs_provenance = ppo.net.cfg.use_depth or ppo.curriculum_config['pool']['stage'] == 4
+    needs_provenance = ppo.net.cfg.use_depth or ppo.curriculum_config['pool']['stage'] >= 4
     if 'curriculum_config' not in st and needs_provenance:
-        raise ValueError('Stage 4/depth resume requires saved curriculum provenance')
+        raise ValueError('Stage 4/5/depth resume requires saved curriculum provenance')
     ppo.opt.load_state_dict(st["opt"])
     if ppo.manager_opt is not None:
         ppo.manager_opt.load_state_dict(st['manager_opt'])
@@ -161,11 +171,11 @@ def main(argv=None) -> int:
         a.init = out / "latest.pt"
     requested = BrainConfig(use_mindmap=use_map, use_notebook=use_notes,
                             use_manager=a.manager == 'on', use_rgb=a.rgb == 'on', use_depth=a.depth == 'on',
-                            goal_interval=a.goal_interval)
+                            goal_interval=a.goal_interval, use_dynamics=a.dynamics_coef > 0)
     transferred = None
     if a.init:
         net, _ = load_checkpoint(a.init, dev)
-        flags = ('use_mindmap', 'use_notebook', 'use_manager', 'use_rgb', 'use_depth', 'goal_interval')
+        flags = ('use_mindmap', 'use_notebook', 'use_manager', 'use_rgb', 'use_depth', 'goal_interval', 'use_dynamics')
         if any(getattr(net.cfg, k) != getattr(requested, k) for k in flags):
             raise SystemExit('--init architecture does not match flags; use --warm-start PATH to expand it')
     else:
@@ -176,7 +186,8 @@ def main(argv=None) -> int:
             transferred = warm_start_from(net, source)
             print('[train] explicit warm start: ' + json.dumps(transferred), flush=True)
     net.eval()
-    cfg = PPOConfig(T=a.T, lr=a.lr, ent_coef=a.ent, epochs=a.epochs, minibatches=a.minibatches, exit_aux_coef=a.exit_aux)
+    cfg = PPOConfig(T=a.T, lr=a.lr, ent_coef=a.ent, epochs=a.epochs, minibatches=a.minibatches, exit_aux_coef=a.exit_aux,
+                    distill_coef=a.distill_coef, distill_temperature=a.distill_temperature, dynamics_coef=a.dynamics_coef)
     kinds = a.kinds.split(",") if a.kinds else None
     from training.curriculum import MapSampler
     curriculum = MapSampler(a.stage, a.seed, kinds=kinds, puzzle_share=a.puzzle_share,
@@ -187,12 +198,21 @@ def main(argv=None) -> int:
     ppo.training_config = dict(rnd=a.rnd, rnd_coef=a.rnd_coef, helpers=a.goal_helpers,
                                helper_weights=a.helper_weights, exit_aux=a.exit_aux)
 
+    if a.dynamics_coef:
+        ppo.training_config['dynamics'] = dict(coefficient=a.dynamics_coef,target='legal-ray-proximity-and-normalized-vitals-delta-v1')
+    teacher = None
+    if a.distill_coef:
+        from training.distill import FrozenTeacher
+        teacher = FrozenTeacher(a.teacher, n, dev, seed=a.seed+9187)
+        ppo.training_config['distillation'] = dict(teacher=teacher.provenance, coefficient=a.distill_coef,
+                                                  temperature=a.distill_temperature)
     ppo.curriculum_config = {'pool': curriculum, 'ticks_override': a.ticks}
     resumed = load_train_state(resume_state, ppo, n) if a.resume else None
-    vec = VecGames(a.workers, a.games, a.stage, a.seed, use_map, use_notes, episode_ticks=a.ticks,
-                   switch_every=a.switch_every, kinds=kinds, use_rgb=net.cfg.use_rgb,
+    vec = VecGames(a.workers, a.games, a.stage, a.seed, use_map or (teacher is not None and teacher.net.cfg.use_mindmap),
+                   use_notes or (teacher is not None and teacher.net.cfg.use_notebook), episode_ticks=a.ticks,
+                   switch_every=a.switch_every, kinds=kinds, use_rgb=net.cfg.use_rgb or (teacher is not None and teacher.net.cfg.use_rgb),
                    goal_helpers=a.goal_helpers == 'on', helper_weights=a.helper_weights, puzzle_share=a.puzzle_share,
-                   use_depth=net.cfg.use_depth, full_level_share=a.full_level_share, catalog_path=a.catalog)
+                   use_depth=net.cfg.use_depth or (teacher is not None and teacher.net.cfg.use_depth), full_level_share=a.full_level_share, catalog_path=a.catalog)
 
     print(f"[train] {name}: stage {a.stage}, memory {a.memory}, {n} games, "
           f"{sum(p.numel() for p in net.parameters()):,} params", flush=True)
@@ -202,6 +222,7 @@ def main(argv=None) -> int:
         tb = SummaryWriter(str(out))
     except Exception:  # noqa: BLE001  (tensorboard is optional)
         tb = None
+    episodes = (out / "episodes.jsonl").open("a", encoding="utf-8")
     metrics = (out / "metrics.jsonl").open("a", encoding="utf-8")
     (out / "args.json").write_text(json.dumps({k: str(v) for k, v in vars(a).items()}, indent=2), encoding="utf-8")
 
@@ -218,6 +239,12 @@ def main(argv=None) -> int:
         while steps < a.steps:
             progress = steps / a.steps
             buf = Rollout(cfg.T, n)
+            if a.dynamics_coef:
+                buf.dynamics_target = np.zeros((cfg.T,n,NUM_RAYS+NUM_VITALS),np.float32)
+                buf.dynamics_mask = np.zeros((cfg.T,n),bool)
+            if teacher is not None:
+                from smriti.policy.actions import NUM_LOGITS
+                buf.teacher_logits = np.zeros((cfg.T,n,NUM_LOGITS),np.float32)
             h0 = state.clone()
             t0 = time.time()
             rnd_inputs = []
@@ -231,11 +258,17 @@ def main(argv=None) -> int:
                 buf.exit_known[t] = feats['_exit_known']
                 label_counts[0] += int(feats['_exit_known'].sum())
                 label_counts[1] += int((feats['_exit_target'] * feats['_exit_known']).sum())
+                if teacher is not None:
+                    buf.teacher_logits[t] = teacher.logits(feats,starts).cpu().numpy()
                 choices, logp, v, state = ppo.act(feats, state, starts)
                 goals = ppo.goals.goal.cpu().numpy() if net.cfg.use_manager else None
                 if goals is not None:
                     buf.goals[t] = goals
                 feats, r, done, infos = vec.step(choices, progress, goals)
+                if a.dynamics_coef:
+                    from training.dynamics import transition_targets
+                    buf.dynamics_target[t],buf.dynamics_mask[t] = transition_targets(
+                        {k:buf.f[k][t] for k in buf.f},feats,done)
                 if ppo.intervals is not None:
                     ppo.intervals.step(feats['_extrinsic'], done)
                 intrinsic = np.zeros(n, np.float32)
@@ -249,7 +282,10 @@ def main(argv=None) -> int:
                 buf.r[t] = ppo.rscale.scale(r, done)
                 buf.done[t] = done
                 starts = done.copy()
-                recent.extend(i for i in infos if i is not None)
+                for episode in (i for i in infos if i is not None):
+                    episodes.write(json.dumps(dict(episode,decisions_completed=steps+(t+1)*n))+"\n")
+                    episodes.flush()
+                    recent.append(episode)
             last_v = ppo.bootstrap(feats, state, starts)
             last_v = last_v * (1.0 - starts)  # a fresh episode's value does not bootstrap the old one
             t_roll = time.time() - t0
@@ -285,6 +321,7 @@ def main(argv=None) -> int:
     finally:
         vec.close()
         metrics.close()
+        episodes.close()
         if tb is not None:
             tb.close()
     print(f"[train] done: {steps} steps in {time.time() - t_start:.0f}s -> {out / 'latest.pt'}")

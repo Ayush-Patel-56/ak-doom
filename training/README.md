@@ -131,3 +131,89 @@ under `runs/ablation/`. `--train-args` accepts only non-controlled training sett
 512 decisions; all 16 shortened evaluation episodes had zero exits. This verifies execution,
 not policy effectiveness. Champion weights remain unchanged. Mac latency measurements are not
 an official pinned Linux scorer benchmark.
+
+
+## Phase 5, Part 1: varied training and hardening
+
+`--stage 5` mixes all usable **training** catalog tiers with generated arena, maze, rooms,
+keydoor and keynear maps. The default full-level share is 0.5 (`--full-level-share` overrides it).
+Generated seeds span [0, 100000); validation/test seed namespaces remain excluded. Versioned
+randomisation varies safe player starts/headings, enemy and item density/composition, verified
+Freedoom textures and light. Key-door puzzles are checked for solvability and key bypasses.
+Generated caps vary deterministically from 2100 to 4200 ticks; catalog caps remain unchanged.
+Skill stays at 3. Profile hashes appear in cache filenames and curriculum/checkpoint provenance;
+resume rejects changed provenance. `--ticks` remains an explicit smoke override.
+
+```bash
+uv run python -m training.train --stage 5 --memory on --manager on --rgb on --depth on \
+  --rnd on --warm-start PATH_TO_PHASE4_CHECKPOINT --name stage5
+uv run python scripts/stress_agent.py --weights runs/stage5/latest.pt \
+  --output runs/stage5-stress.json
+uv run python scripts/benchmark_latency.py --weights runs/stage5/latest.pt \
+  --map maps/two_rooms.wad:MAP01 --json runs/stage5-latency.json
+```
+
+Stress defaults to 20 actual generated maps, each capped at 4200 ticks. It covers dense enemies,
+empty maps, a constrained spawn, repeated resets, invalid/extreme observations, latency and RSS
+where Linux /proc is available. Thresholds are declared in arguments before execution; behavioral
+failures remain failures. A successful Mac reliability run does not establish RSS or official pinned
+CPU compliance. The benchmark rejects missing checkpoints/random fallback. TorchScript is not
+required: retain optimisations only when equivalence and measured speed justify them.
+
+Validation evaluation and final comparison:
+
+```bash
+uv run python scripts/generalisation.py run --weights runs/stage5/latest.pt \
+  --split val --seeds 3 --output runs/stage5-val.json
+# Final evaluation only after training/model selection is frozen:
+uv run python scripts/generalisation.py run --weights runs/stage5/latest.pt \
+  --split test --final-test --seeds 3 --output runs/stage5-test.json
+uv run python scripts/generalisation.py compare --validation runs/stage5-val.json \
+  --test runs/stage5-test.json --gap-tolerance .1 --min-mean-score 10 \
+  --output runs/stage5-gap.json
+```
+
+The gap and useful-score values above are **example acceptance settings**, not measured results
+or official scorer thresholds. Declare suitable values before inspecting final test outcomes.
+Comparison requires matching checkpoint/configuration, tier/seed composition and tick overrides.
+Default minimum evidence is 30 episodes per tier; inspect map diversity and seed variation too.
+Project evaluation, ablation and benchmark commands recognize catalog aliases and byte-identical WAD copies. Known test maps require explicit opt-in and a persisted use record under `runs/final-test-ledger/`;
+repeated reservations require `--allow-repeat-test`. This ledger records future use; historical test
+freshness is unknown. Keep/copy the ledger with experiments and do not delete it to claim first use.
+Development smokes use train/validation maps only. No score-gap claim is made without final evidence.
+
+## Phase 5, Part 2: teacher and auxiliary learning
+
+```bash
+uv run python -m training.train --stage 5 --memory on --manager on --rgb on --depth on \
+  --warm-start PATH_TO_PHASE4_CHECKPOINT --teacher PATH_TO_TRAINED_TEACHER \
+  --distill-coef .1 --distill-temperature 2 --dynamics-coef .1 --name stage5-student
+```
+
+The frozen teacher consumes legal observations from actual student-visited trajectories. It owns
+its recurrent state, goal cadence and sampling generator; its action-group distributions supply KL
+supervision. Hidden sizes and modalities may differ. Rollouts enable the union of required image
+and deterministic spatial-memory features; the teacher's recurrent notebook queries remain its own.
+The spatial history reflects the **student-executed** actions for both agents. Teacher parameters
+receive no gradients. Checkpoint hash, configuration, positive training-step provenance, loss weight
+and temperature are recorded and verified on resume. Provenance is required; it is not evidence that
+a teacher is capable. This implements legal-observation distillation; a privileged full-map teacher
+still requires its own observation contract and trained weights.
+
+`--dynamics-coef` enables a training-only head predicting changes in legal ray proximity and normalized
+vitals from recurrent features plus executed action groups. Targets come from actual consecutive
+observations. Terminal/reset replacements are masked. The head is unused during inference; older
+checkpoints default it off. Expand existing actors with explicit `--warm-start`, and retain the same
+architecture/loss configuration on resume. Distillation and dynamics default off.
+
+Measured evidence will be stored in `configs/phase5-smoke.json`. Pipeline smokes do not establish
+teacher superiority, final test generalisation or champion quality; champion weights are unchanged.
+
+The official `validate.py` is preserved unchanged and does not enforce this project experiment ledger.
+Use it on train/validation maps during development; manually invoking it on test maps is outside the
+project runner guard. This guard is experiment discipline, not a security sandbox against arbitrary
+ViZDoom code. Teacher and student sharing deterministic spatial features does not share recurrent state.
+The benchmark reports requested and effective devices separately; the submitted agent intentionally
+uses CPU inference even when its constructor receives CUDA. Constructor timing excludes checkpoint
+preflight and ledger scans. Completed training episodes are appended to `episodes.jsonl`, including
+actual engine seed, WAD/map identity, cap and randomisation metadata.

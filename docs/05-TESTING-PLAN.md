@@ -162,3 +162,8 @@ The results go into the **2-page brief** and the **demo** as a simple bar chart.
 - [ ] Speed benchmark < 20 ms average on 1 thread
 - [ ] 0 crashes in the full Mini-League
 - [ ] Repo ≤ 1 GB
+
+
+## Phase 5 execution notes
+
+`tests/agent/stress/test_chaos.py` exercises malformed/extreme observation cleaning and reset contracts. `scripts/stress_agent.py` measures real generated-map runs (default 20 maps, 4200-tick caps), behavioral displacement, fallbacks, latency and supported RSS growth. It reports unsupported measurements separately; passing short/unit checks is not full §5.7 acceptance. `scripts/generalisation.py` produces strict matched-tier validation/final-test reports and threshold-based comparisons. Preserve the test-use ledger across runs; first-ever historical test exposure cannot be guaranteed.

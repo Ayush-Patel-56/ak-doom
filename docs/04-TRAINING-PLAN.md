@@ -202,3 +202,8 @@ They're removed (or simply unused) on game day.
 
 
 Stage 4 is implemented through `training/map_pool.py` and `MapSampler`: usable train Tier 4 Freedoom2 entries only, default 80% full levels plus generated replay, catalog episode caps, canonical identity leakage checks and checkpointed pool provenance. See `training/README.md` for flags and `scripts/phase4_ablation.py` for matched held-out comparisons. Scientific completion still requires improved Tier 3/4 exit rates; the recorded short smoke does not demonstrate this.
+
+
+## Phase 5 implementation
+
+Stage 5 and optional legal-observation teacher distillation/next-transition prediction are implemented; see training/README.md. The privileged full-map teacher in §4.6 remains a separate extension. Real spatial memory uses student-executed history, while teacher neural state and manager sampling remain independent. Final test use is explicitly guarded and recorded; short validation smokes do not establish generalisation.

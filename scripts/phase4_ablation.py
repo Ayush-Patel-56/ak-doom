@@ -61,7 +61,7 @@ def parse_arms(values):
     return arms
 
 
-def strict_agent(weights, expected=None):
+def strict_agent(weights, expected=None, device="cpu"):
     import agent_loader
     agent_loader.apply_eval_thread_limits()
     from smriti.brain import load_checkpoint
@@ -70,6 +70,8 @@ def strict_agent(weights, expected=None):
     if not weights.is_file():
         raise FileNotFoundError(weights)
     net, extra = load_checkpoint(weights, 'cpu')
+    if type(extra.get("steps")) is not int or extra["steps"] <= 0:
+        raise ValueError("evidence requires a trained checkpoint with positive decision provenance")
     cfg = net.cfg
     if expected:
         flags = {'memory':cfg.use_mindmap and cfg.use_notebook, 'manager':cfg.use_manager,
@@ -80,7 +82,10 @@ def strict_agent(weights, expected=None):
         training = extra.get('training', {})
         if training.get('rnd') != expected['rnd'] or training.get('helpers') != 'off':
             raise ValueError(f'{weights}: RND/helper metadata does not match requested arm')
-    agent = agent_loader.load_agent_class()(observation_space(), action_space(), 'cpu', weights_path=weights)
+    constructor = agent_loader.load_agent_class()
+    t0 = time.perf_counter()
+    agent = constructor(observation_space(), action_space(), device, weights_path=weights)
+    agent.scored_init_s = time.perf_counter() - t0
     if not agent.policy_name.startswith('brain:') or not hasattr(agent.policy, 'net'):
         raise ValueError(f'{weights}: trained policy failed to load (random fallback rejected)')
     if asdict(agent.policy.net.cfg) != asdict(cfg):
@@ -167,19 +172,25 @@ def evaluation_pool(split, limit=None):
     return pool
 
 
-def evaluate_arm(weights, pool, seeds, expected, eval_ticks=None):
+def evaluate_arm(weights, pool, seeds, expected, eval_ticks=None, final_test=False, allow_repeat_test=False):
     import evaluate as league
     agent, cfg, extra = strict_agent(weights, expected)
     rows = []
-    for entry in pool:
-        meta = dict(entry)
-        if eval_ticks is not None:
-            meta['episode_ticks'] = eval_ticks
-        for seed in range(seeds):
-            row = league.play(agent, entry['spec'], meta, seed,
-                              render_buffers=cfg['use_rgb'] or cfg.get('use_depth',False))
-            row.update(map=entry['spec'], seed=seed, tier=entry['tier'])
-            rows.append(row)
+    from scripts.test_use import reserve_test_use, finish_test_use
+    token = reserve_test_use([entry['spec'] for entry in pool], weights,
+                             final_test=final_test, allow_repeat=allow_repeat_test)
+    try:
+        for entry in pool:
+            meta = dict(entry)
+            if eval_ticks is not None:
+                meta['episode_ticks'] = eval_ticks
+            for seed in range(seeds):
+                row = league.play(agent, entry['spec'], meta, seed,
+                                  render_buffers=cfg['use_rgb'] or cfg.get('use_depth',False))
+                row.update(map=entry['spec'], seed=seed, tier=entry['tier'])
+                rows.append(row)
+    finally:
+        finish_test_use(token, status='completed' if len(rows)==len(pool)*seeds and not any(r.get('stopped') for r in rows) else 'partial')
     return dict(checkpoint=str(weights), sha256=digest(weights), config=cfg, training=extra, rows=rows)
 
 
@@ -213,6 +224,8 @@ def parser():
         p = subs.add_parser(mode, allow_abbrev=False)
         p.add_argument('--name', default=time.strftime('phase4-%Y%m%d-%H%M%S'))
         p.add_argument('--split', choices=['val','test'], default='val')
+        p.add_argument('--final-test', action='store_true')
+        p.add_argument('--allow-repeat-test', action='store_true')
         p.add_argument('--seeds', type=int, default=3)
         p.add_argument('--rgb', choices=['on','off'], default='on')
         p.add_argument('--depth', choices=['on','off'], default='off')
@@ -236,6 +249,7 @@ def parser():
 def main(argv=None):
     ap = parser()
     a = ap.parse_args(argv)
+    if a.split == 'test' and not a.final_test: ap.error('test split requires --final-test')
     for field in ('seeds','eval_ticks','limit_maps','steps','workers','games','ticks'):
         value = getattr(a,field,None)
         if value is not None and value < 1:
@@ -319,7 +333,8 @@ def main(argv=None):
                     checkpoint=str(weights), sha256=digest(weights),
                     requested_decisions=a.steps, actual_decisions=checkpoint_extra.get('steps'))
                 validate_checkpoint_budget(checkpoint_extra, a.steps)
-            result = evaluate_arm(weights,pool,a.seeds,configs[arm],a.eval_ticks)
+            result = evaluate_arm(weights,pool,a.seeds,configs[arm],a.eval_ticks,
+                                  final_test=a.final_test, allow_repeat_test=a.allow_repeat_test)
             results[label] = result
             errors.extend(episode_errors(label,result['rows']))
             if seed is not None:

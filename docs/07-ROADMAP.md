@@ -94,14 +94,15 @@ The 512-decision smoke comparison had zero exits in every arm; improvement is no
 
 ## Phase 5 — Generalise and harden
 
-- [ ] Stage 5: mixed + heavily randomised maps
-- [ ] Bigger, more varied map pool
-- [ ] Teacher–student training (stretch)
-- [ ] Auxiliary tasks (stretch)
-- [x] Stress & chaos tests (§5.7) all passing: `tests/agent/stress/` (4 brain types) + 20-map soak
-- [ ] Speed tuning (TorchScript, etc.) → < 20 ms average
+- [x] Stage 5: mixed train-only catalog and versioned randomised generated maps
+- [x] Broader training tiers and full training seed namespace
+- [x] Optional frozen legal-observation teacher distillation (privileged teacher deferred)
+- [x] Optional real-transition dynamics auxiliary task (terminal/reset masked)
+- [x] Automated stress & chaos coverage: `tests/agent/stress/` (4 brain types), upstream 20-map soak, and Phase 5 real-engine stress measurements in `configs/phase5-smoke.json`
+- [ ] Full §5.7 acceptance: platform resource and policy-quality criteria still require evidence; passing robustness tests does not establish gameplay skill
+- [ ] Official CPU speed acceptance <20 ms average; Mac measurements available, no unmeasured optimisation claimed
 
-**Done when:** the score on **test maps** (used for the first time here) is close to the validation score, meaning no overfitting.
+**Done when (still open):** useful performance on locked **test maps** is close to validation under declared acceptance thresholds and sufficient samples. Development does not run test maps; future test use is ledgered, historical freshness is unknown.
 
 ---
 

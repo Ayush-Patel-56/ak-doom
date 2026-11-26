@@ -111,7 +111,7 @@ def play(agent, spec: str, meta: dict, seed: int, render_buffers: bool) -> dict:
     }
 
 
-def main() -> int:
+def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--split", default="val", choices=["train", "val", "test"])
     ap.add_argument("--map", action="append", help="wad[:MAPxx] instead of a split, repeatable")
@@ -120,7 +120,10 @@ def main() -> int:
     ap.add_argument("--weights", type=Path, help="brain checkpoint to test (default: submission/weights/champion.pt)")
     ap.add_argument("--no-buffers", action="store_true", help="skip rgb/depth (only if the agent ignores them)")
     ap.add_argument("--name", default=None, help="result name (default: <split>-<timestamp>)")
-    args = ap.parse_args()
+    ap.add_argument("--final-test", action="store_true")
+    ap.add_argument("--allow-repeat-test", action="store_true")
+    args = ap.parse_args(argv)
+    if args.seeds < 1: ap.error("seeds must be positive")
 
     catalog = load_catalog()
     if args.map:
@@ -132,24 +135,35 @@ def main() -> int:
             return 2
         specs = [ln.strip() for ln in lst.read_text(encoding="utf-8").splitlines() if ln.strip()]
 
-    t0 = time.perf_counter()
-    agent = agent_loader.load_agent_class()(observation_space(), action_space(), args.device, weights_path=args.weights)
-    init_s = time.perf_counter() - t0
-    print(f"Policy: {agent.policy_name}")
-    if init_s > limits.INIT_TIMEOUT_S:  # official rule: 0 points on every map
-        print(f"WARNING: __init__ took {init_s:.1f}s > {limits.INIT_TIMEOUT_S:.0f}s: the scorer would give 0 points")
+    from scripts.test_use import reserve_test_use, finish_test_use, catalog_metadata
+    resolved_metadata = catalog_metadata(specs)
+    weights = args.weights or (REPO / 'submission/weights/champion.pt')
+    token = reserve_test_use(specs, weights, final_test=args.final_test, allow_repeat=args.allow_repeat_test)
     rows = []
-    for spec in specs:
-        for seed in range(args.seeds):
-            row = play(agent, spec, catalog.get(spec, {}), seed, not args.no_buffers)
-            rows.append(row)
-            print(
-                f"T{row['tier']} {row['map']:<44} s{seed} score {row['score']:7.2f} (x{TIER_WEIGHT[row['tier']]:.0f} = "
-                f"{row['weighted_score']:7.2f})  exit={int(row['exit'])} keys={row['keys']} doors={row['doors']}"
-                f"+{row['locked_doors']}L areas={row['areas']} kills={row['kills']} dmg={row['damage']:.0f}"
-                f" dead={int(row['dead'])} {row['agent_mean_ms']:.2f}ms" + (f"  STOPPED: {row['stopped']}" if row["stopped"] else ""),
-                flush=True,
-            )
+    try:
+        t0 = time.perf_counter()
+        from scripts.phase4_ablation import strict_agent
+        agent, _, _ = strict_agent(weights,device=args.device)
+        init_s = agent.scored_init_s
+        if hasattr(agent.policy, 'net') and agent.policy.net.cfg.uses_pixels and args.no_buffers:
+            raise ValueError('--no-buffers is incompatible with this pixel checkpoint')
+        print(f"Policy: {agent.policy_name}")
+        if init_s > limits.INIT_TIMEOUT_S:  # official rule: 0 points on every map
+            print(f"WARNING: __init__ took {init_s:.1f}s > {limits.INIT_TIMEOUT_S:.0f}s: the scorer would give 0 points")
+        rows = []
+        for spec in specs:
+            for seed in range(args.seeds):
+                row = play(agent, spec, resolved_metadata.get(spec, catalog.get(spec, {})), seed, not args.no_buffers)
+                rows.append(row)
+                print(
+                    f"T{row['tier']} {row['map']:<44} s{seed} score {row['score']:7.2f} (x{TIER_WEIGHT[row['tier']]:.0f} = "
+                    f"{row['weighted_score']:7.2f})  exit={int(row['exit'])} keys={row['keys']} doors={row['doors']}"
+                    f"+{row['locked_doors']}L areas={row['areas']} kills={row['kills']} dmg={row['damage']:.0f}"
+                    f" dead={int(row['dead'])} {row['agent_mean_ms']:.2f}ms" + (f"  STOPPED: {row['stopped']}" if row["stopped"] else ""),
+                    flush=True,
+                )
+    finally:
+        finish_test_use(token, status='completed' if len(rows) == len(specs)*args.seeds and not any(r.get('stopped') for r in rows) else 'partial')
 
     total = round(sum(r["weighted_score"] for r in rows) / max(args.seeds, 1), 2)
     by_tier = {t: round(sum(r["weighted_score"] for r in rows if r["tier"] == t) / max(args.seeds, 1), 2) for t in (1, 2, 3, 4)}
