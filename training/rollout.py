@@ -124,7 +124,8 @@ class Game:
         if done:
             info = {"map": Path(self.wad).name, "kind": self.kind, "ret": self.ret, "len": self.len,
                     **self.shaper.stats(), 'helper_ret': self.helper_ret,
-                    'map_name': self.map, 'episode_ticks': self.current_episode_ticks}
+                    'map_name': self.map, 'episode_ticks': self.current_episode_ticks,
+                    'map_metadata': self.sampler.map_metadata(self.wad, self.map)}
             self.episodes_on_map += 1
             feats = self.start()
         else:
@@ -138,7 +139,7 @@ class Game:
             self.env.close()
 
 
-def _worker(remote, wid, n_games, stage, seed, use_mindmap, use_notebook, episode_ticks, switch_every, kinds, use_rgb, goal_helpers, helper_weights, puzzle_share=None, use_depth=False, full_level_share=.8, catalog_path=None):
+def _worker(remote, wid, n_games, stage, seed, use_mindmap, use_notebook, episode_ticks, switch_every, kinds, use_rgb, goal_helpers, helper_weights, puzzle_share=None, use_depth=False, full_level_share=None, catalog_path=None):
     _paths()
     os.environ.setdefault("OMP_NUM_THREADS", "1")
     fine_timer()
@@ -179,7 +180,7 @@ class VecGames:
     def __init__(self, workers: int, games_per_worker: int, stage: int, seed: int, use_mindmap: bool,
                  use_notebook: bool, episode_ticks: int | None = None, switch_every: int = 2, kinds=None,
                  use_rgb=False, goal_helpers=False, helper_weights=None, puzzle_share=None,
-                 use_depth=False, full_level_share=.8, catalog_path=None):
+                 use_depth=False, full_level_share=None, catalog_path=None):
         ctx = mp.get_context("spawn")  # same on Linux, macOS and Windows
         self.k, self.n = games_per_worker, workers * games_per_worker
         self.remotes, self.procs = [], []

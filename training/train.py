@@ -38,7 +38,7 @@ from training.rollout import VecGames, fine_timer  # noqa: E402
 
 def build_args(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--stage", type=int, default=3, choices=[1, 2, 3, 4])
+    ap.add_argument("--stage", type=int, default=3, choices=[1, 2, 3, 4, 5])
     ap.add_argument("--memory", choices=["on", "off", "map", "notebook"], default="on",
                     help="on = mind map + notebook; off = GRU only (ablation); map / notebook = one of them")
     ap.add_argument("--kinds", help="comma list of map kinds overriding the stage mix (smoke tests)")
@@ -72,12 +72,12 @@ def build_args(argv=None):
     ap.add_argument('--helper-weights', type=json.loads, help='JSON object overriding goal helper weights')
     ap.add_argument('--rnd-coef', type=float, default=.01, help='initial intrinsic weight; linearly decays to zero')
     ap.add_argument('--exit-aux', type=float, default=.1)
-    ap.add_argument('--full-level-share', type=float, default=.8)
+    ap.add_argument('--full-level-share', type=float, default=None)
     ap.add_argument('--catalog', type=Path, default=REPO / 'maps/catalog.json')
     a = ap.parse_args(argv)
     if a.ticks is not None and a.ticks < 1:
         ap.error('--ticks must be positive')
-    if not np.isfinite(a.full_level_share) or not 0 <= a.full_level_share <= 1:
+    if a.full_level_share is not None and (not np.isfinite(a.full_level_share) or not 0 <= a.full_level_share <= 1):
         ap.error('--full-level-share must be in [0, 1]')
     if any(getattr(a, k) < 1 for k in ('workers','games','steps','T','epochs','minibatches','threads','goal_interval','save_every','switch_every')):
         ap.error('counts and goal interval must be positive')
@@ -125,9 +125,9 @@ def load_train_state(path: Path, ppo: PPO, n_games: int) -> dict:
         raise ValueError('--resume training feature/reward config differs from saved run')
     if 'curriculum_config' in st and st['curriculum_config'] != ppo.curriculum_config:
         raise ValueError('--resume curriculum/tick configuration differs from saved run')
-    needs_provenance = ppo.net.cfg.use_depth or ppo.curriculum_config['pool']['stage'] == 4
+    needs_provenance = ppo.net.cfg.use_depth or ppo.curriculum_config['pool']['stage'] >= 4
     if 'curriculum_config' not in st and needs_provenance:
-        raise ValueError('Stage 4/depth resume requires saved curriculum provenance')
+        raise ValueError('Stage 4/5/depth resume requires saved curriculum provenance')
     ppo.opt.load_state_dict(st["opt"])
     if ppo.manager_opt is not None:
         ppo.manager_opt.load_state_dict(st['manager_opt'])

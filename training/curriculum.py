@@ -36,6 +36,7 @@ class Stage:
 STAGES = {
     1: Stage("combat", {"arena": 1.0}),
     2: Stage("navigation", {"maze": 0.5, "rooms": 0.5}),
+    5: Stage("mixed randomised", {"arena": .2, "maze": .2, "rooms": .2, "keydoor": .2, "keynear": .2}),
     4: Stage("full levels", {"keydoor": 0.4, "rooms": 0.3, "maze": 0.15, "arena": 0.15}),
     3: Stage("key & door puzzles", {"rooms": 0.6, "maze": 0.2, "arena": 0.2}, puzzle_share=0.8),
 }
@@ -58,11 +59,14 @@ def map_path(kind: str, seed: int) -> Path:
 class MapSampler:
     """Picks (wad, map, kind) for the next game of a stage. progress() in [0, 1] moves the schedule."""
 
-    def __init__(self, stage: int, seed: int, seeds_per_kind: int = 200, kinds: list[str] | None = None,
-                 puzzle_share: float | None = None, full_level_share: float = 0.8,
+    def __init__(self, stage: int, seed: int, seeds_per_kind: int | None = None, kinds: list[str] | None = None,
+                 puzzle_share: float | None = None, full_level_share: float | None = None,
                  catalog_path=DEFAULT_CATALOG):
         from training.mapgen import KINDS
 
+        seeds_per_kind = (TRAIN_SEED_LIMIT if stage == 5 else 200) if seeds_per_kind is None else seeds_per_kind
+        full_level_share = (.5 if stage == 5 else .8) if full_level_share is None else full_level_share
+        self._generated_metadata = {}
         if stage not in STAGES:
             raise ValueError(f"unknown curriculum stage: {stage}")
         if not 0 <= full_level_share <= 1:
@@ -71,16 +75,17 @@ class MapSampler:
             raise ValueError("seeds_per_kind must use the training seed range")
         if kinds is not None and (not kinds or any(k not in KINDS and k != 'full' for k in kinds)):
             raise ValueError("invalid curriculum kinds")
-        if kinds and 'full' in kinds and stage != 4:
-            raise ValueError("full maps require stage 4")
+        if kinds and 'full' in kinds and stage not in (4,5):
+            raise ValueError("full maps require stage 4 or 5")
         self.stage_number = stage
         self.full_level_share = full_level_share
         self.catalog_path = Path(catalog_path)
         self.full_pool = []
-        if stage == 4 and (kinds is None or 'full' in kinds):
-            self.full_pool = load_catalog_pool('train', [4], source='freedoom2', catalog_path=catalog_path)
+        if stage in (4,5) and (kinds is None or 'full' in kinds):
+            self.full_pool = load_catalog_pool('train', [1,2,3,4] if stage == 5 else [4],
+                                               source=None if stage == 5 else 'freedoom2', catalog_path=catalog_path)
             if not self.full_pool:
-                raise ValueError("empty Stage 4 full-level training pool")
+                raise ValueError("empty full-level training pool")
         self._caps = {map_identity(r['id']): r['episode_ticks'] for r in self.full_pool}
         self.stage = STAGES[stage]
         if puzzle_share is not None:  # e.g. more replay when warm-starting from a brain that must not forget
@@ -98,7 +103,7 @@ class MapSampler:
         if self.kinds:
             return self.rng.choice(self.kinds)
         s = self.stage
-        if self.stage_number == 4 and self.rng.random() < self.full_level_share:
+        if self.stage_number in (4,5) and self.rng.random() < self.full_level_share:
             return "full"
         if self.rng.random() < s.puzzle_share:
             return "keynear" if self.rng.random() < self.near_share() else "keydoor"
@@ -111,19 +116,33 @@ class MapSampler:
             row = self.rng.choice(self.full_pool)
             return row['resolved_wad'], row['map_name'], kind
         seed = self.rng.randrange(self.seeds_per_kind)
+        if self.stage_number == 5:
+            from training.mapgen.randomize import generate_randomized, PROFILE_HASH
+            from training.mapgen import write_map
+            grid = generate_randomized(kind, seed)
+            path = GENERATED / f"s5-{PROFILE_HASH}-{kind}-{seed}.wad"
+            if not path.is_file():
+                tmp = path.with_suffix(f".{random.getrandbits(32):08x}.tmp")
+                write_map(grid,tmp)
+                tmp.replace(path)
+            self._generated_metadata[map_identity(f"{path}:MAP01")] = dict(grid.notes)
+            return str(path), "MAP01", kind
         return str(map_path(kind, seed)), "MAP01", kind
 
     def episode_ticks(self, wad: str, map_name: str) -> int:
         """Catalog cap for full levels, legacy 2100 ticks for generated replay."""
-        return self._caps.get(map_identity(f"{wad}:{map_name}"), 2100)
+        identity = map_identity(f"{wad}:{map_name}")
+        return self._caps.get(identity, self._generated_metadata.get(identity, {}).get('randomisation', {}).get('episode_ticks', 2100))
 
     @property
     def pool_manifest(self) -> dict:
         """Serializable sampling provenance saved alongside experiment configs."""
+        from training.mapgen.randomize import PROFILE, PROFILE_HASH
         return {
+            **({'randomisation': dict(PROFILE, profile_hash=PROFILE_HASH)} if self.stage_number == 5 else {}),
             'stage': self.stage_number,
             'catalog_sha256': hashlib.sha256(self.catalog_path.read_bytes()).hexdigest() if self.full_pool else None,
-            'full_level_share': self.full_level_share if self.stage_number == 4 else 0.0,
+            'full_level_share': self.full_level_share if self.stage_number in (4,5) else 0.0,
             'kinds_override': list(self.kinds) if self.kinds else None,
             'seeds_per_kind': self.seeds_per_kind,
             'generated_seed_range': [0, self.seeds_per_kind],
@@ -139,6 +158,8 @@ class MapSampler:
     def map_metadata(self, wad: str, map_name: str) -> dict | None:
         """Copy full-level metadata for rollout diagnostics; replay has no catalog row."""
         identity = map_identity(f"{wad}:{map_name}")
+        if identity in self._generated_metadata:
+            return dict(self._generated_metadata[identity])
         return next((dict(row) for row in self.full_pool if map_identity(row['id']) == identity), None)
 
     @staticmethod
