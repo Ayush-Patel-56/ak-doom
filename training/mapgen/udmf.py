@@ -99,6 +99,11 @@ def label_regions(grid: GridMap) -> dict[tuple[int, int], int]:
 
 
 def to_udmf(grid: GridMap) -> str:
+    appearance = grid.notes.get("appearance", {})
+    wall_tex = appearance.get("walls", "STARTAN2")
+    room_floor = appearance.get("floors", "FLOOR0_1")
+    ceiling_tex = appearance.get("ceilings", "CEIL1_1")
+    light = int(appearance.get("light", 192))
     region = label_regions(grid)
     n_sectors = max(region.values(), default=-1) + 1
     sector_kind = ["room"] * n_sectors
@@ -143,7 +148,7 @@ def to_udmf(grid: GridMap) -> str:
 
     for (a, b), s in one_sided:
         kind = sector_kind[s]
-        mid = LOCK_TRACK.get(sector_lock[s], "DOORTRAK") if kind == "door" else "STARTAN2"
+        mid = LOCK_TRACK.get(sector_lock[s], "DOORTRAK") if kind == "door" else wall_tex
         lines.append(f"linedef {{ v1 = {vid(*a)}; v2 = {vid(*b)}; sidefront = {side(s, mid=mid)}; blocking = true; "
                      f"dontpegbottom = true; }}")
 
@@ -171,9 +176,9 @@ def to_udmf(grid: GridMap) -> str:
     for s in range(n_sectors):
         kind = sector_kind[s]
         ceiling = 0 if kind == "door" else ROOM_CEILING
-        floor_tex = {"exit": "GATE3", "door": "FLAT20"}.get(kind, "FLOOR0_1")
-        sectors.append(f'sector {{ texturefloor = "{floor_tex}"; textureceiling = "CEIL1_1"; heightfloor = 0; '
-                       f"heightceiling = {ceiling}; lightlevel = 192; }}")
+        floor_tex = {"exit": "GATE3", "door": "FLAT20"}.get(kind, room_floor)
+        sectors.append(f'sector {{ texturefloor = "{floor_tex}"; textureceiling = "{ceiling_tex}"; heightfloor = 0; '
+                       f"heightceiling = {ceiling}; lightlevel = {light}; }}")
 
     things = []
     for r, c in grid.cells(set(THING_TYPES)):
