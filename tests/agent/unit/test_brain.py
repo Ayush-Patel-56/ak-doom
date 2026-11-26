@@ -162,6 +162,19 @@ def test_agent_falls_back_to_random_without_weights(tmp_path, spaces):
     assert agent.policy_name == "random"
 
 
+@pytest.mark.parametrize("content", [
+    b"version https://git-lfs.github.com/spec/v1\noid sha256:abc\nsize 2200000\n",  # LFS pointer, not fetched
+    b"\x00garbage",
+])
+def test_agent_falls_back_to_random_on_unloadable_weights(tmp_path, spaces, content):
+    bad = tmp_path / "champion.pt"
+    bad.write_bytes(content)
+    agent = load_agent_class()(*spaces, "cpu", weights_path=bad)  # must not raise: that is 0 on every map
+    assert agent.policy_name == "random"
+    agent.reset()
+    assert agent.act(spaces[0].sample()).shape == (9,)
+
+
 def test_brain_step_is_fast_on_one_thread(weights, spaces):
     torch.set_num_threads(1)
     pol = BrainPolicy(weights)

@@ -38,15 +38,23 @@ class DoomAgent:
         self.device = device
         self.guard = SafetyGuard(observation_space, action_space)
         path = Path(weights_path) if weights_path is not None else CHAMPION
+        self.policy = None
         if path.is_file():
-            import torch
+            # A bad champion (un-fetched Git LFS pointer, truncated file, old checkpoint format, torch
+            # problem) must never crash __init__: that scores 0 on EVERY map. Fall back to random instead.
+            try:
+                import torch
 
-            torch.set_num_threads(1)  # evaluation gives us one CPU thread
-            from smriti.policy.brain_policy import BrainPolicy
+                torch.set_num_threads(1)  # evaluation gives us one CPU thread
+                from smriti.policy.brain_policy import BrainPolicy
 
-            self.policy = BrainPolicy(path, device=INFERENCE_DEVICE, seed=0)
-            self.policy_name = f"brain:{path.name}"
-        else:
+                self.policy = BrainPolicy(path, device=INFERENCE_DEVICE, seed=0)
+                self.policy_name = f"brain:{path.name}"
+            except Exception as exc:  # noqa: BLE001
+                print(f"[DoomAgent] could not load {path.name} ({type(exc).__name__}: {exc}); "
+                      "using the random policy", file=sys.stderr)
+                self.policy = None
+        if self.policy is None:
             self.policy = RandomPolicy(int(np.prod(action_space.shape)), seed=0)
             self.policy_name = "random"
 
