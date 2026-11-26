@@ -4,6 +4,8 @@ Follows the official rules (docs/EVALUATION.md):
 - skill 3, freedoom2 IWAD, fixed seeds, per-map tick cap (from maps/catalog.json, 2,100-4,200)
 - the agent's compute time per map is limited to 40 ms x decision steps; act() calls over 5 s, an
   exception, or an invalid action make the agent STOP: the player stands still for the rest of the map
+  (points earned so far are kept)
+- reset() over 10 s gives 0 points for that map; __init__ over 60 s is flagged with a warning
 - partial progress counts; harder tiers weigh more (see training/scorer.py for our guessed weights)
 
     uv run python scripts/evaluate.py                       # validation maps (maps/lists/val.txt)
