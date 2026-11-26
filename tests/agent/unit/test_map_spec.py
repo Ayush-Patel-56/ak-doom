@@ -28,3 +28,8 @@ def test_relative_paths_resolve_against_repo():
 def test_vizdoom_prefix_points_at_bundled_wads():
     path = Path(resolve_wad("@vizdoom/freedoom2.wad"))
     assert path.name == "freedoom2.wad" and path.is_file()
+
+
+def test_windows_drive_paths_are_kept_on_every_os():
+    assert resolve_wad(r"C:\maps\x.wad") == r"C:\maps\x.wad"
+    assert resolve_wad("D:/maps/x.wad") == "D:/maps/x.wad"

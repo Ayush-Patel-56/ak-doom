@@ -10,7 +10,7 @@ WAD paths may use two portable prefixes, so map lists work on every machine:
 from __future__ import annotations
 
 import re
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 REPO = Path(__file__).resolve().parent.parent
 VIZDOOM_PREFIX = "@vizdoom/"
@@ -26,6 +26,9 @@ def resolve_wad(wad: str) -> str:
     """Turn a portable WAD reference into a real file path."""
     if wad.startswith(VIZDOOM_PREFIX):
         return str(vizdoom_dir() / wad[len(VIZDOOM_PREFIX):])
+    if PureWindowsPath(wad).drive:
+        # "C:\\maps\\x.wad" is absolute on Windows but not on macOS/Linux: never prefix the repo root.
+        return wad
     path = Path(wad)
     if path.is_absolute() or path.exists():
         return str(path)
