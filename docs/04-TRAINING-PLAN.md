@@ -87,6 +87,13 @@ flowchart LR
 | **4. Full levels** | OBLIGE-generated levels, Freedoom levels, community WADs | None | Regularly reaches the exit on held-out levels |
 | **5. Mix** | All stages mixed together + randomisation | None | Champion score stops improving |
 
+**Stage 3 as built (`training/curriculum.py`):** 80% puzzles, 20% replay (rooms 60%, maze 20%, arena 20%). The puzzle share starts as 100% `keynear` (2–4 rooms, key in or next to the start room, ≤ 2 monsters) and moves linearly to 30% `keynear` / 70% `keydoor` by the end of the run. Training maps are generated on demand from seeds < 100,000 into `maps/generated/`; held-out Tier 3 maps are `maps/curated/{val,test}/t3-{keydoor,keynear}-*`.
+
+```bash
+uv run python -m training.train --stage 3 --memory on  --name s3-mem   --steps 2000000 --workers 6 --games 4
+uv run python scripts/ablation.py run --name abl --steps 2000000      # both arms + held-out report
+```
+
 **Important:** we **keep replaying old stages** (about 20% of games) so the agent doesn't forget earlier skills.
 **Final evaluation runs on the normal game**, so the last stages must use **no helpers at all**.
 
