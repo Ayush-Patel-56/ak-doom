@@ -26,6 +26,9 @@ Add a new row whenever we make or change a big choice. Never delete old rows; ma
 | D-14 | **6 grouped action heads → 9 buttons** | Blocks silly combos (forward + back); smaller choice space | 9 independent on/off heads | ✅ Active |
 | D-15 | **RGB encoder is required**, not optional | The exit never appears in rays or entities, and key/door colour isn't given | Rays + entities only | ✅ Active |
 | D-16 | **No direct commits to `main`**; every change goes through a PR | `main` is what the scorer evaluates at the deadline | Committing straight to `main` | ✅ Active |
+| D-17 | **Mini-League scorer weights are our guesses** (`training/scorer.py`) | The real weights are hidden; we follow the published rules (exit biggest, then progression, exploration, combat; tier weights 1–4) | Waiting for real weights | ✅ Active, revisit if organisers publish more |
+| D-18 | **First map library = Freedoom 2 + ViZDoom scenarios** (both ship with vizdoom) | No download needed; 45 maps; real levels with doors, keys and exits | Download community WADs / OBLIGE first | ✅ Active; OBLIGE + own maps next |
+| D-19 | **Safety guard cleans every observation and action** (`smriti/safety.py`) | A crash or invalid action = standing still for the rest of the map | Trusting the policy output | ✅ Active |
 
 ---
 
@@ -52,4 +55,5 @@ Add a new row whenever we make or change a big choice. Never delete old rows; ma
 | R-15 | `USE` spam makes doors bounce | 🟡 | 🟡 | Previous-action input + door-bounce penalty in training |
 | R-16 | Turning isn't observed, so heading drifts | 🟢 | 🟡 | Measured on `two_rooms.wad`: turn per step is predictable from our buttons (heading error < 0.06°). Re-check on larger maps. |
 | R-17 | Entities only cover the 90° view | 🟡 | 🟢 | Rays cover 360° (they report enemies too); GRU remembers enemies that left the view |
+| R-19 | Validation/test maps are only big Freedoom levels (no Tier 1/2) | 🔴 | 🟡 | Add our own small maps + OBLIGE maps to `maps/curated/`, rebuild the catalog |
 | R-18 | Startup after `reset()` is more than a single ignored step | 🔴 | 🟢 | Step 1 is a no-op, and the steady turn/move ramp only appears after ≥2 no-op steps (held turn from the first action: 0°, 3.515625°, 14.0625°). The odometer must use `startup_noop_steps`, not just skip step 1. See `configs/odometry.json`. |

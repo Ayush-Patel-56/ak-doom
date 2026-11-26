@@ -82,6 +82,13 @@ We also run it on a **slow laptop** as a worst case.
 
 ## 5.6 Level 5: The Mini-League ⭐ (`scripts/evaluate.py`)
 
+```bash
+uv run python scripts/build_map_catalog.py                          # once, or after adding maps
+uv run python scripts/evaluate.py --split val --seeds 2 --name my-run
+```
+
+Map tiers and tick caps come from `maps/catalog.json` (a heuristic: locked doors + keys → Tier 3/4, doors or many sectors → Tier 2, else Tier 1). The scorer lives in `training/scorer.py`; its weights are our guesses (Decision D-17).
+
 Our own copy of the hidden evaluation.
 
 - **Maps:** validation (and, at the very end, test) maps only. **Never training maps.**
