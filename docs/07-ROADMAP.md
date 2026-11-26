@@ -42,7 +42,8 @@ flowchart LR
 - [x] First version of `scripts/evaluate.py` (Mini-League; scorer in `training/scorer.py`)
 - [x] First version of `scripts/benchmark_latency.py`
 - [x] Map tools: `scripts/build_map_catalog.py` → `maps/catalog.json` + `maps/lists/{train,val,test}.txt` (Freedoom 2 + ViZDoom scenarios, 45 maps)
-- [ ] OBLIGE generated maps (needs a separate install; see Training Plan §4.5) and our own small Tier 1/2 maps for val/test
+- [x] Our own small Tier 1/2/3 maps for val/test (`training/mapgen/`, 16 val + 16 test maps)
+- [ ] OBLIGE generated full levels (needs a separate install; optional, see Training Plan §4.5)
 
 **Done when:** a random agent passes the validator and gets a (low) Mini-League score. **We have a baseline.**
 
