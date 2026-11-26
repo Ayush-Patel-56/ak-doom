@@ -5,7 +5,7 @@
     "first_step_after_reset_is_noop": true,
     "startup_noop_steps": 2,
     "measurement_warmup_steps": 5,
-    "note": "First step after reset is a no-op (0 turn, 0 move; tic still advances). The steady turn/move ramp only appears after at least 2 no-op steps. Held turn from the first action: 0, 3.515625, 14.0625 deg (skips the 12.3046875 deg step). After exactly one no-op, the next left is 1.7578125, then 12.3046875, then 14.0625 deg. Movement follows the same pattern. Mid-episode turns are normal. The odometer must wait startup_noop_steps (>= 2), not merely skip step 1."
+    "note": "First step after reset is a no-op (0 turn, 0 move; tic still advances). The steady turn/move ramp only appears after at least 2 no-op steps. Held turn from the first action: 0, 3.515625, 14.0625 deg (skips the 12.3046875 deg step). After exactly one no-op, the next left is 1.7578125, then 12.3046875, then 14.0625 deg. Movement follows the same pattern. Mid-episode turns are normal. The odometer models startup turns without requiring no-op actions."
   },
   "turns": {
     "first_step_after_reset_deg": 0.0,
@@ -67,6 +67,18 @@
       "left_is_positive": true
     }
   },
+  "startup_turn_measurements": {
+    "first_left": 0.0,
+    "second_left": [
+      1.7578125,
+      3.515625
+    ],
+    "first_right": 0.0,
+    "second_right": [
+      -1.7578125,
+      -3.515625
+    ]
+  },
   "motion": {
     "a_now": 2.8614,
     "b_prev": 1.5613,
@@ -77,11 +89,12 @@
     "fit_steps": 600
   },
   "drift_with_agent_knowledge_only": {
+    "seed": 1,
     "steps": 600,
-    "distance_travelled_units": 8363.9,
-    "final_position_error_units": 25.3,
-    "max_position_error_units": 87.2,
-    "final_error_pct_of_distance": 0.3,
+    "distance_travelled_units": 6749.4,
+    "final_position_error_units": 259.9,
+    "max_position_error_units": 262.5,
+    "final_error_pct_of_distance": 3.85,
     "max_heading_error_deg": 0.0
   }
 }

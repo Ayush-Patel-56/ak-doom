@@ -65,7 +65,7 @@ flowchart LR
 
 ## Phase 3 — Memory system ⭐ (our USP)
 
-- [ ] Odometer (+ a test that it matches the true movement in training)
+- [x] Odometer (+ real-engine training-ground-truth tests; measured drift and limitations in System Design §3.3.1)
 - [ ] Mind map (grid update + rotated crop + small CNN)
 - [ ] Landmark notebook (slots + attention)
 - [ ] Curriculum Stage 3 (key & door puzzles)
