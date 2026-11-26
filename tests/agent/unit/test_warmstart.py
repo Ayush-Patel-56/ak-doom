@@ -44,6 +44,36 @@ def test_warm_started_memory_brain_plays_exactly_like_the_source(use_map, use_no
     assert torch.allclose(a[0], b[0], atol=1e-5) and torch.allclose(a[1], b[1], atol=1e-5)
 
 
+def test_adding_a_manager_keeps_the_source_actions_for_every_goal():
+    torch.manual_seed(2)
+    src = SmritiNet(BrainConfig(use_mindmap=True, use_notebook=True)).eval()
+    for p in src.parameters():
+        p.data.normal_(0, 0.1)
+    tgt = SmritiNet(BrainConfig(use_mindmap=True, use_notebook=True, use_manager=True)).eval()
+    report = warm_start_from(tgt, src)
+    assert "policy.bias" in report["preserved"]
+    x = random_features(6, 3, seed=2)
+    starts = torch.zeros(6, 3, dtype=torch.bool)
+    starts[0] = True
+    with torch.no_grad():
+        a = src(x, src.initial_state(3), starts)
+        for goal in range(5):
+            goals = torch.full((6, 3), goal, dtype=torch.long)
+            b = tgt(x, tgt.initial_state(3), starts, goals=goals)
+            assert torch.allclose(a[0], b[0], atol=1e-5) and torch.allclose(a[1], b[1], atol=1e-5)
+
+
+def test_worker_goal_columns_still_get_gradient():
+    torch.manual_seed(3)
+    src = SmritiNet(BrainConfig())
+    tgt = SmritiNet(BrainConfig(use_manager=True))
+    warm_start_from(tgt, src)
+    x = random_features(4, 2, seed=3)
+    logits, _, _ = tgt(x, tgt.initial_state(2), goals=torch.ones(4, 2, dtype=torch.long))
+    logits.sum().backward()
+    assert tgt.worker_fuse[0].weight.grad[:, tgt.cfg.hidden:].abs().sum() > 0
+
+
 def test_memory_can_still_learn_after_warm_start():
     torch.manual_seed(1)
     src = SmritiNet(BrainConfig())

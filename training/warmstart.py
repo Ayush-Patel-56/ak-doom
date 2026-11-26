@@ -8,10 +8,13 @@ We copy shared weights and set NEW encoder input columns to zero. RGB columns ar
 matched by name when a mind map is inserted before them. At step 0
 the memory brain then plays exactly like the source brain (memory is wired in but has no effect yet),
 and training only has to learn how to USE memory instead of re-learning to move, fight and explore.
-The new encoders and hierarchy modules keep their normal random initialisation;
-adding a manager changes the worker architecture, so exact action preservation is
-guaranteed only when the hierarchy configuration is unchanged. For encoder additions, the gradient
-reaches them as soon as the zero columns start to move.
+The new encoders and the manager heads keep their normal random initialisation. Adding a manager
+also inserts worker_fuse = ReLU(Linear([h | goal])) before the policy. A random worker_fuse would
+throw the source policy away, so we start it as h + 1 (identity on h, zero on the goal; the GRU
+state is always in [-1, 1], so the ReLU never cuts) and subtract the +1 offset in the policy bias.
+The warm-started worker then picks exactly the source's actions whatever goal the manager sends,
+and learns to use goals from there. For encoder additions, the gradient reaches the zero columns
+as soon as they start to move.
 """
 
 from __future__ import annotations
@@ -73,4 +76,18 @@ def warm_start_from(target: SmritiNet, source: SmritiNet) -> dict[str, list[str]
             report["widened"].append(name)
         else:
             raise ValueError(f"{name}: cannot warm-start {tuple(old.shape)} -> {tuple(param.shape)}")
+    if target.cfg.use_manager and not source.cfg.use_manager:
+        _preserve_policy_through_worker_fuse(target)
+        report["preserved"] = ["worker_fuse.0.weight", "worker_fuse.0.bias", "policy.bias"]
     return report
+
+
+@torch.no_grad()
+def _preserve_policy_through_worker_fuse(net: SmritiNet) -> None:
+    """worker_fuse(h, goal) = h + 1 and policy(h + 1) == old policy(h), for any goal."""
+    hidden = net.cfg.hidden
+    linear = net.worker_fuse[0]
+    linear.weight.zero_()
+    linear.weight[:, :hidden] = torch.eye(hidden)
+    linear.bias.fill_(1.0)
+    net.policy.bias -= net.policy.weight.sum(dim=1)
