@@ -1,0 +1,20 @@
+{
+  "source": "runs/snapshots/p2-final-6M.pt",
+  "mean_ms": 4.24,
+  "meta": {
+    "steps": 6000640,
+    "updates": 2930,
+    "stage": 2
+  },
+  "mini_league": {
+    "file": "p2-final-6M-val.json",
+    "total": 2021.28,
+    "by_tier": {
+      "1": 498.07,
+      "2": 1390.35,
+      "3": 231.74,
+      "4": -98.88
+    },
+    "crashes": 0
+  }
+}
