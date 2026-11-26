@@ -25,7 +25,7 @@ import struct
 from collections import defaultdict
 from pathlib import Path
 
-from doom_env.mapinfo import load_mapinfo
+from doom_env.mapinfo import DOOM_NAMESPACES, load_mapinfo, parse_udmf, udmf_namespace
 from doom_env.wad import list_maps, map_lumps, read_wad
 from map_spec import REPO, VIZDOOM_PREFIX, resolve_wad
 
@@ -43,6 +43,7 @@ MONSTERS = {3004, 9, 65, 3001, 3002, 58, 3006, 3005, 69, 3003, 68, 71, 66, 67, 6
 KEYS = {5, 6, 13, 38, 39, 40}
 SKILL3_FLAG, MULTIPLAYER_ONLY_FLAG = 0x0002, 0x0010
 EXIT_SPECIALS = {11, 51, 52, 124, 197, 198}  # normal + secret exits (Doom/Boom)
+HEXEN_EXIT_SPECIALS = {74, 75, 243, 244}  # Teleport_NewMap, Teleport_EndGame, Exit_Normal, Exit_Secret (ZDoom/UDMF)
 
 
 def sources() -> list[tuple[str, str]]:
@@ -74,6 +75,28 @@ def doom_format_stats(lumps: dict[str, bytes]) -> dict:
     return {"monsters": monsters, "keys": keys, "exit_lines": exits}
 
 
+def udmf_stats(text: str, has_behavior: bool) -> dict:
+    """Monsters/keys present at skill 3 (single player) and exit lines for UDMF maps.
+
+    Exits triggered from ACS scripts can't be seen here: with a BEHAVIOR lump and no exit line we
+    report exit_lines=None (unknown) instead of 0.
+    """
+    blocks = parse_udmf(text)
+    doom_ns = udmf_namespace(text) in DOOM_NAMESPACES
+    exits_set = EXIT_SPECIALS if doom_ns else HEXEN_EXIT_SPECIALS
+    monsters = keys = 0
+    for t in blocks.get("thing", []):
+        modes = [t.get(k) for k in ("single", "coop", "dm")]
+        in_single = bool(t.get("single")) or all(v is None for v in modes)  # no mode flags at all: keep
+        if not t.get("skill3", False) or not in_single:
+            continue
+        kind = int(t.get("type", 0) or 0)
+        monsters += kind in MONSTERS
+        keys += kind in KEYS
+    exits = sum(int(ln.get("special", 0) or 0) in exits_set for ln in blocks.get("linedef", []))
+    return {"monsters": monsters, "keys": keys, "exit_lines": exits if exits or not has_behavior else None}
+
+
 def tier_for(m: dict) -> int:
     """Heuristic tier, mirroring docs/EVALUATION.md: 1 combat, 2 multi-room, 3 key puzzle, 4 gauntlet."""
     if m["locked_doors"] > 0 and (m.get("keys") or 0) > 0:
@@ -96,9 +119,11 @@ def describe(ref: str, source: str, map_name: str) -> dict:
         "locked_doors": sum(1 for lock in info.door_sectors.values() if lock > 0),
     }
     lumps = map_lumps(read_wad(path), map_name)
-    if "TEXTMAP" not in lumps and "BEHAVIOR" not in lumps:
+    if "TEXTMAP" in lumps:
+        m.update(udmf_stats(lumps["TEXTMAP"].decode("utf-8", "replace"), "BEHAVIOR" in lumps))
+    elif "BEHAVIOR" not in lumps:
         m.update(doom_format_stats(lumps))
-    else:
+    else:  # Hexen binary format: thing/line layout differs, not parsed
         m.update({"monsters": None, "keys": None, "exit_lines": None})
     m["tier"] = tier_for(m)
     m["episode_ticks"] = TIER_TICKS[m["tier"]]
