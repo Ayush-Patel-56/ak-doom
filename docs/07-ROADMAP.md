@@ -26,7 +26,7 @@ flowchart LR
 - [x] Setup works on Windows (`uv sync`, `validate.py` passes; see §6.1 for Windows notes). Every team member: [Repo & Workflow §6.1](06-REPO-AND-WORKFLOW.md#61-setting-up-step-by-step) (`uv sync`, `validate.py`, `pytest`)
 - [x] Build the Docker image and run `validate.py --docker` once: **passed** on `main` after Phase 1 (1 CPU pinned, 44 MB RAM, ~0.4 ms per step)
 - [x] Run the test map and **print one full observation** (`scripts/inspect_observation.py`)
-- [x] Calibrate the odometer (`scripts/measure_odometry.py` → `configs/odometry.json`): turn model and 0.3% drift on `two_rooms.wad`
+- [x] Calibrate the odometer (`scripts/measure_odometry.py` → `configs/odometry.json`): turn model; production-estimator drift is **3.85%** on `two_rooms.wad` (seed 1 in `configs/odometry.json`). Held-out seed 733, 600 steps per map: final position drift is **0.40%** on `two_rooms.wad`, **0.68%** on the Tier 2 maze, and **4.02%** on the Tier 3 key/door map (see System Design §3.3.1 and `configs/odometry-validation.json`)
 - [x] Add `.gitignore` lines and the `maps/curated/**` LFS rule
 - [x] Protect `main` on GitHub: require a pull request before merging
 
@@ -65,7 +65,7 @@ flowchart LR
 
 ## Phase 3 — Memory system ⭐ (our USP)
 
-- [ ] Odometer (+ a test that it matches the true movement in training)
+- [x] Odometer (+ real-engine training-ground-truth tests; measured drift and limitations in System Design §3.3.1)
 - [ ] Mind map (grid update + rotated crop + small CNN)
 - [ ] Landmark notebook (slots + attention)
 - [ ] Curriculum Stage 3 (key & door puzzles)

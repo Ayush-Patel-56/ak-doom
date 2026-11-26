@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "engine_version": "1.3.3",
+  "contract_version": "1.0.0-draft",
+  "frame_skip": 4,
+  "buttons": [
+    "MOVE_FORWARD",
+    "MOVE_BACKWARD",
+    "MOVE_LEFT",
+    "MOVE_RIGHT",
+    "TURN_LEFT",
+    "TURN_RIGHT",
+    "ATTACK",
+    "USE",
+    "SELECT_NEXT_WEAPON"
+  ],
+  "vitals_fields": [
+    "health",
+    "armor",
+    "selected_weapon",
+    "selected_weapon_ammo",
+    "ammo_bullets",
+    "ammo_shells",
+    "ammo_rockets",
+    "ammo_cells",
+    "key_blue_card",
+    "key_yellow_card",
+    "key_red_card",
+    "key_blue_skull",
+    "key_yellow_skull",
+    "key_red_skull",
+    "vel_forward",
+    "vel_right",
+    "vel_up"
+  ],
+  "turns": {
+    "left": [
+      7.03125,
+      12.3046875,
+      14.0625,
+      14.0625,
+      14.0625,
+      14.0625
+    ],
+    "right": [
+      -7.03125,
+      -12.3046875,
+      -14.0625,
+      -14.0625,
+      -14.0625,
+      -14.0625
+    ],
+    "first_left": 0.0,
+    "second_left": [
+      1.7578125,
+      3.515625
+    ],
+    "first_right": 0.0,
+    "second_right": [
+      -1.7578125,
+      -3.515625
+    ]
+  },
+  "motion": {
+    "a_now": 2.8614,
+    "b_prev": 1.5613
+  },
+  "provenance": {
+    "map": "two_rooms.wad:MAP01",
+    "seed": 0,
+    "requested_steps": 600,
+    "fit_steps": 600,
+    "tool": "scripts/measure_odometry.py"
+  }
+}

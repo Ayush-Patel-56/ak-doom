@@ -1,0 +1,43 @@
+{
+  "passed": true,
+  "max_heading_error_deg": 0.06,
+  "max_position_drift_fraction": 0.05,
+  "episodes": [
+    {
+      "map": "maps/two_rooms.wad",
+      "seed": 733,
+      "steps": 600,
+      "distance_travelled_units": 7237.1,
+      "final_position_error_units": 29.0,
+      "max_position_error_units": 51.3,
+      "final_error_pct_of_distance": 0.4,
+      "max_heading_error_deg": 0.0,
+      "max_position_drift_fraction": 0.007088474665266473,
+      "passed": true
+    },
+    {
+      "map": "maps/curated/val/t2-maze-100000.wad",
+      "seed": 733,
+      "steps": 600,
+      "distance_travelled_units": 5229.7,
+      "final_position_error_units": 35.8,
+      "max_position_error_units": 60.3,
+      "final_error_pct_of_distance": 0.68,
+      "max_heading_error_deg": 0.0,
+      "max_position_drift_fraction": 0.011530298105053826,
+      "passed": true
+    },
+    {
+      "map": "maps/curated/val/t3-keydoor-100000.wad",
+      "seed": 733,
+      "steps": 600,
+      "distance_travelled_units": 5221.6,
+      "final_position_error_units": 209.8,
+      "max_position_error_units": 248.2,
+      "final_error_pct_of_distance": 4.02,
+      "max_heading_error_deg": 0.0,
+      "max_position_drift_fraction": 0.047533323119350386,
+      "passed": true
+    }
+  ]
+}
