@@ -51,9 +51,9 @@ flowchart LR
 
 ## Phase 2 — Baseline brain + our PPO
 
-- [ ] Ray, entity (attention) and vitals encoders
-- [ ] GRU memory
-- [ ] Simple flat policy (no manager yet) + critic
+- [x] Ray, entity (attention) and vitals encoders (`submission/smriti/brain.py`)
+- [x] GRU memory (256)
+- [x] Simple flat policy (6 action groups → 9 buttons) + critic; `BrainPolicy` in the agent, random fallback without weights
 - [ ] Our recurrent PPO + parallel game runner
 - [ ] Reward calculator (§4.2) + count-based curiosity
 - [ ] Curriculum Stage 1 (combat) and Stage 2 (navigation)

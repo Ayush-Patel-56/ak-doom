@@ -1,4 +1,4 @@
-"""Policies. Phase 1 only has the random baseline; the trained brain arrives in Phase 2."""
+"""Policies. RandomPolicy is the fallback; BrainPolicy runs the trained SmritiNet (needs torch)."""
 
 from .random_policy import RandomPolicy
 

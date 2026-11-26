@@ -28,8 +28,11 @@ Add a new row whenever we make or change a big choice. Never delete old rows; ma
 | D-16 | **No direct commits to `main`**; every change goes through a PR | `main` is what the scorer evaluates at the deadline | Committing straight to `main` | ✅ Active |
 | D-17 | **Mini-League scorer weights are our guesses** (`training/scorer.py`) | The real weights are hidden; we follow the published rules (exit biggest, then progression, exploration, combat; tier weights 1–4) | Waiting for real weights | ✅ Active, revisit if organisers publish more |
 | D-18 | **First map library = Freedoom 2 + ViZDoom scenarios** (both ship with vizdoom) | No download needed; 45 maps; real levels with doors, keys and exits | Download community WADs / OBLIGE first | ✅ Active; OBLIGE + own maps next |
-| D-23 | **Write our own map generator** (text drawing → UDMF) instead of depending on OBLIGE first | No extra install; maps are tiny, exact and reproducible from a seed; we control the skill being tested (e.g. key away from its door) | OBLIGE only | ✅ Active; OBLIGE stays optional for big full levels |
 | D-19 | **Safety guard cleans every observation and action** (`smriti/safety.py`) | A crash or invalid action = standing still for the rest of the map | Trusting the policy output | ✅ Active |
+| D-20 | **Run the brain on CPU even when `device="cuda"`** | Batch of 1, ~0.5M parameters: one CPU thread does a step in ~2–3 ms; the GPU is shared with other teams and adds launch/transfer cost | GPU inference | ✅ Active; revisit with image encoders |
+| D-21 | **Warm the network up inside `__init__`** | PyTorch's first forward pass took 5 s, half the 10 s first-`act()` limit; `__init__` has 60 s | Warm up in the first `act()` | ✅ Active |
+| D-22 | **No (or unloadable) trained weights → random policy** | `main` stays submittable before the first champion exists; a broken or un-fetched LFS `champion.pt` must not crash `__init__` (0 on every map) | Fail without weights | ✅ Active |
+| D-23 | **Write our own map generator** (text drawing → UDMF) instead of depending on OBLIGE first | No extra install; maps are tiny, exact and reproducible from a seed; we control the skill being tested (e.g. key away from its door) | OBLIGE only | ✅ Active; OBLIGE stays optional for big full levels |
 
 ---
 
@@ -56,5 +59,6 @@ Add a new row whenever we make or change a big choice. Never delete old rows; ma
 | R-15 | `USE` spam makes doors bounce | 🟡 | 🟡 | Previous-action input + door-bounce penalty in training |
 | R-16 | Turning isn't observed, so heading drifts | 🟢 | 🟡 | Measured on `two_rooms.wad`: turn per step is predictable from our buttons (heading error < 0.06°). Re-check on larger maps. |
 | R-17 | Entities only cover the 90° view | 🟡 | 🟢 | Rays cover 360° (they report enemies too); GRU remembers enemies that left the view |
+| R-20 | `__init__` takes ~19 s inside the official image (limit 60 s) | 🟡 | 🔴 | Mostly importing PyTorch on 1 CPU; re-measure with `validate.py --docker` whenever the brain grows |
 | R-19 | Validation/test maps are only big Freedoom levels (no Tier 1/2) | 🟢 | 🟡 | ✅ Fixed: 16 generated val + 16 test maps (arena, maze, rooms, keydoor); val is now 4/8/5/3 maps per tier |
 | R-18 | Startup after `reset()` is more than a single ignored step | 🔴 | 🟢 | Step 1 is a no-op, and the steady turn/move ramp only appears after ≥2 no-op steps (held turn from the first action: 0°, 3.515625°, 14.0625°). The odometer must use `startup_noop_steps`, not just skip step 1. See `configs/odometry.json`. |
