@@ -39,6 +39,35 @@ from training.scorer import TIER_WEIGHT, ScoreTracker  # noqa: E402
 
 STAND_STILL = np.zeros(9, dtype=np.int8)
 
+# --jobs: each worker process loads the agent once and plays whole (map, seed) runs. Every run starts with
+# agent.reset() (memory wiped, policy RNG re-seeded) and a fixed game seed, so results don't depend on which
+# worker plays it: the scores equal a sequential run (tests/agent/unit/test_evaluate_jobs.py).
+_WORKER: dict = {}
+
+
+def _init_worker(weights: str, device: str) -> None:
+    from scripts.phase4_ablation import strict_agent
+
+    _WORKER["agent"] = strict_agent(Path(weights), device=device)[0]
+
+
+def _play_job(job: tuple) -> dict:
+    spec, meta, seed, render_buffers = job
+    return play(_WORKER["agent"], spec, meta, seed, render_buffers)
+
+
+def run_jobs(agent, jobs_list: list[tuple], n_jobs: int, weights: Path, device: str):
+    """Yield one result row per job, in the order of jobs_list."""
+    if n_jobs <= 1:
+        for spec, meta, seed, buffers in jobs_list:
+            yield play(agent, spec, meta, seed, buffers)
+        return
+    import multiprocessing as mp
+
+    with mp.get_context("spawn").Pool(processes=n_jobs, initializer=_init_worker,
+                                      initargs=(str(weights), device)) as pool:
+        yield from pool.imap(_play_job, jobs_list)
+
 
 def load_catalog() -> dict[str, dict]:
     path = REPO / "maps" / "catalog.json"
@@ -122,8 +151,11 @@ def main(argv=None) -> int:
     ap.add_argument("--name", default=None, help="result name (default: <split>-<timestamp>)")
     ap.add_argument("--final-test", action="store_true")
     ap.add_argument("--allow-repeat-test", action="store_true")
+    ap.add_argument("--jobs", type=int, default=1,
+                    help="worker processes playing runs in parallel (same scores as --jobs 1, much faster)")
     args = ap.parse_args(argv)
     if args.seeds < 1: ap.error("seeds must be positive")
+    if args.jobs < 1: ap.error("jobs must be positive")
 
     catalog = load_catalog()
     if args.map:
@@ -151,17 +183,20 @@ def main(argv=None) -> int:
         if init_s > limits.INIT_TIMEOUT_S:  # official rule: 0 points on every map
             print(f"WARNING: __init__ took {init_s:.1f}s > {limits.INIT_TIMEOUT_S:.0f}s: the scorer would give 0 points")
         rows = []
-        for spec in specs:
-            for seed in range(args.seeds):
-                row = play(agent, spec, resolved_metadata.get(spec, catalog.get(spec, {})), seed, not args.no_buffers)
-                rows.append(row)
-                print(
-                    f"T{row['tier']} {row['map']:<44} s{seed} score {row['score']:7.2f} (x{TIER_WEIGHT[row['tier']]:.0f} = "
-                    f"{row['weighted_score']:7.2f})  exit={int(row['exit'])} keys={row['keys']} doors={row['doors']}"
-                    f"+{row['locked_doors']}L areas={row['areas']} kills={row['kills']} dmg={row['damage']:.0f}"
-                    f" dead={int(row['dead'])} {row['agent_mean_ms']:.2f}ms" + (f"  STOPPED: {row['stopped']}" if row["stopped"] else ""),
-                    flush=True,
-                )
+        jobs_list = [(spec, resolved_metadata.get(spec, catalog.get(spec, {})), seed, not args.no_buffers)
+                     for spec in specs for seed in range(args.seeds)]
+        if args.jobs > 1:
+            print(f"Playing {len(jobs_list)} runs on {min(args.jobs, len(jobs_list))} worker processes")
+        for row in run_jobs(agent, jobs_list, min(args.jobs, len(jobs_list)), weights, args.device):
+            seed = row["seed"]
+            rows.append(row)
+            print(
+                f"T{row['tier']} {row['map']:<44} s{seed} score {row['score']:7.2f} (x{TIER_WEIGHT[row['tier']]:.0f} = "
+                f"{row['weighted_score']:7.2f})  exit={int(row['exit'])} keys={row['keys']} doors={row['doors']}"
+                f"+{row['locked_doors']}L areas={row['areas']} kills={row['kills']} dmg={row['damage']:.0f}"
+                f" dead={int(row['dead'])} {row['agent_mean_ms']:.2f}ms" + (f"  STOPPED: {row['stopped']}" if row["stopped"] else ""),
+                flush=True,
+            )
     finally:
         finish_test_use(token, status='completed' if len(rows) == len(specs)*args.seeds and not any(r.get('stopped') for r in rows) else 'partial')
 
