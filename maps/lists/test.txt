@@ -1,0 +1,5 @@
+@vizdoom/freedoom2.wad:MAP01
+@vizdoom/freedoom2.wad:MAP02
+@vizdoom/freedoom2.wad:MAP07
+@vizdoom/freedoom2.wad:MAP14
+@vizdoom/freedoom2.wad:MAP22

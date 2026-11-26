@@ -57,13 +57,16 @@ docker build -t devforge-doom .
 python validate.py --docker --image devforge-doom
 ```
 
-Planned commands (added as the code lands):
+Phase 1 tools:
 
 ```bash
-uv run python scripts/train.py --stage 1      # train
-uv run python scripts/evaluate.py             # our own Mini-League on held-out maps
-uv run python scripts/benchmark_latency.py    # check the 40 ms per-decision budget
+uv run python scripts/build_map_catalog.py    # map library -> maps/catalog.json + maps/lists/*.txt
+uv run python scripts/evaluate.py             # Mini-League on validation maps (our copy of the scorer)
+uv run python scripts/benchmark_latency.py    # speed check against the official limits
+uv run pytest tests/agent                     # our contract + unit tests
 ```
+
+Coming next: `scripts/train.py` (Phase 2).
 
 ## Repository layout
 

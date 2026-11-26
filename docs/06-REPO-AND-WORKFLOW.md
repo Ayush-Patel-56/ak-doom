@@ -64,8 +64,14 @@ ak-doom/
 │   └── curated/                   🟩 small hand-picked WAD set (Git LFS)
 │
 ├── configs/                       🟩 YAML per stage/experiment
-├── scripts/                       🟩 train.py, evaluate.py, benchmark_latency.py,
-│                                     generate_maps.py, record_video.py, export_champion.py
+├── scripts/                       🟩 entry points
+│   ├── agent_loader.py            loads DoomAgent exactly like the scorer (+ one-thread limits)
+│   ├── map_spec.py                "wad:MAP01" parsing, "@vizdoom/..." portable paths
+│   ├── build_map_catalog.py       map library + train/val/test lists
+│   ├── evaluate.py                Mini-League
+│   ├── benchmark_latency.py       speed vs. official limits
+│   ├── inspect_observation.py, measure_odometry.py   (Phase 0 tools)
+│   └── (later) train.py, record_video.py, export_champion.py
 ├── dashboard/                     🟩 Mind View (demo only)
 └── tests/
     ├── test_env.py, ...           🟦 template tests
