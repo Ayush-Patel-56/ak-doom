@@ -38,10 +38,21 @@ class DoomAgent:
         self.action_space = action_space
         self.device = device
         self.guard = SafetyGuard(observation_space, action_space)
-        self.odometer = Odometer()
+        # A bad calibration (missing file, ViZDoom/contract mismatch) must never crash
+        # __init__: that scores 0 on EVERY map. Disable odometry and keep acting.
+        self.odometer = None
         self._previous_executed_action = None
-        self.odometry_valid = True
+        self.odometry_valid = False
         self.odometry_error = None
+        try:
+            self.odometer = Odometer()
+            self.odometry_valid = True
+        except Exception as exc:  # noqa: BLE001
+            print(f"[DoomAgent] could not initialise odometer ({type(exc).__name__}: {exc}); "
+                  "odometry disabled", file=sys.stderr)
+            self.odometer = None
+            self.odometry_valid = False
+            self.odometry_error = str(exc)
         path = Path(weights_path) if weights_path is not None else CHAMPION
         self.policy = None
         if path.is_file():
@@ -67,19 +78,20 @@ class DoomAgent:
         """Called before every map. Clears all per-map state."""
         self.policy.reset()
         self.guard.reset()
-        self.odometer.reset()
         self._previous_executed_action = None
-        self.odometry_valid = True
-        self.odometry_error = None
+        if self.odometer is not None:
+            self.odometer.reset()
+            self.odometry_valid = True
+            self.odometry_error = None
 
     @property
     def pose(self) -> Pose:
         """Read-only spawn-relative pose for memory/dashboard consumers; check odometry_valid."""
-        return self.odometer.pose
+        return self.odometer.pose if self.odometer is not None else Pose()
 
     def act(self, observation: dict) -> np.ndarray:
         """Return a MultiBinary action: int8 array of shape (9,) with values in {0, 1}."""
-        if self._previous_executed_action is not None and self.odometry_valid:
+        if self.odometer is not None and self._previous_executed_action is not None and self.odometry_valid:
             try:
                 # Use raw motion data: SafetyGuard's zero-filled replacement is not a measurement.
                 self.odometer.update(self._previous_executed_action, observation)

@@ -10,7 +10,7 @@ import pytest
 from doom_env import make_env
 from doom_env import spaces as S
 from conftest import REPO
-from smriti.memory.odometer import Calibration, Odometer
+from smriti.memory.odometer import Calibration, Odometer, Pose
 
 
 def press(*names):
@@ -154,6 +154,48 @@ def test_agent_marks_missing_motion_invalid_without_breaking_actions(agent, spac
     assert agent.pose == frozen  # do not invent movement across a missing transition
     agent.reset()
     assert agent.odometry_valid
+
+
+def test_agent_inits_when_calibration_is_missing_or_mismatched(spaces, tmp_path, monkeypatch):
+    """A missing or version-mismatched calibration.json must not crash DoomAgent or break actions."""
+    import json
+    from conftest import load_agent_class
+    from smriti.memory import odometer as odmod
+
+    original = odmod.DEFAULT_CALIBRATION
+    Agent = load_agent_class()
+
+    def assert_safe(agent):
+        assert agent.odometer is None
+        assert not agent.odometry_valid
+        agent.reset()
+        assert agent.odometer is None
+        assert not agent.odometry_valid
+        assert agent.pose == Pose()
+        for _ in range(5):
+            action = agent.act(spaces[0].sample())
+            assert action.shape == (9,)
+            assert set(np.unique(action)).issubset({0, 1})
+            assert not agent.odometry_valid
+            assert agent.odometer is None
+            assert agent.pose == Pose()
+
+    def load_missing(cls, path=None):
+        return cls.from_dict(json.loads((tmp_path / 'missing.json').read_text(encoding='utf-8')))
+
+    monkeypatch.setattr(odmod.Calibration, 'load', classmethod(load_missing))
+    assert_safe(Agent(*spaces, 'cpu'))
+
+    mismatched = json.loads(original.read_text(encoding='utf-8'))
+    mismatched['engine_version'] = '0.0.0'
+    bad_path = tmp_path / 'mismatched.json'
+    bad_path.write_text(json.dumps(mismatched), encoding='utf-8')
+
+    def load_mismatched(cls, path=None):
+        return cls.from_dict(json.loads(bad_path.read_text(encoding='utf-8')))
+
+    monkeypatch.setattr(odmod.Calibration, 'load', classmethod(load_mismatched))
+    assert_safe(Agent(*spaces, 'cpu'))
 
 
 @pytest.mark.parametrize('angle', [90, 225])
