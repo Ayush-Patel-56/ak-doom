@@ -40,3 +40,10 @@ def test_existing_evaluation_commands_expose_final_test_guard():
     assert 'final_test' in inspect.signature(phase4_ablation.evaluate_arm).parameters
     assert phase4_ablation.parser().parse_args(['eval','--arm','full=x','--final-test']).final_test
     assert 'argv' in inspect.signature(evaluate.main).parameters
+
+
+def test_latency_benchmark_rejects_random_fallback(tmp_path,monkeypatch):
+    monkeypatch.syspath_prepend(str(Path(__file__).resolve().parents[3]/'scripts'))
+    from scripts.benchmark_latency import main
+    with pytest.raises(FileNotFoundError):
+        main(['--weights',str(tmp_path/'missing.pt'),'--ticks','4'])

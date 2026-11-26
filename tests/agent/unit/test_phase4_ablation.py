@@ -59,7 +59,7 @@ def test_real_engine_evaluation_renders_rgb_and_rejects_wrong_arm(tmp_path, monk
     p = tmp_path / 'rgb.pt'
     save_checkpoint(p, SmritiNet(BrainConfig(use_mindmap=True, use_notebook=True,
                                            use_manager=True, use_rgb=rgb, use_depth=depth)),
-                    {'training':{'rnd':'on','helpers':'off'}})
+                    {'steps':1, 'training':{'rnd':'on','helpers':'off'}})
     pool = abl.evaluation_pool('val', 2)
     observed = []
     real_play = league.play

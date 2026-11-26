@@ -35,7 +35,7 @@ def heldout_maps(split: str) -> list[str]:
     return [f"maps/curated/{split}/{p.name}:MAP01" for p in sorted(folder.glob("t3-*.wad"))]
 
 
-def evaluate_arm(weights: Path, split: str, seeds: int) -> dict:
+def evaluate_arm(weights: Path, split: str, seeds: int, final_test=False, allow_repeat_test=False) -> dict:
     """Runs in its own process (one CPU thread, like the scorer)."""
     sys.path[:0] = [str(REPO / "scripts"), str(REPO)]
     import agent_loader
@@ -46,12 +46,20 @@ def evaluate_arm(weights: Path, split: str, seeds: int) -> dict:
     import evaluate as league
 
     catalog = league.load_catalog()
-    agent = agent_loader.load_agent_class()(observation_space(), action_space(), "cpu", weights_path=weights)
+    from scripts.phase4_ablation import strict_agent
+    from scripts.test_use import reserve_test_use, finish_test_use
+    specs=heldout_maps(split)
+    if not specs or seeds<1: raise ValueError('nonempty pool and positive seeds required')
+    agent,config,_=strict_agent(weights)
+    token=reserve_test_use(specs,weights,final_test=final_test,allow_repeat=allow_repeat_test)
     rows = []
-    for spec in heldout_maps(split):
-        meta = catalog.get(spec, {"tier": 3, "episode_ticks": 2100})
-        for seed in range(seeds):
-            rows.append(league.play(agent, spec, meta, seed, render_buffers=False))
+    try:
+        for spec in specs:
+            meta = catalog.get(spec, {"tier": 3, "episode_ticks": 2100})
+            for seed in range(seeds):
+                rows.append(league.play(agent, spec, meta, seed, render_buffers=config['use_rgb'] or config.get('use_depth',False)))
+    finally:
+        finish_test_use(token,status='completed' if len(rows)==len(specs)*seeds and not any(r.get('stopped') for r in rows) else 'partial')
     n = max(len(rows), 1)
     summary = {
         "policy": agent.policy_name,
@@ -81,9 +89,11 @@ def table(results: dict) -> str:
     return "\n".join(lines)
 
 
-def run_eval_subprocess(arm: str, weights: Path, split: str, seeds: int, out: Path) -> dict:
+def run_eval_subprocess(arm: str, weights: Path, split: str, seeds: int, out: Path, final_test=False, allow_repeat_test=False) -> dict:
     cmd = [sys.executable, str(Path(__file__).resolve()), "_eval_one", "--weights", str(weights),
            "--split", split, "--seeds", str(seeds), "--out", str(out)]
+    if final_test: cmd += ['--final-test']
+    if allow_repeat_test: cmd += ['--allow-repeat-test']
     subprocess.run(cmd, check=True, cwd=REPO)
     return json.loads(out.read_text(encoding="utf-8"))
 
@@ -120,17 +130,21 @@ def main(argv=None) -> int:
     one.add_argument("--split", default="val")
     one.add_argument("--seeds", type=int, default=3)
     one.add_argument("--out", type=Path, required=True)
+    for parser in (r,e,one):
+        parser.add_argument('--final-test',action='store_true')
+        parser.add_argument('--allow-repeat-test',action='store_true')
     a = ap.parse_args(argv)
+    if a.split=='test' and not a.final_test: ap.error('test split requires --final-test')
 
     if a.cmd == "_eval_one":
-        a.out.write_text(json.dumps(evaluate_arm(a.weights, a.split, a.seeds)), encoding="utf-8")
+        a.out.write_text(json.dumps(evaluate_arm(a.weights, a.split, a.seeds,a.final_test,a.allow_repeat_test)), encoding="utf-8")
         return 0
 
     tmp = REPO / "runs" / "ablation" / "tmp"
     tmp.mkdir(parents=True, exist_ok=True)
     if a.cmd == "eval":
         arms = dict(x.split("=", 1) for x in a.arm)
-        results = {k: run_eval_subprocess(k, Path(v), a.split, a.seeds, tmp / f"{a.name}-{k}.json")
+        results = {k: run_eval_subprocess(k, Path(v), a.split, a.seeds, tmp / f"{a.name}-{k}.json",a.final_test,a.allow_repeat_test)
                    for k, v in arms.items()}
         write_report(a.name, results, {"split": a.split, "seeds": a.seeds, "arms": arms})
         return 0
@@ -154,7 +168,7 @@ def main(argv=None) -> int:
         return 1
     train_s = round(time.time() - t0)
     results = {arm: run_eval_subprocess(arm, REPO / "runs" / f"{a.name}-{arm}" / "latest.pt", a.split, a.seeds,
-                                        tmp / f"{a.name}-{arm}.json") for arm in procs}
+                                        tmp / f"{a.name}-{arm}.json",a.final_test,a.allow_repeat_test) for arm in procs}
     meta = {"steps_per_arm": a.steps, "games_per_arm": a.workers * a.games, "seed": a.seed, "split": a.split,
             "seeds_per_map": a.seeds, "maps": heldout_maps(a.split), "train_seconds": train_s,
             "train_args": a.train_args}

@@ -138,6 +138,11 @@ class MapSampler:
     def pool_manifest(self) -> dict:
         """Serializable sampling provenance saved alongside experiment configs."""
         from training.mapgen.randomize import PROFILE, PROFILE_HASH
+        content = {}
+        if self.stage_number == 5:
+            for row in self.full_pool:
+                path = row['resolved_wad']
+                if path not in content: content[path] = hashlib.sha256(Path(path).read_bytes()).hexdigest()
         return {
             **({'randomisation': dict(PROFILE, profile_hash=PROFILE_HASH)} if self.stage_number == 5 else {}),
             'stage': self.stage_number,
@@ -152,7 +157,8 @@ class MapSampler:
             'near_end': self.stage.near_end,
             'full_pool': [dict(id=r['id'], source=r['source'], tier=r['tier'],
                                episode_ticks=r['episode_ticks'],
-                               canonical_identity=self._portable_identity(r['id'])) for r in self.full_pool],
+                               canonical_identity=self._portable_identity(r['id']),
+                               **({'wad_sha256':content[r['resolved_wad']]} if self.stage_number==5 else {})) for r in self.full_pool],
         }
 
     def map_metadata(self, wad: str, map_name: str) -> dict | None:

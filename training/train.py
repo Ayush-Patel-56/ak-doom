@@ -222,6 +222,7 @@ def main(argv=None) -> int:
         tb = SummaryWriter(str(out))
     except Exception:  # noqa: BLE001  (tensorboard is optional)
         tb = None
+    episodes = (out / "episodes.jsonl").open("a", encoding="utf-8")
     metrics = (out / "metrics.jsonl").open("a", encoding="utf-8")
     (out / "args.json").write_text(json.dumps({k: str(v) for k, v in vars(a).items()}, indent=2), encoding="utf-8")
 
@@ -281,7 +282,10 @@ def main(argv=None) -> int:
                 buf.r[t] = ppo.rscale.scale(r, done)
                 buf.done[t] = done
                 starts = done.copy()
-                recent.extend(i for i in infos if i is not None)
+                for episode in (i for i in infos if i is not None):
+                    episodes.write(json.dumps(dict(episode,decisions_completed=steps+(t+1)*n))+"\n")
+                    episodes.flush()
+                    recent.append(episode)
             last_v = ppo.bootstrap(feats, state, starts)
             last_v = last_v * (1.0 - starts)  # a fresh episode's value does not bootstrap the old one
             t_roll = time.time() - t0
@@ -317,6 +321,7 @@ def main(argv=None) -> int:
     finally:
         vec.close()
         metrics.close()
+        episodes.close()
         if tb is not None:
             tb.close()
     print(f"[train] done: {steps} steps in {time.time() - t_start:.0f}s -> {out / 'latest.pt'}")

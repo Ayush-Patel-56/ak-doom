@@ -21,18 +21,28 @@ def digest(path):
     return h.hexdigest()
 
 
-def physical_identity(spec):
+def content_identity(spec, cache=None):
+    cache = {} if cache is None else cache
     wad,name=map_identity(spec)
     stat=Path(wad).stat()
-    return [stat.st_dev,stat.st_ino,name]
+    key=(stat.st_dev,stat.st_ino,stat.st_size,stat.st_mtime_ns)
+    if key not in cache: cache[key]=digest(wad)
+    return cache[key],name
+
+
+def catalog_metadata(specs, *, catalog_path=DEFAULT_CATALOG):
+    """Resolve aliases/copies to catalog metadata, favoring the restrictive test split."""
+    cache={};known={}
+    for split in ('train','val','test'):
+        for row in load_catalog_pool(split,[1,2,3,4],catalog_path=catalog_path,require_assets=False):
+            if Path(row['resolved_wad']).is_file(): known[content_identity(row['id'],cache)]=row
+    return {spec:dict(known[key]) for spec in specs if (key:=content_identity(spec,cache)) in known}
 
 
 def reserve_test_use(specs, weights, *, final_test=False, allow_repeat=False,
                      ledger=DEFAULT_LEDGER, catalog_path=DEFAULT_CATALOG):
-    known={tuple(physical_identity(r['id'])):r['id'] for r in
-           load_catalog_pool('test',[1,2,3,4],catalog_path=catalog_path)}
-    selected={known[tuple(physical_identity(spec))] for spec in specs
-              if tuple(physical_identity(spec)) in known}
+    metadata=catalog_metadata(specs,catalog_path=catalog_path)
+    selected={row['id'] for row in metadata.values() if row['split']=='test'}
     if not selected: return None
     if not final_test: raise ValueError('known test maps require --final-test and a recorded reservation')
     checkpoint=digest(weights)

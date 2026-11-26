@@ -79,7 +79,8 @@ class Game:
                 self.env = None
             self._open_next_map(make_env)
             self.episodes_on_map = 0
-        obs, _ = self.env.reset(seed=int(self.rng.integers(2**31 - 1)))
+        self.episode_seed = int(self.rng.integers(2**31 - 1))
+        obs, _ = self.env.reset(seed=self.episode_seed)
         self.memory.reset()
         self.memory.observe(None, obs, obs)  # the reset observation is not a transition
         self.shaper.reset(self.env.privileged_state())
@@ -122,7 +123,7 @@ class Game:
         done = bool(term or trunc)
         info = None
         if done:
-            info = {"map": Path(self.wad).name, "kind": self.kind, "ret": self.ret, "len": self.len,
+            info = {"map": Path(self.wad).name, "wad": self.wad, "engine_seed": self.episode_seed, "kind": self.kind, "ret": self.ret, "len": self.len,
                     **self.shaper.stats(), 'helper_ret': self.helper_ret,
                     'map_name': self.map, 'episode_ticks': self.current_episode_ticks,
                     'map_metadata': self.sampler.map_metadata(self.wad, self.map)}

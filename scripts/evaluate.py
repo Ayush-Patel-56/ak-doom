@@ -135,14 +135,16 @@ def main(argv=None) -> int:
             return 2
         specs = [ln.strip() for ln in lst.read_text(encoding="utf-8").splitlines() if ln.strip()]
 
-    from scripts.test_use import reserve_test_use, finish_test_use
+    from scripts.test_use import reserve_test_use, finish_test_use, catalog_metadata
+    resolved_metadata = catalog_metadata(specs)
     weights = args.weights or (REPO / 'submission/weights/champion.pt')
     token = reserve_test_use(specs, weights, final_test=args.final_test, allow_repeat=args.allow_repeat_test)
     rows = []
     try:
         t0 = time.perf_counter()
-        agent = agent_loader.load_agent_class()(observation_space(), action_space(), args.device, weights_path=args.weights)
-        init_s = time.perf_counter() - t0
+        from scripts.phase4_ablation import strict_agent
+        agent, _, _ = strict_agent(weights,device=args.device)
+        init_s = agent.scored_init_s
         if hasattr(agent.policy, 'net') and agent.policy.net.cfg.uses_pixels and args.no_buffers:
             raise ValueError('--no-buffers is incompatible with this pixel checkpoint')
         print(f"Policy: {agent.policy_name}")
@@ -151,7 +153,7 @@ def main(argv=None) -> int:
         rows = []
         for spec in specs:
             for seed in range(args.seeds):
-                row = play(agent, spec, catalog.get(spec, {}), seed, not args.no_buffers)
+                row = play(agent, spec, resolved_metadata.get(spec, catalog.get(spec, {})), seed, not args.no_buffers)
                 rows.append(row)
                 print(
                     f"T{row['tier']} {row['map']:<44} s{seed} score {row['score']:7.2f} (x{TIER_WEIGHT[row['tier']]:.0f} = "

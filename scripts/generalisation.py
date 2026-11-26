@@ -38,13 +38,28 @@ def compare(validation, test, gap_tolerance, min_mean_score, min_episodes_per_ti
                         for t in sorted({r['tier'] for r in rows})})
     v,t=summary(validation),summary(test)
     gap=abs(t['mean_weighted_score']-v['mean_weighted_score'])/max(abs(v['mean_weighted_score']),1.)
-    enough=all(g['episodes']>=min_episodes_per_tier for g in v['tiers'].values())
+    enough=set(v['tiers'])=={'1','2','3','4'} and all(g['episodes']>=min_episodes_per_tier for g in v['tiers'].values())
     useful=min(v['mean_weighted_score'],t['mean_weighted_score'])>=min_mean_score
     return dict(validation=v,test=t,relative_score_gap=gap,gap_tolerance=gap_tolerance,
                 minimum_mean_score=min_mean_score,minimum_episodes_per_tier=min_episodes_per_tier,
                 gap_within_tolerance=gap<=gap_tolerance,
                 generalisation_demonstrated=gap<=gap_tolerance and enough and useful,
                 interpretation='Threshold-based evidence only; inspect raw episodes and seed variation. Historical test freshness unknown.')
+
+
+def validate_report(report, split):
+    if report.get('split') != split or report.get('errors') != []:
+        raise ValueError('errored or wrong-split evaluation report')
+    pool = report.get('map_pool',[])
+    seeds = report.get('seeds',0)
+    if type(seeds) is not int or seeds<1 or not pool or {r['tier'] for r in pool}!={1,2,3,4}:
+        raise ValueError('complete planned coverage of all four tiers required')
+    expected = {(r['id'],r['tier'],seed) for r in pool for seed in range(seeds)}
+    rows = report.get('rows',[])
+    actual = {(r['map'],r['tier'],r['seed']) for r in rows}
+    if len(expected)!=len(pool)*seeds or report.get('expected_episodes')!=len(expected) or len(rows)!=len(expected) or actual!=expected:
+        raise ValueError('incomplete/duplicate/unplanned evaluation rows')
+    if any(r.get('stopped') for r in rows): raise ValueError('stopped evaluation')
 
 
 def main(argv=None):
@@ -60,6 +75,7 @@ def main(argv=None):
     a=ap.parse_args(argv)
     if a.mode=='compare':
         v,t=(json.loads(p.read_text()) for p in (a.validation,a.test))
+        validate_report(v,'val');validate_report(t,'test')
         if not v.get('checkpoint_sha256') or v['checkpoint_sha256']!=t.get('checkpoint_sha256') or v.get('config')!=t.get('config'):
             raise ValueError('checkpoint/config drift')
         if v.get('split')!='val' or t.get('split')!='test' or v.get('ticks_override')!=t.get('ticks_override'):
@@ -83,7 +99,9 @@ def main(argv=None):
         agent,cfg,_=strict_agent(a.weights)
         specs=[r['id'] for r in selected]
         token=reserve_test_use(specs,a.weights,final_test=a.final_test,allow_repeat=a.allow_repeat_test)
-        report=dict(split=a.split,checkpoint_sha256=digest(a.weights),config=cfg,seeds=a.seeds,
+        report=dict(split=a.split,expected_episodes=len(selected)*a.seeds,
+                    map_pool=[dict(id=r['id'],tier=r['tier'],episode_ticks=r['episode_ticks']) for r in selected],
+                    checkpoint_sha256=digest(a.weights),config=cfg,seeds=a.seeds,
                     ticks_override=a.ticks,test_use_id=token,rows=[],errors=[])
         try:
             for r in selected:

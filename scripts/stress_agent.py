@@ -32,6 +32,16 @@ def chaos_observations(space):
             mutate(template,float('inf')),mutate(template,1e30)]
 
 
+def measure_chaos(agent):
+    rows=[]
+    for i,obs in enumerate(chaos_observations(agent.observation_space)):
+        agent.reset();agent.reset()
+        valid=valid_action(agent.act(obs))
+        rows.append(dict(case=i,valid_action=valid,fallbacks=agent.guard.fallbacks,
+                         fallback_allowed=True))
+    return rows
+
+
 def scenario_maps(seed):
     from training.mapgen import GridMap, generate
     dense=generate('arena',seed)
@@ -73,10 +83,9 @@ def main(argv=None):
     failures=[];rows=[]
     report=dict(checkpoint_sha256=digest(a.weights),config=cfg,arguments=vars(a),rows=rows,failures=failures,
                 rss_supported=rss_bytes() is not None,official_pinned_cpu=False,chaos=[])
-    for i,obs in enumerate(chaos_observations(agent.observation_space)):
-        agent.reset();agent.reset()
-        valid=valid_action(agent.act(obs));report['chaos'].append(dict(case=i,valid_action=valid))
-        if not valid: failures.append(f'chaos {i}: invalid action')
+    report['chaos']=measure_chaos(agent)
+    for row in report['chaos']:
+        if not row['valid_action']: failures.append(f"chaos {row['case']}: invalid action")
     with tempfile.TemporaryDirectory(prefix='phase5-stress-') as tmp:
         cases=list(scenario_maps(a.seed).items())
         for i in range(a.maps-len(cases)):
@@ -116,7 +125,7 @@ def main(argv=None):
                 if env is not None: env.close()
     report['reliability_passed']=not failures and len(rows)==a.maps
     report['full_resource_checks_passed']=report['reliability_passed'] and report['rss_supported']
-    report['interpretation']='Measured behavior and thresholds only; unsupported RSS is not a pass; score stability requires held-out multi-seed evaluation.'
+    report['interpretation']='Malformed inputs may use recorded safe fallbacks; normal engine runs require zero fallbacks. Measured behavior and thresholds only; unsupported RSS is not a pass; score stability requires held-out multi-seed evaluation.'
     a.output.parent.mkdir(parents=True,exist_ok=True)
     a.output.write_text(json.dumps(report,indent=2,default=str)+'\n');print(a.output)
     return 1 if failures else 0
