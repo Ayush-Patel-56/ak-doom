@@ -28,7 +28,9 @@ for p in (str(REPO / "submission"), str(REPO)):
 import numpy as np  # noqa: E402
 import torch  # noqa: E402
 
-from smriti.brain import BrainConfig, SmritiNet, load_checkpoint  # noqa: E402
+from smriti.brain import BrainConfig, SmritiNet, load_checkpoint, VITALS_SCALE
+from smriti.features import NUM_RAYS, NUM_VITALS
+from training.rnd import RND  # noqa: E402
 from training.checkpoints import save_checkpoint  # noqa: E402
 from training.ppo import PPO, PPOConfig, Rollout  # noqa: E402
 from training.rollout import VecGames, fine_timer  # noqa: E402
@@ -58,7 +60,31 @@ def build_args(argv=None):
     ap.add_argument("--switch-every", type=int, default=8,
                     help="episodes per map before loading a new one (a map load stalls every game ~0.6 s)")
     ap.add_argument("--resume", action="store_true", help="continue runs/<name> from latest.pt + train_state.pt")
-    return ap.parse_args(argv)
+    for flag in ('manager', 'rgb', 'rnd', 'goal-helpers'):
+        ap.add_argument('--' + flag, choices=['on', 'off'], default='off')
+    ap.add_argument('--goal-interval', type=int, default=8)
+    ap.add_argument('--helper-weights', type=json.loads, help='JSON object overriding goal helper weights')
+    ap.add_argument('--rnd-coef', type=float, default=.01, help='initial intrinsic weight; linearly decays to zero')
+    ap.add_argument('--exit-aux', type=float, default=.1)
+    ap.add_argument('--warm-start', action='store_true', help='explicitly transfer shape-compatible weights from --init')
+    a = ap.parse_args(argv)
+    if any(getattr(a, k) < 1 for k in ('workers','games','steps','T','epochs','minibatches','threads','goal_interval','save_every','switch_every','ticks')):
+        ap.error('counts and goal interval must be positive')
+    if a.goal_helpers == 'on' and a.manager != 'on':
+        ap.error('goal helpers require --manager on')
+    if a.warm_start and (a.init is None or a.resume):
+        ap.error('--warm-start requires --init and cannot be combined with --resume')
+    if not all(np.isfinite(v) and v >= 0 for v in (a.rnd_coef, a.exit_aux, a.ent)) or not np.isfinite(a.lr) or a.lr <= 0:
+        ap.error('loss/reward weights must be finite and nonnegative; lr must be positive')
+    if a.helper_weights is not None:
+        from training.goal_rewards import GoalHelpers
+        try:
+            if not isinstance(a.helper_weights, dict):
+                raise ValueError('helper weights must be a JSON object')
+            GoalHelpers(a.helper_weights)
+        except (ValueError, TypeError) as exc:
+            ap.error(str(exc))
+    return a
 
 
 def memory_flags(mode: str) -> tuple[bool, bool]:
@@ -71,17 +97,32 @@ def save_train_state(path: Path, ppo: PPO, steps: int, it: int, next_save: int) 
     tmp = path.with_suffix(".tmp")
     torch.save({"opt": ppo.opt.state_dict(), "rscale": {"mean": rs.mean, "var": rs.var, "count": rs.count,
                                                          "ret": rs.ret.copy()},
+                "manager_opt": ppo.manager_opt.state_dict() if ppo.manager_opt else None,
+                "rnd": ppo.rnd.state_dict() if ppo.rnd else None,
+                "training_config": ppo.training_config,
+                "torch_rng": torch.get_rng_state(), "numpy_rng": np.random.get_state(),
                 "steps": steps, "it": it, "next_save": next_save}, tmp)
     tmp.replace(path)
 
 
 def load_train_state(path: Path, ppo: PPO, n_games: int) -> dict:
     st = torch.load(path, map_location="cpu", weights_only=False)
+    saved_config = st.get('training_config')
+    legacy_config = dict(rnd='off', rnd_coef=.01, helpers='off', helper_weights=None, exit_aux=.1)
+    if (saved_config if saved_config is not None else legacy_config) != ppo.training_config:
+        raise ValueError('--resume training feature/reward config differs from saved run')
     ppo.opt.load_state_dict(st["opt"])
+    if ppo.manager_opt is not None:
+        ppo.manager_opt.load_state_dict(st['manager_opt'])
+    if ppo.rnd is not None:
+        ppo.rnd.load_state_dict(st['rnd'])
+    if 'torch_rng' in st:
+        torch.set_rng_state(st['torch_rng'])
+        np.random.set_state(st['numpy_rng'])
     rs = ppo.rscale
     rs.mean, rs.var, rs.count = st["rscale"]["mean"], st["rscale"]["var"], st["rscale"]["count"]
-    if len(st["rscale"]["ret"]) == n_games:  # per-game running returns only fit the same game count
-        rs.ret = st["rscale"]["ret"]
+    # Environments restart on resume; old per-game returns and unfinished manager intervals do not.
+    rs.ret = np.zeros(n_games, np.float64)
     return st
 
 
@@ -101,20 +142,39 @@ def main(argv=None) -> int:
         if not ((out / "latest.pt").is_file() and resume_state.is_file()):
             raise SystemExit(f"--resume: no latest.pt + train_state.pt in {out}")
         a.init = out / "latest.pt"
+    requested = BrainConfig(use_mindmap=use_map, use_notebook=use_notes,
+                            use_manager=a.manager == 'on', use_rgb=a.rgb == 'on', goal_interval=a.goal_interval)
+    transferred = None
     if a.init:
         net, _ = load_checkpoint(a.init, dev)
-        if (net.cfg.use_mindmap, net.cfg.use_notebook) != (use_map, use_notes):
-            raise SystemExit(f"--init checkpoint memory config {net.cfg} does not match --memory {a.memory}")
+        flags = ('use_mindmap', 'use_notebook', 'use_manager', 'use_rgb', 'goal_interval')
+        if a.warm_start:
+            source = net.state_dict()
+            net = SmritiNet(requested).to(dev)
+            target = net.state_dict()
+            shared = {k: v for k, v in source.items() if k in target and target[k].shape == v.shape}
+            transferred = {'copied': sorted(shared), 'newly_initialized': sorted(set(target) - set(shared))}
+            target.update(shared)
+            net.load_state_dict(target)
+            print('[train] explicit warm start: ' + json.dumps(transferred), flush=True)
+        elif any(getattr(net.cfg, k) != getattr(requested, k) for k in flags):
+            raise SystemExit('--init architecture does not match flags; use --warm-start explicitly to expand it')
     else:
-        net = SmritiNet(BrainConfig(use_mindmap=use_map, use_notebook=use_notes)).to(dev)
+        net = SmritiNet(requested).to(dev)
     net.eval()
-    cfg = PPOConfig(T=a.T, lr=a.lr, ent_coef=a.ent, epochs=a.epochs, minibatches=a.minibatches)
+    cfg = PPOConfig(T=a.T, lr=a.lr, ent_coef=a.ent, epochs=a.epochs, minibatches=a.minibatches, exit_aux_coef=a.exit_aux)
     kinds = a.kinds.split(",") if a.kinds else None
-    vec = VecGames(a.workers, a.games, a.stage, a.seed, use_map, use_notes, episode_ticks=a.ticks,
-                   switch_every=a.switch_every, kinds=kinds)
-    n = vec.n
+    n = a.workers * a.games
     ppo = PPO(net, cfg, n, dev)
+    ppo.rnd = RND(NUM_RAYS + NUM_VITALS, dev, seed=a.seed) if a.rnd == 'on' else None
+    ppo.training_config = dict(rnd=a.rnd, rnd_coef=a.rnd_coef, helpers=a.goal_helpers,
+                               helper_weights=a.helper_weights, exit_aux=a.exit_aux)
+
     resumed = load_train_state(resume_state, ppo, n) if a.resume else None
+    vec = VecGames(a.workers, a.games, a.stage, a.seed, use_map, use_notes, episode_ticks=a.ticks,
+                   switch_every=a.switch_every, kinds=kinds, use_rgb=net.cfg.use_rgb,
+                   goal_helpers=a.goal_helpers == 'on', helper_weights=a.helper_weights)
+
     print(f"[train] {name}: stage {a.stage}, memory {a.memory}, {n} games, "
           f"{sum(p.numel() for p in net.parameters()):,} params", flush=True)
     try:
@@ -140,23 +200,45 @@ def main(argv=None) -> int:
             buf = Rollout(cfg.T, n)
             h0 = state.clone()
             t0 = time.time()
+            rnd_inputs = []
+            reward_components = []
+            label_counts = [0, 0]
             for t in range(cfg.T):
                 for k in buf.f:
                     buf.f[k][t] = feats[k]
                 buf.start[t] = starts
+                buf.exit_target[t] = feats['_exit_target']
+                buf.exit_known[t] = feats['_exit_known']
+                label_counts[0] += int(feats['_exit_known'].sum())
+                label_counts[1] += int((feats['_exit_target'] * feats['_exit_known']).sum())
                 choices, logp, v, state = ppo.act(feats, state, starts)
-                feats, r, done, infos = vec.step(choices, progress)
+                goals = ppo.goals.goal.cpu().numpy() if net.cfg.use_manager else None
+                if goals is not None:
+                    buf.goals[t] = goals
+                feats, r, done, infos = vec.step(choices, progress, goals)
+                if ppo.intervals is not None:
+                    ppo.intervals.step(feats['_extrinsic'], done)
+                intrinsic = np.zeros(n, np.float32)
+                if ppo.rnd is not None and (~done).any():
+                    legal = np.concatenate([feats['ray_dist'][~done], feats['vitals'][~done] / VITALS_SCALE], axis=-1)
+                    intrinsic[~done] = ppo.rnd.bonus(legal) * a.rnd_coef * (1.0 - progress)
+                    rnd_inputs.append(legal)
+                reward_components.append([float(feats['_extrinsic'].mean()), float(feats['_helper'].mean()), float(intrinsic.mean())])
+                r = r + intrinsic
                 buf.a[t], buf.logp[t], buf.v[t] = choices, logp, v
                 buf.r[t] = ppo.rscale.scale(r, done)
                 buf.done[t] = done
                 starts = done.copy()
                 recent.extend(i for i in infos if i is not None)
-            _, _, last_v, _ = ppo.act(feats, state, starts)
+            last_v = ppo.bootstrap(feats, state, starts)
             last_v = last_v * (1.0 - starts)  # a fresh episode's value does not bootstrap the old one
             t_roll = time.time() - t0
             t0 = time.time()
             stats = ppo.update(buf, h0, last_v, lr=a.lr * (1.0 - 0.9 * progress),
                                ent_coef=a.ent * (1.0 - 0.9 * progress))
+            stats['rnd_loss'] = ppo.rnd.update(np.concatenate(rnd_inputs)) if rnd_inputs else 0.
+            stats.update(zip(('reward_extrinsic', 'reward_helper', 'reward_intrinsic'), np.mean(reward_components, axis=0).tolist()))
+            stats['exit_labels_known'], stats['exit_labels_positive'] = label_counts
             t_upd = time.time() - t0
             steps += cfg.T * n
             it += 1
@@ -173,7 +255,8 @@ def main(argv=None) -> int:
                     if isinstance(v, (int, float)) and k not in ("steps", "it"):
                         tb.add_scalar(k, v, steps)
             print(" ".join(f"{k}={v}" for k, v in row.items()), flush=True)
-            extra = {"steps": steps, "stage": a.stage, "memory": a.memory, "name": name}
+            extra = {"steps": steps, "stage": a.stage, "memory": a.memory, "name": name,
+                     "manager": a.manager, "rgb": a.rgb, "training": ppo.training_config, "warm_start": transferred}
             save_checkpoint(out / "latest.pt", net, extra)
             save_train_state(resume_state, ppo, steps, it, next_save)
             if steps >= next_save:

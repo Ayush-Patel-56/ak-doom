@@ -34,6 +34,7 @@ FEATURE_SPEC: dict[str, tuple[tuple[int, ...], type]] = {
     "map": ((NUM_CHANNELS, CROP, CROP), np.uint8),
     "notes": ((NUM_SLOTS, NOTE_FEATURES), np.float32),
     "note_mask": ((NUM_SLOTS,), np.bool_),
+    "rgb": ((3, 60, 80), np.uint8),
 }
 MEMORY_KEYS = ("map", "notes", "note_mask")
 
@@ -58,6 +59,7 @@ def extract(obs: dict, prev_action: np.ndarray | None = None,
     for k in MEMORY_KEYS:
         shape, dtype = FEATURE_SPEC[k]
         out[k] = np.zeros(shape, dtype) if memory is None else np.asarray(memory[k], dtype)
+    out['rgb'] = np.asarray(obs['rgb'], dtype=np.uint8)[::2, ::2].transpose(2, 0, 1).copy()
     return out
 
 

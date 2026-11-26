@@ -108,6 +108,16 @@ class DoomAgent:
         """Read-only spawn-relative pose for memory/dashboard consumers; check odometry_valid."""
         return self.memory.pose
 
+    @property
+    def active_goal(self):
+        """Learned goal index, or None for checkpoints without a manager."""
+        return getattr(self.policy, 'active_goal', None)
+
+    @property
+    def exit_probability(self):
+        """RGB head's learned score; None for checkpoints without RGB."""
+        return getattr(self.policy, 'exit_probability', None)
+
     def act(self, observation: dict) -> np.ndarray:
         """Return a MultiBinary action: int8 array of shape (9,) with values in {0, 1}."""
         was_valid = self.memory.valid
@@ -124,4 +134,6 @@ class DoomAgent:
         action = self.guard.act(observation, self.policy)
         # Includes cleaned policy outputs and fallback actions. Never use the intended policy action.
         self._previous_executed_action = action.copy()
+        if hasattr(self.policy, 'record_executed_action'):
+            self.policy.record_executed_action(action)
         return action
