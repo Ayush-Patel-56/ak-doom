@@ -47,7 +47,7 @@ Phase 0 tools:
 
 ```bash
 uv run python scripts/inspect_observation.py   # print one real observation, readable
-uv run python scripts/measure_odometry.py      # calibrate turning/movement -> configs/odometry.json
+uv run python scripts/measure_odometry.py --out configs/odometry.json   # calibrate turning/movement
 ```
 
 Closest check to the real scorer (needs Docker):

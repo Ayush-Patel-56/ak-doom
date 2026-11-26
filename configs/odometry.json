@@ -1,37 +1,68 @@
 {
   "map": "two_rooms.wad:MAP01",
   "frame_skip": 4,
+  "startup": {
+    "first_step_after_reset_is_noop": true,
+    "startup_noop_steps": 2,
+    "measurement_warmup_steps": 5,
+    "note": "First step after reset is a no-op (0 turn, 0 move; tic still advances). The steady turn/move ramp only appears after at least 2 no-op steps. Held turn from the first action: 0, 3.515625, 14.0625 deg (skips the 12.3046875 deg step). After exactly one no-op, the next left is 1.7578125, then 12.3046875, then 14.0625 deg. Movement follows the same pattern. Mid-episode turns are normal. The odometer must wait startup_noop_steps (>= 2), not merely skip step 1."
+  },
   "turns": {
     "first_step_after_reset_deg": 0.0,
     "TURN_LEFT": {
       "held_steps_deg": [
-        7.031,
-        12.305,
-        14.063,
-        14.063,
-        14.063,
-        14.063
+        7.03125,
+        12.3046875,
+        14.0625,
+        14.0625,
+        14.0625,
+        14.0625
       ],
-      "after_one_release_step_deg": 7.031
+      "held_steps_fine": [
+        160,
+        280,
+        320,
+        320,
+        320,
+        320
+      ],
+      "after_one_release_step_deg": 7.03125,
+      "after_one_release_step_fine": 160
     },
     "TURN_RIGHT": {
       "held_steps_deg": [
-        -7.031,
-        -12.305,
-        -14.063,
-        -14.063,
-        -14.063,
-        -14.063
+        -7.03125,
+        -12.3046875,
+        -14.0625,
+        -14.0625,
+        -14.0625,
+        -14.0625
       ],
-      "after_one_release_step_deg": -7.031
+      "held_steps_fine": [
+        -160,
+        -280,
+        -320,
+        -320,
+        -320,
+        -320
+      ],
+      "after_one_release_step_deg": -7.03125,
+      "after_one_release_step_fine": -160
     },
     "model": {
       "held_sequence_deg": [
-        7.031,
-        12.305,
-        14.063
+        7.03125,
+        12.3046875,
+        14.0625
       ],
-      "steady_deg": 14.063,
+      "held_sequence_fine": [
+        160,
+        280,
+        320
+      ],
+      "steady_deg": 14.0625,
+      "steady_fine": 320,
+      "fine_angles_per_circle": 8192,
       "release_resets": true,
       "left_is_positive": true
     }
@@ -48,9 +79,9 @@
   "drift_with_agent_knowledge_only": {
     "steps": 600,
     "distance_travelled_units": 8363.9,
-    "final_position_error_units": 25.2,
-    "max_position_error_units": 87.1,
+    "final_position_error_units": 25.3,
+    "max_position_error_units": 87.2,
     "final_error_pct_of_distance": 0.3,
-    "max_heading_error_deg": 0.054
+    "max_heading_error_deg": 0.0
   }
 }

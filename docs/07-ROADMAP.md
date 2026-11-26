@@ -26,7 +26,7 @@ flowchart LR
 - [x] Setup works on Windows (`uv sync`, `validate.py` passes; see §6.1 for Windows notes). Every team member: [Repo & Workflow §6.1](06-REPO-AND-WORKFLOW.md#61-setting-up-step-by-step) (`uv sync`, `validate.py`, `pytest`)
 - [ ] Build the Docker image and run `validate.py --docker` once
 - [x] Run the test map and **print one full observation** (`scripts/inspect_observation.py`)
-- [x] Calibrate the odometer (`scripts/measure_odometry.py` → `configs/odometry.json`): exact turn model, 0.3% drift
+- [x] Calibrate the odometer (`scripts/measure_odometry.py` → `configs/odometry.json`): turn model and 0.3% drift on `two_rooms.wad`
 - [x] Add `.gitignore` lines and the `maps/curated/**` LFS rule
 - [x] Protect `main` on GitHub: require a pull request before merging
 

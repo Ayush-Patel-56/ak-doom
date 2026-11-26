@@ -9,7 +9,6 @@ Phase 0 tool: shows exactly what the agent receives, so encoder design matches r
 from __future__ import annotations
 
 import argparse
-import re
 from pathlib import Path
 
 import numpy as np
@@ -17,16 +16,10 @@ import numpy as np
 from doom_env import make_env
 from doom_env import spaces as S
 
+from map_spec import parse_map
+
 REPO = Path(__file__).resolve().parent.parent
 HIT_SYMBOL = {0: ".", 1: "#", 2: "D", 3: "L", 4: "E", 5: "i"}  # none, wall, door, locked, enemy, item
-
-
-def parse_map(spec: str) -> tuple[str, str]:
-    """Split "path/to.wad:MAP05" into (wad, map). Safe with Windows drive letters like "F:\\..."."""
-    wad, sep, name = spec.rpartition(":")
-    if sep and re.fullmatch(r"(MAP\d\d|E\dM\d)", name, re.IGNORECASE):
-        return wad, name.upper()
-    return spec, "MAP01"
 
 
 def describe(obs: dict) -> str:

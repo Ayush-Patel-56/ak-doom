@@ -20,7 +20,6 @@ from __future__ import annotations
 import argparse
 import json
 import math
-import re
 from pathlib import Path
 
 import numpy as np
@@ -28,18 +27,29 @@ import numpy as np
 from doom_env import make_env
 from doom_env import spaces as S
 
+from map_spec import parse_map
+
 REPO = Path(__file__).resolve().parent.parent
 VI = S.VITALS_INDEX
 B = {name: i for i, name in enumerate(S.BUTTONS)}
-WARMUP_STEPS = 5  # the first step after reset() is not applied by the engine; start measuring later
+FINE_ANGLES_PER_CIRCLE = 8192  # Doom's fine-angle grid; 360° / 8192
+# First step after reset() is a no-op. The steady turn/move ramp only appears after
+# at least 2 no-op steps (held turn from the first action: 0°, 3.515625°, 14.0625°;
+# after exactly one no-op, the next left is 1.7578125°; movement follows the same
+# pattern). Mid-episode turns are normal. We wait 5 steps so calibration starts
+# on the clean ramp. The odometer must use startup_noop_steps (>= 2), not just skip step 1.
+WARMUP_STEPS = 5
+STARTUP_NOOP_STEPS = 2
 
 
-def parse_map(spec: str) -> tuple[str, str]:
-    """Split "path/to.wad:MAP05" into (wad, map). Safe with Windows drive letters like "F:\\..."."""
-    wad, sep, name = spec.rpartition(":")
-    if sep and re.fullmatch(r"(MAP\d\d|E\dM\d)", name, re.IGNORECASE):
-        return wad, name.upper()
-    return spec, "MAP01"
+def snap_deg(deg: float) -> float:
+    """Snap a measured heading change onto Doom's fine-angle grid."""
+    fine = int(round(deg * FINE_ANGLES_PER_CIRCLE / 360.0))
+    return fine * 360.0 / FINE_ANGLES_PER_CIRCLE
+
+
+def deg_to_fine(deg: float) -> int:
+    return int(round(deg * FINE_ANGLES_PER_CIRCLE / 360.0))
 
 
 def press(*names: str) -> np.ndarray:
@@ -68,7 +78,7 @@ def measure_turns(env, seed: int) -> dict:
     env.reset(seed=seed)
     before = env.privileged_state()["angle"]
     env.step(press("TURN_LEFT"))
-    out["first_step_after_reset_deg"] = round(angle_delta(env.privileged_state()["angle"], before), 3)
+    out["first_step_after_reset_deg"] = snap_deg(angle_delta(env.privileged_state()["angle"], before))
 
     for button in ("TURN_LEFT", "TURN_RIGHT"):
         env.reset(seed=seed)
@@ -79,18 +89,27 @@ def measure_turns(env, seed: int) -> dict:
         for _ in range(6):
             env.step(press(button))
             cur = env.privileged_state()["angle"]
-            held.append(round(angle_delta(cur, prev), 3))
+            held.append(snap_deg(angle_delta(cur, prev)))
             prev = cur
         env.step(press())  # one released step resets Doom's slow-turn counter
         before = env.privileged_state()["angle"]
         env.step(press(button))
-        after_release = round(angle_delta(env.privileged_state()["angle"], before), 3)
-        out[button] = {"held_steps_deg": held, "after_one_release_step_deg": after_release}
+        after_release = snap_deg(angle_delta(env.privileged_state()["angle"], before))
+        out[button] = {
+            "held_steps_deg": held,
+            "held_steps_fine": [deg_to_fine(d) for d in held],
+            "after_one_release_step_deg": after_release,
+            "after_one_release_step_fine": deg_to_fine(after_release),
+        }
 
     seq = out["TURN_LEFT"]["held_steps_deg"]
+    seq_fine = out["TURN_LEFT"]["held_steps_fine"]
     out["model"] = {
         "held_sequence_deg": seq[:3],  # 1st, 2nd, 3rd+ consecutive held step
+        "held_sequence_fine": seq_fine[:3],
         "steady_deg": seq[-1],
+        "steady_fine": seq_fine[-1],
+        "fine_angles_per_circle": FINE_ANGLES_PER_CIRCLE,
         "release_resets": out["TURN_LEFT"]["after_one_release_step_deg"] == seq[0],
         "left_is_positive": seq[0] > 0,
     }
@@ -221,6 +240,19 @@ def main() -> None:
     result = {
         "map": f"{Path(wad).name}:{map_name}",
         "frame_skip": S.FRAME_SKIP,
+        "startup": {
+            "first_step_after_reset_is_noop": turns["first_step_after_reset_deg"] == 0.0,
+            "startup_noop_steps": STARTUP_NOOP_STEPS,
+            "measurement_warmup_steps": WARMUP_STEPS,
+            "note": (
+                "First step after reset is a no-op (0 turn, 0 move; tic still advances). "
+                "The steady turn/move ramp only appears after at least 2 no-op steps. "
+                "Held turn from the first action: 0, 3.515625, 14.0625 deg (skips the 12.3046875 deg step). "
+                "After exactly one no-op, the next left is 1.7578125, then 12.3046875, then 14.0625 deg. "
+                "Movement follows the same pattern. Mid-episode turns are normal. "
+                "The odometer must wait startup_noop_steps (>= 2), not merely skip step 1."
+            ),
+        },
         "turns": turns,
         "motion": motion,
         "drift_with_agent_knowledge_only": drift,

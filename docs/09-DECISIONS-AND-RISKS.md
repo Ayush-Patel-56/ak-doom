@@ -13,7 +13,7 @@ Add a new row whenever we make or change a big choice. Never delete old rows; ma
 | D-01 | Use **rays + entities + vitals** as the main input, not raw pixels | The organisers say pixels waste ~90% of training on edge detection; rays are fast on CPU | Pixel-only CNN | ✅ Active |
 | D-02 | **PyTorch** over JAX | Team familiarity, simpler export, in the base image | JAX/Flax | ✅ Active |
 | D-03 | **Write our own recurrent PPO** | Innovation points; lets us add manager, curiosity and asymmetric critic | Stable-Baselines3 default (scores poorly by rule) | ✅ Active |
-| D-04 | **Mind map from odometry**, with a fallback to GRU + notebook only | A spatial memory is our USP. Phase 0 measured it: exact button-based turn model + friction-aware velocity formula gives 0.3% drift. The fallback stays in case big maps disagree. | Pure LSTM memory only | ✅ Active (measured) |
+| D-04 | **Mind map from odometry**, with a fallback to GRU + notebook only | A spatial memory is our USP. Phase 0 measured it on `two_rooms.wad`: button-based turn model + friction-aware velocity formula gives 0.3% drift. Re-check on larger maps; the fallback stays if they disagree. | Pure LSTM memory only | ✅ Active (measured) |
 | D-05 | **Landmark notebook** with attention | Tier 3 (keycard → door) needs long-term memory of specific objects | Hoping the GRU remembers | ✅ Active |
 | D-06 | **Manager/worker** with 5 named goals | Long levels need planning above button presses; easy to explain | Flat policy only (kept as ablation) | ✅ Active |
 | D-07 | **Entity attention** | Handles any number of enemies; gives explainable focus | Fixed top-K list | ✅ Active |
@@ -50,6 +50,6 @@ Add a new row whenever we make or change a big choice. Never delete old rows; ma
 | R-13 | Contract changes during the event (it's `1.0.0-draft`) | 🟢 | 🟡 | Only patch fixes are allowed; watch announcements and pull official fixes into `env/` via PR |
 | R-14 | Key and locked-door **colours are not given** | 🔴 | 🟡 | RGB colour guess; otherwise try every locked door after any key pickup |
 | R-15 | `USE` spam makes doors bounce | 🟡 | 🟡 | Previous-action input + door-bounce penalty in training |
-| R-16 | Turning isn't observed, so heading drifts | 🟢 | 🟡 | ✅ Solved in Phase 0: turn per step is exact from our buttons (heading error < 0.06°) |
-| R-18 | The first step after `reset()` is ignored by the engine | 🔴 | 🟢 | Odometer skips it; nothing to learn from that step |
+| R-16 | Turning isn't observed, so heading drifts | 🟢 | 🟡 | Measured on `two_rooms.wad`: turn per step is predictable from our buttons (heading error < 0.06°). Re-check on larger maps. |
 | R-17 | Entities only cover the 90° view | 🟡 | 🟢 | Rays cover 360° (they report enemies too); GRU remembers enemies that left the view |
+| R-18 | Startup after `reset()` is more than a single ignored step | 🔴 | 🟢 | Step 1 is a no-op, and the steady turn/move ramp only appears after ≥2 no-op steps (held turn from the first action: 0°, 3.515625°, 14.0625°). The odometer must use `startup_noop_steps`, not just skip step 1. See `configs/odometry.json`. |
