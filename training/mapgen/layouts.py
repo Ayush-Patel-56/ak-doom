@@ -6,6 +6,7 @@
 | maze    | 2    | pure navigation and memory in 1-cell corridors                |
 | rooms   | 2    | rooms joined by corridors with doors (USE), exit in far room  |
 | keydoor | 3    | find the keycard, unlock the door to the exit room            |
+| keynear | 3    | easy key puzzle (curriculum Stage 3 warm-up): key near spawn  |
 """
 
 from __future__ import annotations
@@ -15,7 +16,7 @@ from collections import deque
 
 from .udmf import LOCKED, GridMap, validate
 
-KINDS = {"arena": 1, "maze": 2, "rooms": 2, "keydoor": 3}
+KINDS = {"arena": 1, "maze": 2, "rooms": 2, "keydoor": 3, "keynear": 3}
 MONSTERS = "zzzsid"  # weighted: zombiemen are most common
 KEYS = (("r", "R"), ("b", "B"), ("y", "Y"))
 KEY_FOR = {"R": "r", "B": "b", "Y": "y"}
@@ -132,6 +133,8 @@ def playable(grid: GridMap, kind: str) -> bool:
             return False
         if not any(grid.at(*c) in "rby" for c in reachable(grid, starts[0], set())):
             return False
+    if kind == "keynear":  # same puzzle rules as keydoor
+        return playable(grid, "keydoor")
     return True
 
 
@@ -376,7 +379,49 @@ def keydoor(seed: int) -> GridMap:
                          notes={"kind": "keydoor", "tier": 3, "seed": seed, "key": key_char})
 
 
-GENERATORS = {"arena": arena, "maze": maze, "rooms": rooms, "keydoor": keydoor}
+def keynear(seed: int) -> GridMap:
+    """Curriculum Stage 3 warm-up (docs/04-TRAINING-PLAN.md §4.4: "key placed close at first").
+
+    A small 2-4 room tree; the exit room is a leaf behind a locked door and the key lies in the start
+    room or a room next to it, with at most two monsters. Same puzzle as keydoor, shorter backtrack.
+    """
+    rng = random.Random(seed)
+    for _ in range(50):
+        rows, cols = rng.choice(((1, 2), (1, 3), (2, 2)))
+        if rows * cols < 2:
+            continue
+        cv, rms, edges = _room_layout(rng, rows, cols)
+        start_room = rng.choice(sorted(rms))
+        adj = {k: [] for k in rms}
+        for a, b in edges:
+            adj[a].append(b)
+            adj[b].append(a)
+        leaves = [k for k in rms if k != start_room and len(adj[k]) == 1]
+        if leaves:
+            break
+    else:
+        return GridMap.parse("###\n#P#\n###", notes={"kind": "keynear", "tier": 3, "seed": seed})
+    exit_room = rng.choice(sorted(leaves))
+    parent = adj[exit_room][0]
+    key_char, lock_char = rng.choice(KEYS)
+    for a, b in edges:
+        _connect(cv, rms, a, b, lock_char if {a, b} == {exit_room, parent} else None)
+    start = _room_center(rms[start_room])
+    if not _place_start_and_exit(cv, start, _room_center(rms[exit_room])):
+        return GridMap.parse(cv.text(), player_angle=0, notes={"kind": "keynear", "tier": 3, "seed": seed})
+    near = [k for k in [start_room] + adj[start_room] if k != exit_room]
+    kr = rms[rng.choice(sorted(near))]
+    floors = [(r, c) for r in range(kr[0], kr[2] + 1) for c in range(kr[1], kr[3] + 1) if cv[r, c] == "."]
+    if not floors:
+        return GridMap.parse(cv.text(), player_angle=0, notes={"kind": "keynear", "tier": 3, "seed": seed})
+    cv[rng.choice(floors)] = key_char
+    scatter(cv, rng, MONSTERS, rng.randint(0, 2), away_from=start, min_dist=6)
+    scatter(cv, rng, "ha", rng.randint(0, 2))
+    return GridMap.parse(cv.text(), player_angle=rng.choice(ANGLES),
+                         notes={"kind": "keynear", "tier": 3, "seed": seed, "key": key_char})
+
+
+GENERATORS = {"arena": arena, "maze": maze, "rooms": rooms, "keydoor": keydoor, "keynear": keynear}
 
 
 def generate(kind: str, seed: int) -> GridMap:
