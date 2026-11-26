@@ -43,7 +43,8 @@ def _paths():
 class Game:
     """One doom_env game + its memory, reward shaper and episode bookkeeping."""
 
-    def __init__(self, sampler, use_mindmap: bool, use_notebook: bool, episode_ticks: int, switch_every: int, rng):
+    def __init__(self, sampler, use_mindmap: bool, use_notebook: bool, episode_ticks: int, switch_every: int, rng,
+                 use_rgb=False, goal_helpers=False, helper_weights=None):
         from smriti.memory import EpisodeMemory, Odometer
 
         self.sampler, self.ticks, self.switch_every, self.rng = sampler, episode_ticks, switch_every, rng
@@ -53,12 +54,20 @@ class Game:
         from training.rewards import RewardShaper
 
         self.shaper = RewardShaper()
+        self.use_rgb = use_rgb
+        self.labeler = None
+        from training.goal_rewards import GoalHelpers
+        self.helpers = GoalHelpers(helper_weights) if goal_helpers else None
 
     def _features(self, obs):
         from smriti.features import extract
 
         mem = self.memory.features() if self.uses_memory else None
-        return extract(obs, self.prev_action, mem)
+        feats = extract(obs, self.prev_action, mem)
+        target, known = self.labeler.label() if self.labeler is not None else (0., False)
+        feats['_exit_target'], feats['_exit_known'] = np.array(target, np.float32), np.array(known, bool)
+        feats['_extrinsic'], feats['_helper'] = np.array(0., np.float32), np.array(0., np.float32)
+        return feats
 
     def start(self):
         from doom_env import make_env
@@ -73,6 +82,9 @@ class Game:
         self.memory.reset()
         self.memory.observe(None, obs, obs)  # the reset observation is not a transition
         self.shaper.reset(self.env.privileged_state())
+        if self.helpers is not None:
+            self.helpers.reset(self.env.privileged_state(), obs)
+        self.helper_ret = 0.0
         self.prev_action = np.zeros(9, np.float32)
         self.ret, self.len = 0.0, 0
         return self._features(obs)
@@ -83,8 +95,11 @@ class Game:
         for _ in range(MAP_ATTEMPTS):
             try:
                 wad, map_name, kind = next(self.sampler)
-                self.env = make_env(wad, map_name, episode_ticks=self.ticks, render_buffers=False)
+                self.env = make_env(wad, map_name, episode_ticks=self.ticks, render_buffers=self.use_rgb)
                 self.wad, self.map, self.kind = wad, map_name, kind
+                if self.use_rgb:
+                    from training.exit_visibility import ExitVisibility
+                    self.labeler = ExitVisibility.from_env(self.env)
                 return
             except Exception as exc:  # noqa: BLE001
                 last_error = exc
@@ -92,9 +107,11 @@ class Game:
                       file=sys.stderr, flush=True)
         raise RuntimeError(f"{MAP_ATTEMPTS} maps in a row failed to load") from last_error
 
-    def step(self, buttons: np.ndarray):
+    def step(self, buttons: np.ndarray, goal=None):
         obs, _, term, trunc, _ = self.env.step(buttons)
         r = self.shaper(self.env.privileged_state(), buttons)
+        helper = self.helpers(self.env.privileged_state(), int(goal), None if term or trunc else obs) if self.helpers is not None else 0.
+        self.helper_ret += helper
         self.ret += r
         self.len += 1
         self.prev_action = buttons.astype(np.float32)
@@ -102,42 +119,43 @@ class Game:
         info = None
         if done:
             info = {"map": Path(self.wad).name, "kind": self.kind, "ret": self.ret, "len": self.len,
-                    **self.shaper.stats()}
+                    **self.shaper.stats(), 'helper_ret': self.helper_ret}
             self.episodes_on_map += 1
             feats = self.start()
         else:
             self.memory.observe(buttons, obs, obs)
             feats = self._features(obs)
-        return feats, r, done, info
+        feats['_extrinsic'], feats['_helper'] = np.array(r, np.float32), np.array(helper, np.float32)
+        return feats, r + helper, done, info
 
     def close(self):
         if self.env is not None:
             self.env.close()
 
 
-def _worker(remote, wid, n_games, stage, seed, use_mindmap, use_notebook, episode_ticks, switch_every, kinds,
-            puzzle_share=None):
+def _worker(remote, wid, n_games, stage, seed, use_mindmap, use_notebook, episode_ticks, switch_every, kinds, use_rgb, goal_helpers, helper_weights, puzzle_share=None):
     _paths()
     os.environ.setdefault("OMP_NUM_THREADS", "1")
     fine_timer()
     games = []
     try:
-        from smriti.features import stack
+        def stack(items):
+            return {k: np.stack([item[k] for item in items]) for k in items[0]}
         from smriti.policy.actions import groups_to_buttons
         from training.curriculum import MapSampler
 
         sampler = MapSampler(stage, seed * 1009 + wid, kinds=kinds, puzzle_share=puzzle_share)
         rng = np.random.default_rng(seed * 7919 + wid)
-        games = [Game(sampler, use_mindmap, use_notebook, episode_ticks, switch_every, rng) for _ in range(n_games)]
+        games = [Game(sampler, use_mindmap, use_notebook, episode_ticks, switch_every, rng, use_rgb, goal_helpers, helper_weights) for _ in range(n_games)]
         remote.send(("ok", stack([g.start() for g in games])))
         while True:
             cmd, data = remote.recv()
             if cmd == "close":
                 break
-            choices, progress = data
+            choices, progress, goals = data
             sampler.progress = progress
             buttons = groups_to_buttons(choices)
-            out = [g.step(buttons[i]) for i, g in enumerate(games)]
+            out = [g.step(buttons[i], None if goals is None else goals[i]) for i, g in enumerate(games)]
             remote.send(("ok", (stack([o[0] for o in out]), np.array([o[1] for o in out], np.float32),
                                 np.array([o[2] for o in out], bool), [o[3] for o in out])))
     except Exception:  # noqa: BLE001
@@ -153,7 +171,7 @@ def _worker(remote, wid, n_games, stage, seed, use_mindmap, use_notebook, episod
 class VecGames:
     def __init__(self, workers: int, games_per_worker: int, stage: int, seed: int, use_mindmap: bool,
                  use_notebook: bool, episode_ticks: int = 2100, switch_every: int = 2, kinds=None,
-                 puzzle_share: float | None = None):
+                 use_rgb=False, goal_helpers=False, helper_weights=None, puzzle_share=None):
         ctx = mp.get_context("spawn")  # same on Linux, macOS and Windows
         self.k, self.n = games_per_worker, workers * games_per_worker
         self.remotes, self.procs = [], []
@@ -161,7 +179,7 @@ class VecGames:
             a, b = ctx.Pipe()
             p = ctx.Process(target=_worker, daemon=True,
                             args=(b, w, games_per_worker, stage, seed, use_mindmap, use_notebook, episode_ticks,
-                                  switch_every, kinds, puzzle_share))
+                                  switch_every, kinds, use_rgb, goal_helpers, helper_weights, puzzle_share))
             p.start()
             self.remotes.append(a)
             self.procs.append(p)
@@ -178,9 +196,10 @@ class VecGames:
     def _cat(ds):
         return {k: np.concatenate([d[k] for d in ds]) for k in ds[0]}
 
-    def step(self, choices: np.ndarray, progress: float):
+    def step(self, choices: np.ndarray, progress: float, goals=None):
         for i, r in enumerate(self.remotes):
-            r.send(("step", (choices[i * self.k:(i + 1) * self.k], progress)))
+            r.send(("step", (choices[i * self.k:(i + 1) * self.k], progress,
+                             None if goals is None else goals[i * self.k:(i + 1) * self.k])))
         outs = [self._recv(r) for r in self.remotes]
         feats = self._cat([o[0] for o in outs])
         return (feats, np.concatenate([o[1] for o in outs]), np.concatenate([o[2] for o in outs]),

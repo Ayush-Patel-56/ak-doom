@@ -79,10 +79,10 @@ flowchart LR
 
 ## Phase 4 — Manager/worker + stronger curiosity
 
-- [ ] Manager (5 goals, every 8 decisions) + goal-conditioned worker
-- [ ] Goal helper rewards
-- [ ] RND curiosity (optional)
-- [ ] RGB encoder + "exit in view?" auxiliary task (rays and entities never show the exit)
+- [x] Manager (5 learned goals, every 8 decisions) + goal-conditioned worker; implementation/smoke verified
+- [x] Goal helper rewards (training-only scorer events)
+- [x] RND curiosity (optional; checkpointed predictor/target/statistics)
+- [x] RGB encoder + masked "exit in view?" auxiliary task (real geometry/render labels; detector effectiveness not established)
 - [ ] Depth encoder (if speed allows)
 - [ ] Curriculum Stage 4 (full levels)
 - [ ] Ablations: − manager, − curiosity

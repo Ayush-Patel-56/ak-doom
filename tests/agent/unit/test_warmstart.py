@@ -62,6 +62,63 @@ def test_incompatible_brains_are_refused():
         warm_start_from(SmritiNet(BrainConfig(use_mindmap=True)), SmritiNet(BrainConfig(hidden=128)))
 
 
+def test_rgb_inputs_stay_aligned_when_adding_memory():
+    torch.manual_seed(71)
+    source = SmritiNet(BrainConfig(use_rgb=True)).eval()
+    target = SmritiNet(BrainConfig(use_rgb=True, use_mindmap=True, use_notebook=True)).eval()
+    warm_start_from(target, source)
+    x = random_features(3, 2, seed=71)
+    with torch.no_grad():
+        before = source(x, source.initial_state(2))
+        after = target(x, target.initial_state(2))
+    torch.testing.assert_close(before[0], after[0], atol=1e-6, rtol=1e-5)
+    torch.testing.assert_close(before[1], after[1], atol=1e-6, rtol=1e-5)
+
+
+def test_phase4_cli_preserves_upstream_path_based_warm_start():
+    from pathlib import Path
+    from training.train import build_args
+    args = build_args(['--warm-start', 'source.pt', '--manager', 'on', '--rgb', 'on', '--puzzle-share', '.6'])
+    assert args.warm_start == Path('source.pt')
+    assert args.manager == args.rgb == 'on' and args.puzzle_share == .6
+
+
+def test_puzzle_override_reaches_phase4_worker_processes():
+    from training.rollout import VecGames
+    games = VecGames(1, 1, 3, 1, False, False, episode_ticks=40,
+                     switch_every=1, puzzle_share=0., use_rgb=True)
+    try:
+        completed = []
+        for _ in range(35):
+            _, _, _, infos = games.step(np.zeros((1, 6), np.int64), 0.)
+            completed.extend(info for info in infos if info is not None)
+        assert len(completed) >= 3
+        assert all(info['kind'] in ('arena', 'maze', 'rooms') for info in completed)
+    finally:
+        games.close()
+
+
+def test_champion_warm_start_trains_with_phase4_flags():
+    import shutil
+    import uuid
+    from conftest import REPO
+    from training.train import main
+    from smriti.brain import load_checkpoint
+    name = 'merge-warmstart-' + uuid.uuid4().hex[:8]
+    out = REPO / 'runs' / name
+    try:
+        assert main(['--warm-start', str(REPO / 'submission/weights/champion.pt'),
+                     '--memory', 'on', '--manager', 'on', '--rgb', 'on', '--puzzle-share', '0',
+                     '--workers', '1', '--games', '1', '--T', '8', '--steps', '32',
+                     '--epochs', '1', '--minibatches', '1', '--threads', '1', '--ticks', '40',
+                     '--name', name]) == 0
+        net, metadata = load_checkpoint(out / 'latest.pt')
+        assert net.cfg.use_manager and net.cfg.use_rgb and net.cfg.uses_memory
+        assert set(metadata['warm_start']['widened']) == {'fuse.0.weight', 'gru.weight_ih'}
+    finally:
+        shutil.rmtree(out, ignore_errors=True)
+
+
 def test_puzzle_share_override_changes_the_mix():
     from training.curriculum import MapSampler
 

@@ -140,6 +140,16 @@ Picks one of **5 goals** every 8 decisions (~1 second of game time):
 
 The goals are **learned, not scripted**. We only give each one a name to help the dashboard and the explanation; the network learns when to use them. We also add small **helper rewards** (e.g. "Explore" gets extra novelty reward) so the goals mean something.
 
+**Implemented Phase 4:** `smriti/hierarchy.py` shares the neural decision path between training and
+inference. A goal embedding conditions worker logits, and each episode resets the goal cadence.
+PPO replays stored goals. `training/manager.py` carries pending intervals across rollouts and forms
+discounted extrinsic targets at the next boundary or terminal transition; manager heads train on
+detached boundary GRU features. Optional RGB features join the fused recurrent input. The RGB exit
+head is supervised by masked training-only engine/geometry labels, never by an invented proximity
+label. Optional RND and goal helper rewards affect training only. All architecture switches default
+off for older checkpoints. See [training instructions](../training/README.md#phase-4-features) for
+configuration, reward weights, checkpoint behavior, supported labels and measured limitations.
+
 ### Worker: "what buttons now?"
 The official action is **9 on/off buttons** (`MultiBinary(9)`). Instead of 9 separate coin flips (which allow silly combos like forward + backward), the worker picks from **6 small groups** and we convert the result to the 9-button array:
 

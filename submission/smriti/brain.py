@@ -58,6 +58,15 @@ class BrainConfig:
     use_notebook: bool = False
     map_out: int = 128
     note_dim: int = 64
+    use_manager: bool = False
+    goal_interval: int = 8
+    goal_dim: int = 16
+    use_rgb: bool = False
+    rgb_out: int = 64
+
+    def __post_init__(self):
+        if self.goal_interval < 1 or self.goal_dim < 1 or self.rgb_out < 1:
+            raise ValueError('goal interval and feature sizes must be positive')
 
     @property
     def uses_memory(self) -> bool:
@@ -177,19 +186,33 @@ class SmritiNet(nn.Module):
         if c.use_mindmap:
             self.mindmap = MapEncoder(c)
             fuse_in += c.map_out
+        if c.use_rgb:
+            self.rgb = nn.Sequential(
+                nn.Conv2d(3, 16, 5, stride=2, padding=2), nn.ReLU(),
+                nn.Conv2d(16, 32, 3, stride=2, padding=1), nn.ReLU(),
+                nn.Conv2d(32, 32, 3, stride=2, padding=1), nn.ReLU(),
+                nn.AdaptiveAvgPool2d((3, 4)), nn.Flatten(),
+                nn.Linear(32 * 3 * 4, c.rgb_out), nn.ReLU())
+            self.exit_head = nn.Linear(c.rgb_out, 1)
+            fuse_in += c.rgb_out
         self.fuse = nn.Sequential(nn.Linear(fuse_in, c.hidden), nn.ReLU())
         if c.use_notebook:
             self.notebook = NotebookReader(c)
         self.gru = nn.GRUCell(c.hidden + (c.note_dim if c.use_notebook else 0), c.hidden)
         self.policy = nn.Linear(c.hidden, NUM_LOGITS)
         self.value = nn.Linear(c.hidden, 1)
+        if c.use_manager:
+            self.manager = nn.Linear(c.hidden, 5)
+            self.manager_value = nn.Linear(c.hidden, 1)
+            self.goal_embedding = nn.Embedding(5, c.goal_dim)
+            self.worker_fuse = nn.Sequential(nn.Linear(c.hidden + c.goal_dim, c.hidden), nn.ReLU())
         nn.init.orthogonal_(self.policy.weight, gain=0.01)  # start close to uniform choices
         nn.init.zeros_(self.policy.bias)
 
     def initial_state(self, batch: int, device=None) -> torch.Tensor:
         return torch.zeros(batch, self.cfg.hidden, device=device)
 
-    def encode(self, x: dict[str, torch.Tensor]) -> torch.Tensor:
+    def encode(self, x: dict[str, torch.Tensor], return_visual=False):
         """Per-step encoders on a flat batch (N, ...) -> (N, hidden)."""
         vit = torch.clamp(x["vitals"] / self.vitals_scale, -5.0, 5.0)
         parts = [
@@ -199,9 +222,13 @@ class SmritiNet(nn.Module):
         ]
         if self.cfg.use_mindmap:
             parts.append(self.mindmap(x["map"]))
-        return self.fuse(torch.cat(parts, dim=-1))
+        visual = self.rgb(x['rgb'].float() / 255.0) if self.cfg.use_rgb else None
+        if visual is not None:
+            parts.append(visual)
+        fused = self.fuse(torch.cat(parts, dim=-1))
+        return (fused, visual) if return_visual else fused
 
-    def forward(self, x: dict[str, torch.Tensor], state: torch.Tensor, starts: torch.Tensor | None = None):
+    def recurrent(self, x, state, starts=None):
         """Sequence forward.
 
         x: features with leading dims (T, B); state: (B, hidden) memory before step 0;
@@ -211,7 +238,8 @@ class SmritiNet(nn.Module):
         t, b = x["ray_dist"].shape[:2]
         flat = {k: v.reshape(t * b, *v.shape[2:]) for k, v in x.items()
                 if k not in MEMORY_KEYS or self.cfg.uses_memory}
-        emb = self.encode(flat).reshape(t, b, -1)
+        emb, visual = self.encode(flat, return_visual=True)
+        emb = emb.reshape(t, b, -1)
         if self.cfg.use_notebook:
             nk, nv, nvalid = self.notebook.keys_values(flat["notes"], flat["note_mask"])
             nk, nv, nvalid = (z.reshape(t, b, *z.shape[1:]) for z in (nk, nv, nvalid))
@@ -225,7 +253,26 @@ class SmritiNet(nn.Module):
             state = self.gru(inp, state)
             outs.append(state)
         h = torch.stack(outs)
-        return self.policy(h), self.value(h).squeeze(-1), state
+        return h, state, None if visual is None else visual.reshape(t, b, -1)
+
+    def worker(self, h, goals=None):
+        if self.cfg.use_manager:
+            if goals is None:
+                raise ValueError('hierarchical worker requires sampled goals')
+            h = self.worker_fuse(torch.cat([h, self.goal_embedding(goals)], dim=-1))
+        return self.policy(h)
+
+    def forward(self, x, state, starts=None, *, goals=None, return_aux=False):
+        h, state, visual = self.recurrent(x, state, starts)
+        result = (self.worker(h, goals), self.value(h).squeeze(-1), state)
+        if not return_aux:
+            return result
+        aux = {'hidden': h}
+        if self.cfg.use_manager:
+            aux.update(manager_logits=self.manager(h), manager_value=self.manager_value(h).squeeze(-1))
+        if self.cfg.use_rgb:
+            aux['exit_logits'] = self.exit_head(visual).squeeze(-1)
+        return (*result, aux)
 
 
 # ----------------------------------------------------------------------------- action distribution
