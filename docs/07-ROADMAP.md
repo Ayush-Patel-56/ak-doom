@@ -108,7 +108,9 @@ The 512-decision smoke comparison had zero exits in every arm; improvement is no
 - [ ] Full §5.7 acceptance: platform resource and policy-quality criteria still require evidence; passing robustness tests does not establish gameplay skill
 - [x] CPU speed <20 ms average: champion #2 averages **4.6 ms** per decision on the 24 val maps × 4 seeds (one thread) and **p50 2.2 ms** in `validate.py --docker` (1 CPU pinned, fresh clone of `main`)
 
-**Done when (still open):** useful performance on locked **test maps** is close to validation under declared acceptance thresholds and sufficient samples. Development does not run test maps; future test use is ledgered, historical freshness is unknown.
+**Done when:** useful performance on locked **test maps** is close to validation under declared acceptance thresholds and sufficient samples. Development does not run test maps; future test use is ledgered, historical freshness is unknown.
+
+**Final test run (once, ledgered):** champion #2 on the 25 test maps × 4 seeds (`evaluate.py --split test --final-test`, ledger entry `7250b7f8…`, checkpoint `d86e8fe1c399…`): **+4,990.69**, 0 of 100 runs stopped, 3.5 ms per decision. Per run that is **199.6 vs 221.2 on val (90%)**. Exits test vs val: arena 14/16 vs 16/16, maze 15/16 vs 15/16, rooms **7/16 vs 11/16**, key-near 15/16 vs 16/16, far key 4/16 vs 5/16, Freedoom 0/20 vs 0/16. Close to validation everywhere except rooms maps. No formal acceptance thresholds were declared in advance, so this is reported as evidence rather than a pass/fail; the Phase 3 memory ablation had already looked at the Tier 3 test maps once (`abl-p3`).
 
 ---
 
