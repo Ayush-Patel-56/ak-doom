@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 420" width="820" height="420" role="img" aria-label="Score per tier: random agent vs champion 1 vs champion 2">
+<title>Score per tier: random agent vs champion 1 vs champion 2</title>
+
+<style>
+  .surface { fill: #fcfcfb; } .ink { fill: #0b0b0b; } .ink2 { fill: #52514e; } .grid { stroke: #e4e3df; }
+  .axis { stroke: #8a8984; } .s0 { fill: #2a78d6; } .s1 { fill: #eb6834; } .s2 { fill: #1baf7a; }
+  @media (prefers-color-scheme: dark) {
+    .surface { fill: #1a1a19; } .ink { fill: #f0efec; } .ink2 { fill: #c3c2b7; } .grid { stroke: #33332f; }
+    .axis { stroke: #77766f; } .s0 { fill: #3987e5; } .s1 { fill: #d95926; } .s2 { fill: #199e70; }
+  }
+  text { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
+</style>
+<rect class="surface" x="0" y="0" width="820" height="420" rx="8"/>
+<text class="ink" x="20.0" y="32.0" font-size="17" text-anchor="start" font-weight="600">Score per tier (weighted), same 24 val maps × 2 seeds</text>
+<text class="ink2" x="20.0" y="54.0" font-size="13" text-anchor="start" font-weight="400">Tier weights are the scorer&#x27;s ×1–×4. Higher is better.</text>
+<rect class="s0" x="20" y="66" width="12" height="12" rx="2"/>
+<text class="ink" x="38.0" y="77.0" font-size="13" text-anchor="start" font-weight="400">Random agent</text>
+<rect class="s1" x="138.8" y="66" width="12" height="12" rx="2"/>
+<text class="ink" x="156.8" y="77.0" font-size="13" text-anchor="start" font-weight="400">Champion #1 (Phase 2)</text>
+<rect class="s2" x="324.20000000000005" y="66" width="12" height="12" rx="2"/>
+<text class="ink" x="342.2" y="77.0" font-size="13" text-anchor="start" font-weight="400">Champion #2 (Phase 3)</text>
+<line class="grid" x1="70" y1="350.0" x2="800" y2="350.0" stroke-width="1"/>
+<text class="ink2" x="62.0" y="354.0" font-size="12" text-anchor="end" font-weight="400">-500</text>
+<line class="grid" x1="70" y1="313.7" x2="800" y2="313.7" stroke-width="1"/>
+<text class="ink2" x="62.0" y="317.7" font-size="12" text-anchor="end" font-weight="400">0</text>
+<line class="grid" x1="70" y1="277.4" x2="800" y2="277.4" stroke-width="1"/>
+<text class="ink2" x="62.0" y="281.4" font-size="12" text-anchor="end" font-weight="400">+500</text>
+<line class="grid" x1="70" y1="241.1" x2="800" y2="241.1" stroke-width="1"/>
+<text class="ink2" x="62.0" y="245.1" font-size="12" text-anchor="end" font-weight="400">+1,000</text>
+<line class="grid" x1="70" y1="204.9" x2="800" y2="204.9" stroke-width="1"/>
+<text class="ink2" x="62.0" y="208.9" font-size="12" text-anchor="end" font-weight="400">+1,500</text>
+<line class="grid" x1="70" y1="168.6" x2="800" y2="168.6" stroke-width="1"/>
+<text class="ink2" x="62.0" y="172.6" font-size="12" text-anchor="end" font-weight="400">+2,000</text>
+<line class="grid" x1="70" y1="132.3" x2="800" y2="132.3" stroke-width="1"/>
+<text class="ink2" x="62.0" y="136.3" font-size="12" text-anchor="end" font-weight="400">+2,500</text>
+<line class="grid" x1="70" y1="96.0" x2="800" y2="96.0" stroke-width="1"/>
+<text class="ink2" x="62.0" y="100.0" font-size="12" text-anchor="end" font-weight="400">+3,000</text>
+<path class="s0" d="M90.25,313.71428571428567 V315.87909142857137 Q90.25,318.0438971428571 92.41480571428572,318.0438971428571 H134.0851942857143 Q136.25,318.0438971428571 136.25,315.87909142857137 V313.71428571428567 Z"><title>Random agent, tier 1: -59.7</title></path>
+<path class="s1" d="M138.25,313.71428571428567 V281.5686342857142 Q138.25,277.5686342857142 142.25,277.5686342857142 H180.25 Q184.25,277.5686342857142 184.25,281.5686342857142 V313.71428571428567 Z"><title>Champion #1 (Phase 2), tier 1: +498.1</title></path>
+<path class="s2" d="M186.25,313.71428571428567 V279.53808571428567 Q186.25,275.53808571428567 190.25,275.53808571428567 H228.25 Q232.25,275.53808571428567 232.25,279.53808571428567 V313.71428571428567 Z"><title>Champion #2 (Phase 3), tier 1: +526.0</title></path>
+<text class="ink" x="209.2" y="269.5" font-size="12" text-anchor="middle" font-weight="600">+526</text>
+<text class="ink" x="161.2" y="372.0" font-size="13" text-anchor="middle" font-weight="400">Tier 1 · combat ×1</text>
+<path class="s0" d="M272.75,313.71428571428567 V316.3420971428571 Q272.75,318.9699085714285 275.3778114285714,318.9699085714285 H316.1221885714286 Q318.75,318.9699085714285 318.75,316.3420971428571 V313.71428571428567 Z"><title>Random agent, tier 2: -72.4</title></path>
+<path class="s1" d="M320.75,313.71428571428567 V216.81459999999998 Q320.75,212.81459999999998 324.75,212.81459999999998 H362.75 Q366.75,212.81459999999998 366.75,216.81459999999998 V313.71428571428567 Z"><title>Champion #1 (Phase 2), tier 2: +1,390.3</title></path>
+<path class="s2" d="M368.75,313.71428571428567 V176.2319314285714 Q368.75,172.2319314285714 372.75,172.2319314285714 H410.75 Q414.75,172.2319314285714 414.75,176.2319314285714 V313.71428571428567 Z"><title>Champion #2 (Phase 3), tier 2: +1,949.6</title></path>
+<text class="ink" x="391.8" y="166.2" font-size="12" text-anchor="middle" font-weight="600">+1,950</text>
+<text class="ink" x="343.8" y="372.0" font-size="13" text-anchor="middle" font-weight="400">Tier 2 · navigation ×2</text>
+<path class="s0" d="M455.25,313.71428571428567 V326.89411999999993 Q455.25,330.89411999999993 459.25,330.89411999999993 H497.25 Q501.25,330.89411999999993 501.25,326.89411999999993 V313.71428571428567 Z"><title>Random agent, tier 3: -236.7</title></path>
+<path class="s1" d="M503.25,313.71428571428567 V265.3547257142857 Q503.25,261.3547257142857 507.25,261.3547257142857 H545.25 Q549.25,261.3547257142857 549.25,265.3547257142857 V313.71428571428567 Z"><title>Champion #1 (Phase 2), tier 3: +721.5</title></path>
+<path class="s2" d="M551.25,313.71428571428567 V119.13127999999998 Q551.25,115.13127999999998 555.25,115.13127999999998 H593.25 Q597.25,115.13127999999998 597.25,119.13127999999998 V313.71428571428567 Z"><title>Champion #2 (Phase 3), tier 3: +2,736.4</title></path>
+<text class="ink" x="574.2" y="109.1" font-size="12" text-anchor="middle" font-weight="600">+2,736</text>
+<text class="ink" x="526.2" y="372.0" font-size="13" text-anchor="middle" font-weight="400">Tier 3 · keys &amp; doors ×3</text>
+<path class="s0" d="M637.75,313.71428571428567 V314.16567999999995 Q637.75,314.61707428571424 638.2013942857143,314.61707428571424 H683.2986057142857 Q683.75,314.61707428571424 683.75,314.16567999999995 V313.71428571428567 Z"><title>Random agent, tier 4: -12.4</title></path>
+<path class="s1" d="M685.75,313.71428571428567 V317.3022171428571 Q685.75,320.89014857142854 689.3379314285714,320.89014857142854 H728.1620685714286 Q731.75,320.89014857142854 731.75,317.3022171428571 V313.71428571428567 Z"><title>Champion #1 (Phase 2), tier 4: -98.9</title></path>
+<path class="s2" d="M733.75,313.71428571428567 V314.7774571428571 Q733.75,315.8406285714285 734.8131714285714,315.8406285714285 H778.6868285714286 Q779.75,315.8406285714285 779.75,314.7774571428571 V313.71428571428567 Z"><title>Champion #2 (Phase 3), tier 4: -29.3</title></path>
+<text class="ink" x="756.8" y="330.8" font-size="12" text-anchor="middle" font-weight="600">-29</text>
+<text class="ink" x="708.8" y="372.0" font-size="13" text-anchor="middle" font-weight="400">Tier 4 · full levels ×4</text>
+<line class="axis" x1="70" y1="313.7" x2="800" y2="313.7" stroke-width="1.5"/>
+</svg>

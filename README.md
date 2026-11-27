@@ -5,7 +5,7 @@
 > **Agent name:** *Smriti* (स्मृति), which means "memory".
 > **Track:** Yugaantar 2026 · DevForge — Track 1, *"Can It Play DOOM?"*
 > **Built on:** the official [`devforge-doom-template`](https://github.com/Reinforce-SST/devforge-doom-template).
-> **Status:** 🎮 Playing. The submitted agent is **champion #2**, the Phase 3 memory brain (mind map + landmark notebook): **+5,182.69** on our 24 validation maps vs +2,511.03 for champion #1. It solves all key-near-start puzzles and opens locked doors; big Freedoom levels are still its weak spot.
+> **Status:** 🎮 Playing. The submitted agent is **champion #2**, the Phase 3 memory brain (mind map + landmark notebook): **+5,182.69** on our 24 validation maps vs +2,511.03 for champion #1. It solves all key-near-start puzzles and opens locked doors; big Freedoom levels are still its weak spot. A Phase 4 brain (manager + curiosity + RGB, trained on GPU) matches it but did not beat it on 4 seeds, so champion #2 stays.
 
 ## What is this?
 
@@ -30,6 +30,26 @@ flowchart LR
 3. **It thinks in two levels.** A *manager* picks the goal ("explore", "fight", "go get the key"), and a *worker* handles the movement and shooting.
 4. **It is curious.** It gets an extra reward for visiting new places, so it doesn't get stuck in corners.
 5. **You can watch it think.** A live *Mind View* dashboard shows its map, its notebook and its current goal while it plays.
+
+## Results
+
+Same 24 held-out validation maps × 2 seeds for every brain (never trained on; scored by our copy of the official scorer, `scripts/evaluate.py`):
+
+![Mini-League total per brain](docs/figures/progress-val24.svg)
+
+![Score per tier](docs/figures/tiers-val24.svg)
+
+Memory is what moved Tier 3: with the mind map and notebook the agent finds keys and opens locked doors far more often, and dies far less ([ablation](docs/experiments.md), one training seed: evidence, not proof):
+
+![Memory ablation](docs/figures/ablation-memory.svg)
+
+### Watch it think (Mind View)
+
+| Key near the start: key → locked door → exit | Far key: remembered across rooms |
+|---|---|
+| ![Mind View, key-near map](docs/demo/mindview-keynear-exit.png) | ![Mind View, far-key map](docs/demo/mindview-keydoor-far-key.png) |
+
+Videos (champion #2 on validation maps, including two honest failures): [docs/demo](docs/08-DEMO-AND-BRIEF.md#81-mind-view-dashboard). Record your own with `scripts/mind_view.py`. Project brief (2 pages): [docs/brief/brief.pdf](docs/brief/brief.pdf).
 
 ## Quick start
 
@@ -57,16 +77,20 @@ docker build -t devforge-doom .
 python validate.py --docker --image devforge-doom
 ```
 
-Phase 1 tools:
+Evaluate, train, show:
 
 ```bash
 uv run python scripts/build_map_catalog.py    # map library -> maps/catalog.json + maps/lists/*.txt
-uv run python scripts/evaluate.py             # Mini-League on validation maps (our copy of the scorer)
+uv run python scripts/evaluate.py --seeds 2 --jobs 8      # Mini-League on validation maps (our copy of the scorer)
 uv run python scripts/benchmark_latency.py    # speed check against the official limits
+uv run python -m training.train --stage 3 --memory on --name my-run --steps 2000000   # train (add --device cuda on a GPU)
+uv run python scripts/export_champion.py runs/my-run/latest.pt --eval runs/eval/my-run-val.json   # promote only if it beats the champion
+uv run python scripts/mind_view.py --map maps/curated/val/t3-keynear-100000.wad:MAP01 --ticks 3500 --out runs/demo/keynear.mp4
+uv run python scripts/make_charts.py          # redraw the results charts in docs/figures/
 uv run pytest tests/agent                     # our contract + unit tests
 ```
 
-Coming next: `scripts/train.py` (Phase 2).
+Training on a Windows NVIDIA GPU: see [Repo & Workflow §6.1](docs/06-REPO-AND-WORKFLOW.md#61-setting-up-step-by-step).
 
 ## Repository layout
 
@@ -78,10 +102,9 @@ submission/smriti/    the agent's brain (encoders, memory, policy)
 submission/weights/   champion weights (Git LFS)
 training/             training pipeline (PPO, rewards, curiosity, curriculum)
 scripts/              train / evaluate / benchmark entry points
-dashboard/            Mind View demo
 validate.py           official validator: run before every merge
 tests/                template tests + our tests
-docs/                 official docs + our planning docs
+docs/                 official docs + our planning docs, brief/, figures/ (charts), demo/ (Mind View videos)
 ```
 
 ## Documentation
@@ -120,4 +143,4 @@ docs/                 official docs + our planning docs
 
 ## Next steps
 
-See [Roadmap Phase 0](docs/07-ROADMAP.md).
+See [Roadmap Phase 6](docs/07-ROADMAP.md#phase-6--polish--present): team names in the brief, repo URL to the organisers, one guarded final test-map evaluation of the submitted brain, final merge before the deadline.

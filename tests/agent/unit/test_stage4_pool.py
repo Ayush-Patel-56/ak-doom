@@ -1,5 +1,6 @@
 """Catalog isolation and real Stage 4 sampling contracts."""
 import json
+import shutil
 from pathlib import Path
 
 import pytest
@@ -113,8 +114,15 @@ def test_duplicate_identity_within_split_rejected(tmp_path):
 def test_hardlink_alias_cross_split_rejected(tmp_path):
     from training.map_pool import load_catalog_pool
     original = Path('maps/two_rooms.wad').resolve()
+    train = entry()
     alias = tmp_path / 'alias.wad'
-    alias.hardlink_to(original)
+    try:
+        alias.hardlink_to(original)
+    except OSError:  # hard links can't cross drives (e.g. repo on F:, pytest temp on C:): link a same-drive copy
+        base = tmp_path / 'base.wad'
+        shutil.copyfile(original, base)
+        alias.hardlink_to(base)
+        train = entry(id=str(base) + ':MAP01')
     with pytest.raises(ValueError, match='split'):
         load_catalog_pool('train', [4], catalog_path=catalog(tmp_path,
-            [entry(), entry(id=str(alias) + ':map01', split='val')]))
+            [train, entry(id=str(alias) + ':map01', split='val')]))

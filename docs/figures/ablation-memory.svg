@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 400" width="820" height="400" role="img" aria-label="Memory ablation: mind map + notebook vs GRU only">
+<title>Memory ablation: mind map + notebook vs GRU only</title>
+
+<style>
+  .surface { fill: #fcfcfb; } .ink { fill: #0b0b0b; } .ink2 { fill: #52514e; } .grid { stroke: #e4e3df; }
+  .axis { stroke: #8a8984; } .s0 { fill: #2a78d6; } .s1 { fill: #eb6834; } .s2 { fill: #1baf7a; }
+  @media (prefers-color-scheme: dark) {
+    .surface { fill: #1a1a19; } .ink { fill: #f0efec; } .ink2 { fill: #c3c2b7; } .grid { stroke: #33332f; }
+    .axis { stroke: #77766f; } .s0 { fill: #3987e5; } .s1 { fill: #d95926; } .s2 { fill: #199e70; }
+  }
+  text { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
+</style>
+<rect class="surface" x="0" y="0" width="820" height="400" rx="8"/>
+<text class="ink" x="20.0" y="32.0" font-size="17" text-anchor="start" font-weight="600">Memory ablation: mind map + notebook vs GRU only</text>
+<text class="ink2" x="20.0" y="54.0" font-size="13" text-anchor="start" font-weight="400">Phase 3, same PPO / seed / curriculum, ~1.0M decisions per arm; 8 held-out Tier 3 val maps x 5 seeds</text>
+<rect class="s0" x="20" y="66" width="12" height="12" rx="2"/>
+<text class="ink" x="38.0" y="77.0" font-size="13" text-anchor="start" font-weight="400">With memory</text>
+<rect class="s1" x="141.4" y="66" width="12" height="12" rx="2"/>
+<text class="ink" x="159.4" y="77.0" font-size="13" text-anchor="start" font-weight="400">Without memory (GRU only)</text>
+<line class="grid" x1="70" y1="326.0" x2="800" y2="326.0" stroke-width="1"/>
+<text class="ink2" x="62.0" y="330.0" font-size="12" text-anchor="end" font-weight="400">0%</text>
+<line class="grid" x1="70" y1="268.5" x2="800" y2="268.5" stroke-width="1"/>
+<text class="ink2" x="62.0" y="272.5" font-size="12" text-anchor="end" font-weight="400">25%</text>
+<line class="grid" x1="70" y1="211.0" x2="800" y2="211.0" stroke-width="1"/>
+<text class="ink2" x="62.0" y="215.0" font-size="12" text-anchor="end" font-weight="400">50%</text>
+<line class="grid" x1="70" y1="153.5" x2="800" y2="153.5" stroke-width="1"/>
+<text class="ink2" x="62.0" y="157.5" font-size="12" text-anchor="end" font-weight="400">75%</text>
+<line class="grid" x1="70" y1="96.0" x2="800" y2="96.0" stroke-width="1"/>
+<text class="ink2" x="62.0" y="100.0" font-size="12" text-anchor="end" font-weight="400">100%</text>
+<path class="s0" d="M114.25,326.0 V266.75 Q114.25,262.75 118.25,262.75 H156.25 Q160.25,262.75 160.25,266.75 V326.0 Z"><title>With memory, Exit reached: 27.5%</title></path>
+<text class="ink" x="137.2" y="256.8" font-size="12" text-anchor="middle" font-weight="600">27.5%</text>
+<path class="s1" d="M162.25,326.0 V295.5 Q162.25,291.5 166.25,291.5 H204.25 Q208.25,291.5 208.25,295.5 V326.0 Z"><title>Without memory (GRU only), Exit reached: 15%</title></path>
+<text class="ink" x="185.2" y="285.5" font-size="12" text-anchor="middle" font-weight="600">15%</text>
+<text class="ink" x="161.2" y="346.0" font-size="13" text-anchor="middle" font-weight="400">Exit reached</text>
+<text class="ink2" x="161.2" y="363.0" font-size="11" text-anchor="middle" font-weight="400">(higher is better)</text>
+<path class="s0" d="M296.75,326.0 V226.5 Q296.75,222.5 300.75,222.5 H338.75 Q342.75,222.5 342.75,226.5 V326.0 Z"><title>With memory, Key picked up: 45%</title></path>
+<text class="ink" x="319.8" y="216.5" font-size="12" text-anchor="middle" font-weight="600">45%</text>
+<path class="s1" d="M344.75,326.0 V266.75 Q344.75,262.75 348.75,262.75 H386.75 Q390.75,262.75 390.75,266.75 V326.0 Z"><title>Without memory (GRU only), Key picked up: 27.5%</title></path>
+<text class="ink" x="367.8" y="256.8" font-size="12" text-anchor="middle" font-weight="600">27.5%</text>
+<text class="ink" x="343.8" y="346.0" font-size="13" text-anchor="middle" font-weight="400">Key picked up</text>
+<text class="ink2" x="343.8" y="363.0" font-size="11" text-anchor="middle" font-weight="400">(higher is better)</text>
+<path class="s0" d="M479.25,326.0 V255.25 Q479.25,251.25 483.25,251.25 H521.25 Q525.25,251.25 525.25,255.25 V326.0 Z"><title>With memory, Locked door opened: 32.5%</title></path>
+<text class="ink" x="502.2" y="245.2" font-size="12" text-anchor="middle" font-weight="600">32.5%</text>
+<path class="s1" d="M527.25,326.0 V266.75 Q527.25,262.75 531.25,262.75 H569.25 Q573.25,262.75 573.25,266.75 V326.0 Z"><title>Without memory (GRU only), Locked door opened: 27.5%</title></path>
+<text class="ink" x="550.2" y="256.8" font-size="12" text-anchor="middle" font-weight="600">27.5%</text>
+<text class="ink" x="526.2" y="346.0" font-size="13" text-anchor="middle" font-weight="400">Locked door opened</text>
+<text class="ink2" x="526.2" y="363.0" font-size="11" text-anchor="middle" font-weight="400">(higher is better)</text>
+<path class="s0" d="M661.75,326.0 V301.25 Q661.75,297.25 665.75,297.25 H703.75 Q707.75,297.25 707.75,301.25 V326.0 Z"><title>With memory, Died: 12.5%</title></path>
+<text class="ink" x="684.8" y="291.2" font-size="12" text-anchor="middle" font-weight="600">12.5%</text>
+<path class="s1" d="M709.75,326.0 V186.25 Q709.75,182.25 713.75,182.25 H751.75 Q755.75,182.25 755.75,186.25 V326.0 Z"><title>Without memory (GRU only), Died: 62.5%</title></path>
+<text class="ink" x="732.8" y="176.2" font-size="12" text-anchor="middle" font-weight="600">62.5%</text>
+<text class="ink" x="708.8" y="346.0" font-size="13" text-anchor="middle" font-weight="400">Died</text>
+<text class="ink2" x="708.8" y="363.0" font-size="11" text-anchor="middle" font-weight="400">(lower is better)</text>
+<line class="axis" x1="70" y1="326.0" x2="800" y2="326.0" stroke-width="1.5"/>
+<text class="ink2" x="20.0" y="390.0" font-size="11" text-anchor="start" font-weight="400">One training seed and 40 episodes per arm: evidence, not proof. Test split agrees (exit 45% vs 12.5%). Source: docs/experiments.md, abl-p3.</text>
+</svg>

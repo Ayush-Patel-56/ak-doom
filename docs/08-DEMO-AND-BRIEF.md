@@ -31,6 +31,26 @@ A screen that shows the game and the agent's "thoughts" side by side.
 
 **Build options:** an OpenCV window (simplest), or a small local web page. Both can record to MP4 for the backup video.
 
+**Built:** [`scripts/mind_view.py`](../scripts/mind_view.py) records the dashboard to MP4 (Pillow + ffmpeg, no new dependency). It drives the real `submission/agent.py` and only *reads* its state after each `act()` (mind map grid, notebook slots, odometer pose, manager goal, exit-in-view score) plus a forward hook that copies the entity-attention weights, so the submitted agent pays no debug cost. The end card shows the scorer's result for that run.
+
+```bash
+uv run python scripts/mind_view.py --map maps/curated/val/t3-keynear-100000.wad:MAP01 --ticks 3500 --out runs/demo/keynear.mp4
+uv run python scripts/mind_view.py --map two_rooms --png 40          # single frames, no ffmpeg needed
+```
+
+**Backup videos** ([`docs/demo/`](demo/), champion #2, **val maps only**; each reproduces its Mini-League run exactly):
+
+| Video | Shows | Outcome |
+|---|---|---|
+| [01-arena-combat](demo/01-arena-combat.mp4) | Tier 1: attention on enemies, fight, exit | exit, 2 kills, 60 steps |
+| [02-keynear-key-door-exit](demo/02-keynear-key-door-exit.mp4) | Tier 3: key → notebook → locked door → exit | exit in 45 steps |
+| [03-keydoor-far-key](demo/03-keydoor-far-key.mp4) | Tier 3: far key, remembered across rooms (notebook pins on the map) | exit in 297 steps |
+| [04-maze-navigation](demo/04-maze-navigation.mp4) | Tier 2: breadcrumbs on the mind map through a maze | exit in 431 steps |
+| [05-fail-keydoor-timeout](demo/05-fail-keydoor-timeout.mp4) | **Failure:** far-key map, wanders and never finds the key | time up (875 steps) |
+| [06-fail-freedoom-map24](demo/06-fail-freedoom-map24.mp4) | **Failure:** big Freedoom level, dies early | died at 132 steps |
+
+**Charts** ([`docs/figures/`](figures/), redraw with `scripts/make_charts.py`): [progress per brain](figures/progress-val24.svg), [score per tier](figures/tiers-val24.svg), [memory ablation](figures/ablation-memory.svg).
+
 ## 8.2 The 2-page brief (outline)
 
 The rules ask for: **USP, neural architecture, spatial memory design, training/exploration pipeline.**

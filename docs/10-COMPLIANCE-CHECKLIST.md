@@ -54,8 +54,8 @@
 - [x] Open-source libraries allowed, but **core architecture + training pipeline are our own**: SmritiNet, memory, PPO, curriculum and map generator are all written in this repo (history from 2026-11-26); libraries: PyTorch, NumPy, ViZDoom, Gymnasium
 
 ## Brief
-- [ ] 2-page PDF (max 2 pages)
-- [ ] Covers USP, neural architecture, spatial memory design, training/exploration pipeline
+- [x] 2-page PDF (max 2 pages): [`docs/brief/brief.pdf`](brief/brief.pdf), exactly 2 pages (team names still to fill in: `{{TEAM_NAMES}}`)
+- [x] Covers USP, neural architecture, spatial memory design, training/exploration pipeline (plus results, speed and limitations)
 
 ## Final sanity
 - [x] Fresh `git clone` → LFS weights download → `validate.py` passes: clone of `main` @ `01b6ca9` got the real 2,242,253-byte `champion.pt` and passed
