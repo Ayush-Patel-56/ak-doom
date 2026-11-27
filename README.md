@@ -7,6 +7,26 @@
 > **Built on:** the official [`devforge-doom-template`](https://github.com/Reinforce-SST/devforge-doom-template).
 > **Status:** 🎮 Playing. The submitted agent is **champion #2**, the Phase 3 memory brain (mind map + landmark notebook): **+5,182.69** on our 24 validation maps vs +2,511.03 for champion #1. It solves all key-near-start puzzles and opens locked doors; big Freedoom levels are still its weak spot. A Phase 4 brain (manager + curiosity + RGB, trained on GPU) matches it but did not beat it on 4 seeds, so champion #2 stays. On the held-out **test** maps (run once, at the end) it scores **+4,990.69** with 0 crashes in 100 runs, about 90% of its validation score per run.
 
+## 🎬 Demo film: *AK-DOOM: SMRITI — The Machine That Remembers*
+
+<p align="center">
+  <a href="docs/media/smriti-demo-film.mp4">
+    <img src="docs/media/smriti-demo-thumbnail.jpg" alt="AK-DOOM: SMRITI, The Machine That Remembers (demo film, 2:57). Click to play." width="820">
+  </a>
+</p>
+
+<p align="center">
+  <a href="docs/media/smriti-demo-film.mp4"><b>▶ Watch the demo (2:57)</b></a>
+  &nbsp;·&nbsp; 720p · English captions
+</p>
+
+<p align="center">
+  <img src="docs/media/smriti-demo-preview.gif" alt="Preview: Smriti returns to the remembered locked door with the keycard and opens it (Mind View, real run)" width="600">
+  <br><sub>Preview: Smriti returns to the locked door it remembered, keycard in hand, and opens it. This is a real run shown in the Mind View dashboard.</sub>
+</p>
+
+> **What's real:** all gameplay and every Mind View panel come from the committed champion (`submission/weights/champion.pt`) playing in ViZDoom. The key → locked door → exit sequence is one real run on the held-out validation map `t3-keydoor-100000`. About 34 s of cinematic shots are AI-generated and labelled *Conceptual visualization* on screen, and speed-ups (4×, ≈7×, 0.5× slow motion) are labelled. Modules that are built but not in the submitted weights (manager/worker, RND, RGB and depth encoders) are marked as such.
+
 ## What is this?
 
 Smriti is an AI player for DOOM. It learns only by playing the game, with no recorded data and no hand-written moves. Then it plays **maps it has never seen**: it fights monsters, explores rooms, finds keycards, remembers where the locked doors are and reaches the exit.
