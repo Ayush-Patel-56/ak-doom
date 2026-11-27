@@ -87,6 +87,9 @@ uv run python -m training.train --stage 3 --memory on --name my-run --steps 2000
 uv run python scripts/export_champion.py runs/my-run/latest.pt --eval runs/eval/my-run-val.json   # promote only if it beats the champion
 uv run python scripts/mind_view.py --map maps/curated/val/t3-keynear-100000.wad:MAP01 --ticks 3500 --out runs/demo/keynear.mp4
 uv run python scripts/make_charts.py          # redraw the results charts in docs/figures/
+uv run python scripts/episode_trace.py --split val --seeds 2 --jobs 8 --name val-flags   # replay behaviour flags
+uv run python scripts/replay_review.py runs/llm/traces/val-flags --flags-only            # report (add the LLM: Testing Plan §5.9.1)
+uv run python scripts/mock_review.py bank --questions 25     # desk-review Q&A bank via the hackathon LLM API
 uv run pytest tests/agent                     # our contract + unit tests
 ```
 

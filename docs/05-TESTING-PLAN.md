@@ -146,6 +146,29 @@ The results go into the **2-page brief** and the **demo** as a simple bar chart.
 - Watch for silly behaviour: spinning, wall-hugging, shooting walls, ignoring keys.
 - Write each observed problem into `docs/experiments.md` as a todo.
 
+### 5.9.1 Automated replay checks and the LLM reviewer (hackathon Creo API)
+
+Watching every video does not scale, so the replay check is automated in two layers. Neither touches the agent: they are testing tools only, and the agent never uses a network (evaluation has none).
+
+1. **Behaviour flags (free, no LLM):** `scripts/episode_trace.py` plays runs exactly like `evaluate.py` and records a per-decision trace from the scorer's ground truth. Plain numeric rules then flag `stuck`, `spinning`, `wall_hugging`, `oscillating`, `passive_fire`, `no_new_area` and `weapon_cycling`, with step ranges. Test maps are refused.
+2. **LLM reviewer (uses credits):** `scripts/replay_review.py` sends each run's compact trace (~2.4k tokens) to a model on the hackathon's OpenAI-compatible **Creo** API. The model answers as a replay judge (what a viewer sees, where, how bad, likely cause, *training-side* fixes), and a final call ranks the problems across runs. `--flags-only` writes the rule report for free; `--dry-run` saves the exact requests to `runs/llm/dry-run/` without sending anything.
+3. **Mock desk review:** `scripts/mock_review.py bank` writes a desk-review question bank with model answers grounded in our repo; `quiz` asks one person questions, grades the typed answers and gives the ideal answer plus a follow-up. It sends ~23k tokens of repo material per call (`--context-chars` to shrink it).
+
+Setup: the key lives **outside the repo** in `~/.creo.env` (or environment variables), never in git or chat:
+
+```powershell
+Set-Content -Path "$HOME\.creo.env" -Encoding utf8 -Value @("CREO_API_KEY=<key>", "CREO_BASE_URL=<https://host/v1>", "CREO_MODEL=<model>")
+uv run python scripts/creo.py models      # list models; then `ping` for one tiny request
+```
+
+```bash
+uv run python scripts/episode_trace.py --split val --seeds 2 --jobs 8 --name val-flags
+uv run python scripts/replay_review.py runs/llm/traces/val-flags --flags-only
+uv run python scripts/replay_review.py runs/llm/traces/val-flags --only-flagged
+uv run python scripts/mock_review.py bank --questions 25
+uv run python scripts/creo.py usage       # tokens used so far
+```
+
 ## 5.10 When each test runs
 
 | When | Tests |
