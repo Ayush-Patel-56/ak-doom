@@ -1,0 +1,119 @@
+{
+  "map_set_fingerprint": "8fda02b8a085ba01",
+  "map_set": "24 val maps (4 x t1-arena, 4 x t2-maze, 4 x t2-rooms, 4 x t3-keynear, 4 x t3-keydoor, 4 Freedoom 2 levels) x 2 seeds = 48 runs",
+  "brains": [
+    {
+      "key": "random",
+      "label": "Random agent",
+      "note": "template baseline + safety guard",
+      "source": "runs/eval/random-val24.json",
+      "total": -381.25,
+      "by_tier": {
+        "4": -12.44,
+        "3": -236.73,
+        "1": -59.66,
+        "2": -72.42
+      },
+      "exits": 0,
+      "runs": 48
+    },
+    {
+      "key": "champion1",
+      "label": "Champion #1 (Phase 2)",
+      "note": "rays + entities + vitals + GRU, 6M steps",
+      "total": 2511.03,
+      "by_tier": {
+        "1": 498.07,
+        "2": 1390.35,
+        "3": 721.49,
+        "4": -98.88
+      }
+    },
+    {
+      "key": "champion2",
+      "label": "Champion #2 (Phase 3)",
+      "note": "+ mind map + landmark notebook, 4.5M steps",
+      "source": "runs/eval/champion2-val24.json",
+      "highlight": true,
+      "total": 5182.69,
+      "by_tier": {
+        "1": 526.05,
+        "2": 1949.56,
+        "3": 2736.38,
+        "4": -29.3
+      },
+      "exits": 31,
+      "runs": 48
+    },
+    {
+      "key": "p4v1",
+      "label": "Phase 4 run 1 @ 500k",
+      "note": "+ manager, curiosity, RGB; 50% full levels",
+      "source": "runs/eval/p4-500k-val24.json",
+      "total": 3345.48,
+      "by_tier": {
+        "1": 393.14,
+        "2": 1579.81,
+        "3": 1459.29,
+        "4": -86.76
+      },
+      "exits": 20,
+      "runs": 48
+    },
+    {
+      "key": "p4v2",
+      "label": "Phase 4 run 2 @ 1M",
+      "note": "4 seeds: 5,077 vs champion #2 5,309",
+      "source": "runs/eval/p4v2-final-val24.json",
+      "total": 5354.56,
+      "by_tier": {
+        "1": 538.2,
+        "2": 1813.03,
+        "3": 3062.55,
+        "4": -59.22
+      },
+      "exits": 31,
+      "runs": 48
+    }
+  ],
+  "tier_compare": [
+    "random",
+    "champion1",
+    "champion2"
+  ],
+  "ablation": {
+    "title": "Memory ablation: mind map + notebook vs GRU only",
+    "subtitle": "Phase 3, same PPO / seed / curriculum, ~1.0M decisions per arm; 8 held-out Tier 3 val maps x 5 seeds",
+    "arms": [
+      "With memory",
+      "Without memory (GRU only)"
+    ],
+    "metrics": [
+      [
+        "Exit reached",
+        27.5,
+        15,
+        "higher"
+      ],
+      [
+        "Key picked up",
+        45,
+        27.5,
+        "higher"
+      ],
+      [
+        "Locked door opened",
+        32.5,
+        27.5,
+        "higher"
+      ],
+      [
+        "Died",
+        12.5,
+        62.5,
+        "lower"
+      ]
+    ],
+    "footnote": "One training seed and 40 episodes per arm: evidence, not proof. Test split agrees (exit 45% vs 12.5%). Source: docs/experiments.md, abl-p3."
+  }
+}

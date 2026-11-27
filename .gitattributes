@@ -12,3 +12,5 @@
 *.joblib filter=lfs diff=lfs merge=lfs -text
 # AK-Doom: curated training maps (template test WADs stay as regular files)
 maps/curated/** filter=lfs diff=lfs merge=lfs -text
+# AK-Doom: demo videos (Mind View recordings)
+docs/demo/*.mp4 filter=lfs diff=lfs merge=lfs -text

@@ -39,6 +39,8 @@ Add a new row whenever we make or change a big choice. Never delete old rows; ma
 | D-28 | **Warm-start memory brains from the champion** (new memory inputs start at zero) | The memory brain then starts with the champion's skills (exit ~75% at step 0 vs ~2% from scratch) and only learns to use memory | Train each memory brain from scratch | ✅ Active |
 | D-29 | **More replay (40%) when warm-starting** (`--puzzle-share 0.6`) | Most of the champion's score comes from arenas and mazes; 80% key puzzles risks forgetting them | Stage 3 default (80% puzzles) | ✅ Active for `p3-mem-ws-v1` |
 | D-30 | **Compare Mini-League totals only on the same map set** (fingerprint of maps × seeds + weights SHA-256 in every result) | The val set grew from 20 to 24 maps; a worse Phase 3 checkpoint's 24-map total (+2,464) would have beaten champion #1's stale 20-map number (+2,021), while on the same 24 maps the champion scores +2,511 | Compare raw totals | ✅ Active |
+| D-31 | **Warm-starting a manager keeps the source policy** (`worker_fuse` starts as `h + 1`, goal weights zero, offset folded into the policy bias) | A random `worker_fuse` threw champion #2's skill away (entropy 5.0, every smoke episode died); with the identity start the worker plays exactly like the source for every goal (PR #23) | Random init; freezing the worker | ✅ Active |
+| D-32 | **Keep champion #2; do not export the Phase 4 brain yet** | Phase 4 v2 won on 2 seeds (+5,354.56 vs +5,182.69) but lost on 4 seeds (+5,077.05 vs +5,308.52), with no extra Tier 3/4 exits and +0.7 ms per decision. A 3% swing between seed sets is noise; a champion change needs a win on the larger sample | Export on the 2-seed result | ✅ Active |
 | D-23 | **Write our own map generator** (text drawing → UDMF) instead of depending on OBLIGE first | No extra install; maps are tiny, exact and reproducible from a seed; we control the skill being tested (e.g. key away from its door) | OBLIGE only | ✅ Active; OBLIGE stays optional for big full levels |
 
 ---
@@ -56,7 +58,7 @@ Add a new row whenever we make or change a big choice. Never delete old rows; ma
 | R-05 | Odometer drifts | 🟢 | 🟡 | Measured 0.3% drift on the test map; re-check on big maps; mind map stores "age" so old info fades; fallback D-04 |
 | R-06 | Training-time cheats leak into habits | 🟡 | 🟡 | Final stages use the normal game; Mini-League uses the normal game only |
 | R-07 | Exit not visible in rays/entities (**confirmed** by the contract) | 🔴 | 🔴 | RGB encoder + "exit in view?" helper task (D-15) |
-| R-08 | Repo > 1 GB | 🟢 | 🔴 | LFS only for the champion + a curated set of WADs; generated maps are git-ignored |
+| R-08 | Repo > 1 GB | 🟢 | 🔴 | LFS for the champion, a curated set of WADs, and `docs/demo/*.mp4`; generated maps are git-ignored |
 | R-09 | LFS weights missing in the submitted repo | 🟢 | 🔴 | Fresh-clone validator check before submission |
 | R-10 | Reward hacking (e.g. spinning for novelty, door open/close loops) | 🟡 | 🟡 | Count each door/area once per episode; watch videos |
 | R-11 | Rule-compliance doubts (mind map seen as "hardcoded") | 🟢 | 🟡 | RULES.md allows preprocessing and learned memory; no pathfinding/BFS; explained in the brief |

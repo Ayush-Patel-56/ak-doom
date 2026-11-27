@@ -27,9 +27,29 @@ A screen that shows the game and the agent's "thoughts" side by side.
 └──────────────────────────────────────────────────────────┘
 ```
 
-**How it works:** the brain can return an optional `debug` dictionary (mind map, notebook, goal, attention weights). The dashboard reads it. On game day the debug output is **switched off** to save time.
+**How it works:** there is no brain `debug` dictionary. [`scripts/mind_view.py`](../scripts/mind_view.py) drives the real `submission/agent.py` and only *reads* its state after each `act()` (mind map, notebook, pose, manager goal, exit-in-view score). A forward hook, registered only during `record()` and removed afterwards, copies the entity-attention weights. The submitted agent is unchanged and pays no debug cost on game day.
 
-**Build options:** an OpenCV window (simplest), or a small local web page. Both can record to MP4 for the backup video.
+**Build:** there is no OpenCV window or local web page. The script records the dashboard to MP4 with Pillow + ffmpeg (`--png` writes single frames without ffmpeg).
+
+**Built:** [`scripts/mind_view.py`](../scripts/mind_view.py) records the dashboard to MP4 (Pillow + ffmpeg, no new dependency). It drives the real `submission/agent.py` and only *reads* its state after each `act()` (mind map grid, notebook slots, odometer pose, manager goal, exit-in-view score) plus a forward hook that copies the entity-attention weights, so the submitted agent pays no debug cost. The end card shows the scorer's result for that run.
+
+```bash
+uv run python scripts/mind_view.py --map maps/curated/val/t3-keynear-100000.wad:MAP01 --ticks 3500 --out runs/demo/keynear.mp4
+uv run python scripts/mind_view.py --map two_rooms --png 40          # single frames, no ffmpeg needed
+```
+
+**Backup videos** ([`docs/demo/`](demo/), champion #2, **val maps only**; each reproduces its Mini-League run exactly):
+
+| Video | Shows | Outcome |
+|---|---|---|
+| [01-arena-combat](demo/01-arena-combat.mp4) | Tier 1: attention on enemies, fight, exit | exit, 2 kills, 60 steps |
+| [02-keynear-key-door-exit](demo/02-keynear-key-door-exit.mp4) | Tier 3: key → notebook → locked door → exit | exit in 45 steps |
+| [03-keydoor-far-key](demo/03-keydoor-far-key.mp4) | Tier 3: far key, remembered across rooms (notebook pins on the map) | exit in 297 steps |
+| [04-maze-navigation](demo/04-maze-navigation.mp4) | Tier 2: breadcrumbs on the mind map through a maze | exit in 431 steps |
+| [05-fail-keydoor-timeout](demo/05-fail-keydoor-timeout.mp4) | **Failure:** far-key map, wanders and never finds the key | time up (875 steps) |
+| [06-fail-freedoom-map24](demo/06-fail-freedoom-map24.mp4) | **Failure:** big Freedoom level, dies early | died at 132 steps |
+
+**Charts** ([`docs/figures/`](figures/), redraw with `scripts/make_charts.py`): [progress per brain](figures/progress-val24.svg), [score per tier](figures/tiers-val24.svg), [memory ablation](figures/ablation-memory.svg).
 
 ## 8.2 The 2-page brief (outline)
 

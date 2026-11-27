@@ -89,7 +89,11 @@ flowchart LR
 - [x] Curriculum Stage 4 (catalog train-only full levels, replay and recorded caps)
 - [x] Controlled ablation runner: − manager, − curiosity, Phase 3 reference; smoke execution verified
 
-**Done when (still open):** exit rate on Tier 3/4 validation maps improves over Phase 3.
+- [x] Warm start from champion #2 keeps its policy when the manager is added (D-31, PR #23)
+- [x] GPU training (RTX 4050, separate CUDA environment; Repo & Workflow §6.1): ~380 vs ~255 decisions/s on CPU
+- [x] Two training runs from champion #2 (`docs/experiments.md`): run 1 (50% full levels, curiosity 0.01) **forgot** key puzzles (+3,345 at 500k); run 2 (conservative mix) reached **+5,354.56** on 2 seeds but **+5,077.05 vs champion #2's +5,308.52 on 4 seeds**
+
+**Done when: not met.** Phase 4 matches Phase 3 within noise but does not add Tier 3/4 exits (T3 20/36 vs 21/36, T4 0/12 both, 4 seeds). Champion #2 stays the submitted brain (D-32). Next, if time allows: a longer run from `p4-cons-ws-v2` and a larger seed sample before any export.
 The 512-decision smoke comparison had zero exits in every arm; improvement is not established.
 
 ---
@@ -102,7 +106,7 @@ The 512-decision smoke comparison had zero exits in every arm; improvement is no
 - [x] Optional real-transition dynamics auxiliary task (terminal/reset masked)
 - [x] Automated stress & chaos coverage: `tests/agent/stress/` (4 brain types), upstream 20-map soak, and Phase 5 real-engine stress measurements in `configs/phase5-smoke.json`
 - [ ] Full §5.7 acceptance: platform resource and policy-quality criteria still require evidence; passing robustness tests does not establish gameplay skill
-- [ ] Official CPU speed acceptance <20 ms average; Mac measurements available, no unmeasured optimisation claimed
+- [x] CPU speed <20 ms average: champion #2 averages **4.6 ms** per decision on the 24 val maps × 4 seeds (one thread) and **p50 2.2 ms** in `validate.py --docker` (1 CPU pinned, fresh clone of `main`)
 
 **Done when (still open):** useful performance on locked **test maps** is close to validation under declared acceptance thresholds and sufficient samples. Development does not run test maps; future test use is ledgered, historical freshness is unknown.
 
@@ -110,12 +114,12 @@ The 512-decision smoke comparison had zero exits in every arm; improvement is no
 
 ## Phase 6 — Polish & present
 
-- [ ] Final champion exported + fresh-clone `validate.py --docker` check
+- [x] Final champion exported + fresh-clone `validate.py --docker` check: champion #2 (Phase 3), fresh clone of `main` passed in Docker (init 6.3 s, p50 2.2 ms, exit in 82 steps, 668 MB)
 - [ ] Final PR merged to `main` **before the deadline** (the scorer evaluates the last commit on the default branch)
-- [ ] Mind View dashboard
-- [ ] Demo videos (good runs + honest failure cases)
-- [ ] Ablation chart
-- [ ] 2-page brief PDF ([outline](08-DEMO-AND-BRIEF.md#82-the-2-page-brief-outline))
+- [x] Mind View dashboard: `scripts/mind_view.py` (records the real agent's map, notebook, goal and attention to MP4)
+- [x] Demo videos (good runs + honest failure cases): 6 recordings in `docs/demo/` ([list](08-DEMO-AND-BRIEF.md#81-mind-view-dashboard))
+- [x] Ablation chart + results charts: `docs/figures/` (`scripts/make_charts.py`)
+- [x] 2-page brief PDF ([outline](08-DEMO-AND-BRIEF.md#82-the-2-page-brief-outline)): `docs/brief/brief.pdf`; team names still to fill in
 - [ ] Q&A practice: every member can explain every part
 - [ ] [Compliance checklist](10-COMPLIANCE-CHECKLIST.md) fully ticked
 

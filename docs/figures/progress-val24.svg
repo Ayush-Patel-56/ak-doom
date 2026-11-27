@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 358" width="820" height="358" role="img" aria-label="Mini-League weighted total per brain on the 24-map validation set">
+<title>Mini-League weighted total per brain on the 24-map validation set</title>
+
+<style>
+  .surface { fill: #fcfcfb; } .ink { fill: #0b0b0b; } .ink2 { fill: #52514e; } .grid { stroke: #e4e3df; }
+  .axis { stroke: #8a8984; } .s0 { fill: #2a78d6; } .s1 { fill: #eb6834; } .s2 { fill: #1baf7a; }
+  @media (prefers-color-scheme: dark) {
+    .surface { fill: #1a1a19; } .ink { fill: #f0efec; } .ink2 { fill: #c3c2b7; } .grid { stroke: #33332f; }
+    .axis { stroke: #77766f; } .s0 { fill: #3987e5; } .s1 { fill: #d95926; } .s2 { fill: #199e70; }
+  }
+  text { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
+</style>
+<rect class="surface" x="0" y="0" width="820" height="358" rx="8"/>
+<text class="ink" x="20.0" y="32.0" font-size="17" text-anchor="start" font-weight="600">Mini-League weighted total, same 24 val maps × 2 seeds</text>
+<text class="ink2" x="20.0" y="54.0" font-size="13" text-anchor="start" font-weight="400">Held-out maps never used in training. Higher is better.</text>
+<line class="grid" x1="300.0" y1="76" x2="300.0" y2="332" stroke-width="1"/>
+<text class="ink2" x="300.0" y="350.0" font-size="12" text-anchor="middle" font-weight="400">-1,000</text>
+<line class="grid" x1="361.4" y1="76" x2="361.4" y2="332" stroke-width="1"/>
+<text class="ink2" x="361.4" y="350.0" font-size="12" text-anchor="middle" font-weight="400">0</text>
+<line class="grid" x1="422.9" y1="76" x2="422.9" y2="332" stroke-width="1"/>
+<text class="ink2" x="422.9" y="350.0" font-size="12" text-anchor="middle" font-weight="400">+1,000</text>
+<line class="grid" x1="484.3" y1="76" x2="484.3" y2="332" stroke-width="1"/>
+<text class="ink2" x="484.3" y="350.0" font-size="12" text-anchor="middle" font-weight="400">+2,000</text>
+<line class="grid" x1="545.7" y1="76" x2="545.7" y2="332" stroke-width="1"/>
+<text class="ink2" x="545.7" y="350.0" font-size="12" text-anchor="middle" font-weight="400">+3,000</text>
+<line class="grid" x1="607.1" y1="76" x2="607.1" y2="332" stroke-width="1"/>
+<text class="ink2" x="607.1" y="350.0" font-size="12" text-anchor="middle" font-weight="400">+4,000</text>
+<line class="grid" x1="668.6" y1="76" x2="668.6" y2="332" stroke-width="1"/>
+<text class="ink2" x="668.6" y="350.0" font-size="12" text-anchor="middle" font-weight="400">+5,000</text>
+<line class="grid" x1="730.0" y1="76" x2="730.0" y2="332" stroke-width="1"/>
+<text class="ink2" x="730.0" y="350.0" font-size="12" text-anchor="middle" font-weight="400">+6,000</text>
+<text class="ink" x="288.0" y="105.0" font-size="14" text-anchor="end" font-weight="400">Random agent</text>
+<text class="ink2" x="288.0" y="121.0" font-size="11" text-anchor="end" font-weight="400">template baseline + safety guard</text>
+<path opacity="0.55" class="s0" d="M361.42857142857144,90 H342.0089285714286 Q338.0089285714286,90 338.0089285714286,94.0 V110.0 Q338.0089285714286,114 342.0089285714286,114 H361.42857142857144 Z"><title>Random agent: -381.25</title></path>
+<text class="ink" x="330.0" y="107.0" font-size="13" text-anchor="end" font-weight="600">-381</text>
+<text class="ink" x="288.0" y="151.0" font-size="14" text-anchor="end" font-weight="400">Champion #1 (Phase 2)</text>
+<text class="ink2" x="288.0" y="167.0" font-size="11" text-anchor="end" font-weight="400">rays + entities + vitals + GRU, 6M steps</text>
+<path opacity="0.55" class="s0" d="M361.42857142857144,136 H511.67755714285715 Q515.6775571428572,136 515.6775571428572,140.0 V156.0 Q515.6775571428572,160 511.67755714285715,160 H361.42857142857144 Z"><title>Champion #1 (Phase 2): +2,511.03</title></path>
+<text class="ink" x="523.7" y="153.0" font-size="13" text-anchor="start" font-weight="600">+2,511</text>
+<text class="ink" x="288.0" y="197.0" font-size="14" text-anchor="end" font-weight="600">Champion #2 (Phase 3)</text>
+<text class="ink2" x="288.0" y="213.0" font-size="11" text-anchor="end" font-weight="400">+ mind map + landmark notebook, 4.5M steps</text>
+<path class="s0" d="M361.42857142857144,182 H675.7938142857142 Q679.7938142857142,182 679.7938142857142,186.0 V202.0 Q679.7938142857142,206 675.7938142857142,206 H361.42857142857144 Z"><title>Champion #2 (Phase 3): +5,182.69</title></path>
+<text class="ink" x="687.8" y="199.0" font-size="13" text-anchor="start" font-weight="600">+5,183</text>
+<text class="ink" x="288.0" y="243.0" font-size="14" text-anchor="end" font-weight="400">Phase 4 run 1 @ 500k</text>
+<text class="ink2" x="288.0" y="259.0" font-size="11" text-anchor="end" font-weight="400">+ manager, curiosity, RGB; 50% full levels</text>
+<path opacity="0.55" class="s0" d="M361.42857142857144,228 H562.9366285714286 Q566.9366285714286,228 566.9366285714286,232.0 V248.0 Q566.9366285714286,252 562.9366285714286,252 H361.42857142857144 Z"><title>Phase 4 run 1 @ 500k: +3,345.48</title></path>
+<text class="ink" x="574.9" y="245.0" font-size="13" text-anchor="start" font-weight="600">+3,345</text>
+<text class="ink" x="288.0" y="289.0" font-size="14" text-anchor="end" font-weight="400">Phase 4 run 2 @ 1M</text>
+<text class="ink2" x="288.0" y="305.0" font-size="11" text-anchor="end" font-weight="400">4 seeds: 5,077 vs champion #2 5,309</text>
+<path opacity="0.55" class="s0" d="M361.42857142857144,274 H686.3515428571429 Q690.3515428571429,274 690.3515428571429,278.0 V294.0 Q690.3515428571429,298 686.3515428571429,298 H361.42857142857144 Z"><title>Phase 4 run 2 @ 1M: +5,354.56</title></path>
+<text class="ink" x="698.4" y="291.0" font-size="13" text-anchor="start" font-weight="600">+5,355</text>
+<line class="axis" x1="361.4" y1="76" x2="361.4" y2="332" stroke-width="1.5"/>
+</svg>

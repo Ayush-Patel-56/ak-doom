@@ -22,6 +22,15 @@
 - `validate.py` warns that it can't pin the agent to 1 CPU or measure RAM on Windows. Use `--docker` for real numbers.
 - The official image is big: about **19 GB** on disk, and the first build downloads several GB (PyTorch, JAX, CUDA libraries). Later runs reuse it.
 - Even in Docker, Windows can't report per-process GPU memory (`validate.py` warns). Measure it on a Linux GPU machine once the agent uses the GPU.
+- **GPU training on Windows (optional).** The project's `.venv` has the CPU build of PyTorch (that is what the agent uses at evaluation). For training on an NVIDIA GPU, make a *separate* environment outside the repo so `uv.lock` and the submission never change:
+  ```powershell
+  uv export --frozen --no-hashes --no-emit-project --format requirements-txt | Select-String -NotMatch '^torch==' | Out-File -Encoding utf8 gpu-req.txt
+  uv venv F:\venvs\ak-doom-gpu --python .venv\Scripts\python.exe
+  uv pip install --python F:\venvs\ak-doom-gpu\Scripts\python.exe -r gpu-req.txt
+  uv pip install --python F:\venvs\ak-doom-gpu\Scripts\python.exe torch==2.15.0 --index-url https://download.pytorch.org/whl/cu132
+  F:\venvs\ak-doom-gpu\Scripts\python.exe -m training.train --device cuda ...
+  ```
+  `torch 2.15.0+cu132` ran on an RTX 4050 Laptop with a CUDA 13.0 driver (581.80). Phase 4 (RGB encoder + manager) trained at ~380 decisions/s vs ~255 on the CPU, using < 1 GB of GPU memory; `--resume` moves a CPU run onto the GPU.
 - 8 template tests fail on Windows because they use Linux-only Python features (`resource`, `os.sched_getaffinity`). The other 41 pass. They are expected to pass on Linux/Docker.
 
 ## 6.2 Folder layout
@@ -102,10 +111,11 @@ flowchart LR
 
 ## 6.3 Git LFS and size budget
 
-The template's `.gitattributes` already sends `*.pt`, `*.pth`, `*.safetensors`, `*.ckpt`, `*.npz`, `*.onnx` (and more) to LFS. We add one line for our curated maps (not all WADs, so the template's test WADs stay as they are):
+The template's `.gitattributes` already sends `*.pt`, `*.pth`, `*.safetensors`, `*.ckpt`, `*.npz`, `*.onnx` (and more) to LFS. We add two lines: one for our curated maps (not all WADs, so the template's test WADs stay as they are), and one for the Mind View demo videos:
 
 ```text
 maps/curated/** filter=lfs diff=lfs merge=lfs -text
+docs/demo/*.mp4 filter=lfs diff=lfs merge=lfs -text
 ```
 
 `.gitignore` additions (never ignore anything under `submission/`; the validator fails if we do):
