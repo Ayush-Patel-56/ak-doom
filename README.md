@@ -5,9 +5,9 @@
 > **Agent name:** *Smriti* (स्मृति), which means "memory".
 > **Track:** Yugaantar 2026 · DevForge — Track 1, *"Can It Play DOOM?"*
 > **Built on:** the official [`devforge-doom-template`](https://github.com/Reinforce-SST/devforge-doom-template).
-> **Status:** 🎮 Playing. The submitted agent is **champion #2**, the Phase 3 memory brain (mind map + landmark notebook): **+5,182.69** on our 24 validation maps vs +2,511.03 for champion #1. It solves all key-near-start puzzles and opens locked doors; big Freedoom levels are still its weak spot. A Phase 4 brain (manager + curiosity + RGB, trained on GPU) matches it but did not beat it on 4 seeds, so champion #2 stays. On the held-out **test** maps (run once, at the end) it scores **+4,990.69** with 0 crashes in 100 runs, about 90% of its validation score per run.
+> **Status:**  Playing. The submitted agent is **champion #2**, the Phase 3 memory brain (mind map + landmark notebook): **+5,182.69** on our 24 validation maps vs +2,511.03 for champion #1. It solves all key-near-start puzzles and opens locked doors; big Freedoom levels are still its weak spot. A Phase 4 brain (manager + curiosity + RGB, trained on GPU) matches it but did not beat it on 4 seeds, so champion #2 stays. On the held-out **test** maps (run once, at the end) it scores **+4,990.69** with 0 crashes in 100 runs, about 90% of its validation score per run.
 
-## 🎬 Demo film: *AK-DOOM: SMRITI — The Machine That Remembers*
+##  Demo film: *AK-DOOM: SMRITI — The Machine That Remembers*
 
 <p align="center">
   <a href="docs/media/smriti-demo-film.mp4">
