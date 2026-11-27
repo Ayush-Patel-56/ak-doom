@@ -1,6 +1,6 @@
 # AK-Doom: Smriti (स्मृति, "memory")
 
-**Project Brief** · Yugaantar DevForge, Track 1 "Can It Play DOOM?" · Team AK-Doom ({{TEAM_NAMES}})
+**Project Brief** · Yugaantar DevForge, Track 1 "Can It Play DOOM?" · Team LLF
 
 > **A DOOM agent that draws its own map and remembers where the locked door was.**
 > It senses only what a player could sense, gets no coordinates, and every button press comes from one small neural network.
@@ -8,8 +8,7 @@
 <!--
 This Markdown file is the source of truth for the brief text. brief.html is the print layout
 (2 A4 pages, page break before section 5) and brief.pdf is rendered from it with headless Edge.
-Values in {{...}} are filled in once the final run is scored: {{TEAM_NAMES}}, +5,182.69,
-+526.1..−29.3, 0, 2.4.
+All values are filled in (team LLF; champion #2 results; one-time test-map run).
 Sources: docs/experiments.md, docs/03-SYSTEM-DESIGN.md, docs/04-TRAINING-PLAN.md, submission/smriti/.
 -->
 
@@ -87,7 +86,7 @@ The Mini-League is our copy of the published scoring rules (exit, progression, e
 | Memory brain, early check | 0.39 M | +2,463.58 | +446.7 | +879.7 | +1,200.4 | −63.2 | 0 / 48 |
 | **Champion #2 (memory brain)** | 4.5 M | **+5,182.69** | +526.1 | +1,949.6 | +2,736.4 | −29.3 | 0 / 48 |
 
-*Random agent: −201.16 on the older 20-map set, where champion #1 scores +2,021.28 (different map sets are never compared).*
+*Random agent on the same 24 maps: −381.25 (0 exits). **Held-out test maps** (25 maps × 4 seeds, run once at the end, after the brain was fixed): champion #2 **+4,990.69**, 0 / 100 crashes, ≈90% of its validation score per run.*
 
 - **Champion #1** (6 M steps, stages 1–2) reaches the exit on every arena and maze, but on 0 of 8 runs of the full key-door maps.
 - **Champion #2** is the memory brain warm-started from champion #1 and trained on stage 3 for 4.5 M steps. It **doubles** champion #1's total and is better on every tier: it solves **all 4 `keynear` maps** on both seeds (key → locked door → exit; champion #1: 1 of 4), one far-key `keydoor` map, and **5 of 8** doored-room runs (was 1 of 8), while keeping every arena and maze. An early check (387k steps) had briefly forgotten mazes; replay brought them back.
@@ -113,5 +112,5 @@ Official Docker image, **1 CPU pinned**, median time per decision: champion #1 *
 
 - **Big Freedoom levels** still score worse than random (T4 negative): the agent rushes in and dies.
 - **Doored rooms**: 5 of 8 exits; **far-key `keydoor`**: 1 of 4 solved.
-- **Phase 4** (manager/worker, RND curiosity, RGB "exit in view" head) is built but not yet trained to completion; images make CPU training ~45% slower. Next: train it on a GPU.
+- **Phase 4** (manager/worker, RND curiosity, RGB "exit in view" head), trained on a GPU from champion #2, matches it but does not beat it on 4 seeds (+5,077 vs +5,309), so it is not submitted.
 - Most results are **single training seeds**. Next: 3 seeds per ablation arm and longer runs.

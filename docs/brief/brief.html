@@ -69,7 +69,7 @@
 <section class="page page1">
   <header>
     <h1>AK-Doom: Smriti <span class="deva">(स्मृति)</span> <span style="font-weight:400;font-size:12pt;color:var(--muted)">"memory"</span></h1>
-    <div class="sub">Project Brief · Yugaantar DevForge, Track 1 "Can It Play DOOM?" · Team AK-Doom (<span class="ph">{{TEAM_NAMES}}</span>)</div>
+    <div class="sub">Project Brief · Yugaantar DevForge, Track 1 "Can It Play DOOM?" · Team LLF</div>
   </header>
 
   <div class="pitch"><b>A DOOM agent that draws its own map and remembers where the locked door was.</b>
@@ -254,7 +254,7 @@
       <tr class="hl"><td>Champion #2 (memory brain)</td><td class="num">4.5 M</td><td class="num"><b>+5,182.69</b></td><td class="num">+526.1</td><td class="num">+1,949.6</td><td class="num">+2,736.4</td><td class="num">−29.3</td><td class="num">0 / 48</td></tr>
     </tbody>
   </table>
-  <p class="note">Random agent: −201.16 on the older 20-map set, where champion #1 scores +2,021.28 (different map sets are never compared).</p>
+  <p class="note">Random agent on the same 24 maps: −381.25 (0 exits). <b>Held-out test maps</b> (25 maps × 4 seeds, run once at the end, after the brain was fixed): champion #2 <b>+4,990.69</b>, 0 / 100 crashes, ≈90% of its validation score per run.</p>
   <ul>
     <li><b>Champion #1</b> (6 M steps, stages 1–2) reaches the exit on every arena and maze, but on 0 of 8 runs of the full key-door maps.</li>
     <li><b>Champion #2</b> is the memory brain warm-started from champion #1 and trained on stage 3 for 4.5 M steps. It <b>doubles</b> champion #1's total and is better on every tier: it solves <b>all 4 <code>keynear</code> maps</b> on both seeds (key → locked door → exit; champion #1: 1 of 4), one far-key <code>keydoor</code> map, and <b>5 of 8</b> doored-room runs (was 1 of 8), while keeping every arena and maze. An early check (387k steps) had briefly forgotten mazes; replay brought them back.</li>
@@ -284,7 +284,7 @@
       <ul>
         <li><b>Big Freedoom levels</b> still score worse than random (T4 negative): the agent rushes in and dies.</li>
         <li><b>Doored rooms</b>: 5 of 8 exits; <b>far-key <code>keydoor</code></b>: 1 of 4 solved.</li>
-        <li><b>Phase 4</b> (manager/worker, RND curiosity, RGB "exit in view" head) is built but not yet trained to completion; images make CPU training ~45% slower. Next: train it on a GPU.</li>
+        <li><b>Phase 4</b> (manager/worker, RND curiosity, RGB "exit in view" head), trained on a GPU from champion #2, matches it but does not beat it on 4 seeds (+5,077 vs +5,309), so it is not submitted.</li>
         <li>Most results are <b>single training seeds</b>. Next: 3 seeds per ablation arm and longer runs.</li>
       </ul>
     </div>
