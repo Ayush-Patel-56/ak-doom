@@ -16,13 +16,18 @@ agent pays no debug cost on game day. The end card shows the scorer's result for
 
     uv run python scripts/mind_view.py --map maps/curated/val/t3-keynear-100000.wad:MAP01 --out runs/demo/keynear.mp4
     uv run python scripts/mind_view.py --weights runs/x/step_500000.pt --map two_rooms --seed 1 --out demo.mp4
+    uv run python scripts/mind_view.py --live --map maps/curated/val/t1-arena-100003.wad:MAP01 --map maps/curated/val/t3-keynear-100000.wad:MAP01
 
-Needs ffmpeg on PATH for MP4 (`--png` writes single frames without it).
+--live shows the dashboard in a desktop window while the agent plays (Esc stops), several maps in a row.
+Each map's tick cap comes from maps/catalog.json (2,100 for maps not in it); --ticks overrides it.
+Needs ffmpeg on PATH for MP4 (`--png` writes single frames without it); --live uses tkinter (ships with
+Python). Test maps are refused: their one-time use goes through evaluate.py --final-test.
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import math
 import shutil
 import subprocess
@@ -373,14 +378,85 @@ class Mp4Writer:
             raise SystemExit("ffmpeg failed")
 
 
+class LiveWindow:
+    """Shows dashboard frames in a desktop window at a steady pace (tkinter: ships with Python)."""
+
+    def __init__(self, fps: float, scale: float = 1.0, title: str = "AK-Doom Mind View"):
+        import tkinter as tk
+        from PIL import ImageTk
+
+        self._tk, self._imagetk = tk, ImageTk
+        self.root = tk.Tk()
+        self.root.title(f"{title}  (Esc to stop)")
+        self.root.configure(background="black")
+        self.label = tk.Label(self.root, bd=0, background="black")
+        self.label.pack()
+        self.closed = False
+        self.root.protocol("WM_DELETE_WINDOW", self.close)
+        self.root.bind("<Escape>", lambda _e: self.close())
+        self.period, self.scale = 1.0 / fps, scale
+        self.next_t = time.perf_counter()
+        self._photo = None
+
+    def show(self, img: Image.Image) -> bool:
+        """Draw one frame; returns False once the viewer closed the window."""
+        if self.closed:
+            return False
+        if self.scale != 1.0:
+            img = img.resize((int(W * self.scale), int(H * self.scale)), Image.BILINEAR)
+        self._photo = self._imagetk.PhotoImage(img)
+        self.label.configure(image=self._photo)
+        try:
+            self.root.update()
+        except self._tk.TclError:
+            self.closed = True
+            return False
+        self.next_t += self.period
+        wait = self.next_t - time.perf_counter()
+        if wait > 0:
+            time.sleep(wait)
+        else:
+            self.next_t = time.perf_counter()
+        return not self.closed
+
+    def hold(self, img: Image.Image, seconds: float) -> None:
+        end = time.perf_counter() + seconds
+        while time.perf_counter() < end and self.show(img):
+            pass
+
+    def close(self) -> None:
+        if not self.closed:
+            self.closed = True
+            try:
+                self.root.destroy()
+            except self._tk.TclError:
+                pass
+
+
 def resolve_map(spec: str) -> str:
     if spec == "two_rooms":
         return str(REPO / "maps" / "two_rooms.wad") + ":MAP01"
     return spec
 
 
+def default_ticks(spec: str) -> int:
+    """The map's tick cap from maps/catalog.json (the same value the Mini-League uses), else 2,100."""
+    cat = REPO / "maps" / "catalog.json"
+    if cat.is_file():
+        for m in json.loads(cat.read_text(encoding="utf-8"))["maps"]:
+            if m["id"] == spec and m.get("episode_ticks"):
+                return int(m["episode_ticks"])
+    return 2100
+
+
+def refuse_test_map(spec: str) -> None:
+    if "/curated/test/" in spec.replace(chr(92), "/"):
+        raise SystemExit(f"refusing test map {spec}: test maps are used once, through evaluate.py --final-test")
+
+
 def record(weights: Path | None, spec: str, seed: int, out: Path | None, fps: float, ticks: int | None,
-           png_steps: list[int], png_dir: Path | None, max_steps: int | None) -> dict:
+           png_steps: list[int], png_dir: Path | None, max_steps: int | None,
+           live: LiveWindow | None = None) -> dict:
     sys.path.insert(0, str(REPO / "submission"))
     from agent import DoomAgent  # the real submission agent
     from training.scorer import ScoreTracker
@@ -388,8 +464,9 @@ def record(weights: Path | None, spec: str, seed: int, out: Path | None, fps: fl
     agent = DoomAgent(observation_space(), action_space(), "cpu", weights_path=weights)
     net = getattr(agent.policy, "net", None)
     tap = AttentionTap(net) if net is not None else None
+    refuse_test_map(spec)
     wad, map_name = parse_map(resolve_map(spec))
-    episode_ticks = ticks or 2100
+    episode_ticks = ticks or default_ticks(spec)
     env = make_env(wad, map_name, episode_ticks=episode_ticks, render_buffers=True)
     tracker = ScoreTracker()
     writer = Mp4Writer(out, fps) if out is not None else None
@@ -427,6 +504,8 @@ def record(weights: Path | None, spec: str, seed: int, out: Path | None, fps: fl
             frame = render_frame(snap)
             if writer is not None:
                 writer.write(frame)
+            if live is not None and not live.show(frame):
+                break
             if png_dir is not None and (step + 1) in png_steps:
                 png_dir.mkdir(parents=True, exist_ok=True)
                 frame.save(png_dir / f"mindview-step{step + 1:04d}.png")
@@ -443,34 +522,51 @@ def record(weights: Path | None, spec: str, seed: int, out: Path | None, fps: fl
                    locked_doors=res.get("locked_doors"), kills=res.get("kills"), dead=bool(res.get("dead")),
                    score=round(float(res.get("score", 0.0)), 1),
                    mean_ms=round(float(np.mean(ms_all)) if ms_all else 0.0, 2))
-    if writer is not None and frame is not None:
+    if frame is not None and (writer is not None or live is not None):
         outcome = "EXIT REACHED" if summary["exit"] else ("DIED" if summary["dead"] else "TIME UP")
         lines = [f"map: {spec.replace(str(REPO), '').lstrip('/').lstrip(chr(92))}",
                  f"steps: {summary['steps']}   keys: {summary['keys']}   locked doors opened: {summary['locked_doors']}",
                  f"kills: {summary['kills']}   map score: {summary['score']}",
                  f"mean {summary['mean_ms']} ms per decision (budget 40 ms)"]
-        writer.write(end_card(frame, outcome, lines), repeat=int(fps * 3))
-        writer.close()
+        card = end_card(frame, outcome, lines)
+        if writer is not None:
+            writer.write(card, repeat=int(fps * 3))
+            writer.close()
+        if live is not None:
+            live.hold(card, 3.0)
     return summary
 
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--weights", type=Path, help="brain checkpoint (default: submission/weights/champion.pt)")
-    ap.add_argument("--map", required=True, help="wad[:MAPxx], or 'two_rooms' for the template test map")
+    ap.add_argument("--map", action="append", required=True,
+                    help="wad[:MAPxx], or 'two_rooms' for the template test map; repeat with --live to play several")
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--ticks", type=int, help="episode length in game tics (default 2100)")
+    ap.add_argument("--ticks", type=int, help="episode length in game tics (default: the map's catalog cap)")
+    ap.add_argument("--live", action="store_true", help="show the dashboard in a window while it plays")
+    ap.add_argument("--scale", type=float, default=1.0, help="live window size (e.g. 0.75 on small screens)")
     ap.add_argument("--out", type=Path, help="MP4 path")
     ap.add_argument("--fps", type=float, default=17.5, help="17.5 = 2x real time (a decision is 4 tics)")
     ap.add_argument("--png", type=int, action="append", default=[], help="also save the frame at this step")
     ap.add_argument("--png-dir", type=Path, default=REPO / "runs" / "demo")
     ap.add_argument("--max-steps", type=int)
     a = ap.parse_args(argv)
-    if a.out is None and not a.png:
-        ap.error("give --out and/or --png")
-    summary = record(a.weights, a.map, a.seed, a.out, a.fps, a.ticks, a.png, a.png_dir if a.png else None,
-                     a.max_steps)
-    print(summary)
+    if a.out is None and not a.png and not a.live:
+        ap.error("give --live, --out and/or --png")
+    if len(a.map) > 1 and (a.out is not None or a.png):
+        ap.error("several --map values only work with --live (one MP4 / PNG set per map)")
+    live = LiveWindow(fps=a.fps, scale=a.scale) if a.live else None
+    try:
+        for spec in a.map:
+            summary = record(a.weights, spec, a.seed, a.out, a.fps, a.ticks, a.png,
+                             a.png_dir if a.png else None, a.max_steps, live)
+            print(summary)
+            if live is not None and live.closed:
+                break
+    finally:
+        if live is not None:
+            live.close()
     if a.out is not None:
         print(f"saved {a.out}")
     return 0

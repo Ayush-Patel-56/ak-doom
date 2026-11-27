@@ -89,3 +89,40 @@ def test_charts_render_valid_svg(tmp_path, monkeypatch):
         assert root.tag.endswith("svg")
     data = json.loads(make_charts.DATA.read_text(encoding="utf-8"))
     assert all(b["total"] is not None for b in data["brains"])
+
+
+def test_catalog_tick_caps_and_test_map_guard():
+    import mind_view
+
+    assert mind_view.default_ticks("maps/curated/val/t3-keynear-100000.wad:MAP01") == 3500
+    assert mind_view.default_ticks("two_rooms") == 2100
+    with pytest.raises(SystemExit, match="test map"):
+        mind_view.refuse_test_map("maps/curated/test/t1-arena-200000.wad:MAP01")
+
+
+def test_release_check_spots_lfs_pointers_and_wrong_hashes(tmp_path, monkeypatch):
+    import release_check
+
+    pointer = tmp_path / "champion.pt"
+    pointer.write_bytes(b"version https://git-lfs.github.com/spec/v1\noid sha256:abc\nsize 3018785\n")
+    assert release_check.is_lfs_pointer(pointer)
+    meta = tmp_path / "champion.json"
+    meta.write_text(json.dumps({"weights_sha256": "0" * 64}), encoding="utf-8")
+    monkeypatch.setattr(release_check, "CHAMPION", pointer)
+    monkeypatch.setattr(release_check, "CHAMPION_JSON", meta)
+    ok, msg = release_check.check_hash()
+    assert not ok and "!=" in msg
+    meta.write_text(json.dumps({"weights_sha256": release_check.sha256(pointer)}), encoding="utf-8")
+    assert release_check.check_hash()[0]
+
+
+@pytest.mark.skipif(not CHAMPION.is_file(), reason="needs the trained champion")
+def test_release_check_accepts_the_real_champion():
+    import release_check
+
+    if release_check.is_lfs_pointer(CHAMPION):
+        pytest.skip("champion.pt is an LFS pointer in this checkout")
+    assert release_check.check_hash()[0]
+    ok, msg, agent = release_check.check_agent()
+    assert ok, msg
+    assert release_check.check_plays(agent)[0]

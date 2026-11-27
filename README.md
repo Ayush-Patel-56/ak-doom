@@ -85,7 +85,9 @@ uv run python scripts/evaluate.py --seeds 2 --jobs 8      # Mini-League on valid
 uv run python scripts/benchmark_latency.py    # speed check against the official limits
 uv run python -m training.train --stage 3 --memory on --name my-run --steps 2000000   # train (add --device cuda on a GPU)
 uv run python scripts/export_champion.py runs/my-run/latest.pt --eval runs/eval/my-run-val.json   # promote only if it beats the champion
-uv run python scripts/mind_view.py --map maps/curated/val/t3-keynear-100000.wad:MAP01 --ticks 3500 --out runs/demo/keynear.mp4
+uv run python scripts/mind_view.py --map maps/curated/val/t3-keynear-100000.wad:MAP01 --out runs/demo/keynear.mp4
+uv run python scripts/mind_view.py --live --map maps/curated/val/t1-arena-100003.wad:MAP01 --map maps/curated/val/t3-keynear-100000.wad:MAP01   # live demo window (Esc stops)
+uv run python scripts/release_check.py        # before submitting: the REAL trained brain is what gets loaded (validate.py alone passes on an LFS pointer)
 uv run python scripts/make_charts.py          # redraw the results charts in docs/figures/
 uv run python scripts/episode_trace.py --split val --seeds 2 --jobs 8 --name val-flags   # replay behaviour flags
 uv run python scripts/replay_review.py runs/llm/traces/val-flags --flags-only            # report (add the LLM: Testing Plan §5.9.1)

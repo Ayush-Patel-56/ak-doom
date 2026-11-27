@@ -33,7 +33,7 @@ Sources: docs/experiments.md, docs/03-SYSTEM-DESIGN.md, docs/04-TRAINING-PLAN.md
 INPUTS                  ENCODERS                               FUSE     MEMORY      DECIDE                      OUTPUT
 64 rays (360°)       -> circular 1-D conv over the ring -> 128 --+
 0-32 entities        -> entity attention (learned query +    ----+
-                        "nothing here" token) -> 128             |
+                        "nothing here" token) -> 64              |
 17 vitals + prev act -> vitals MLP -> 32 ------------------------+-> fuse -> GRU 256 -+-> [manager: 1 of 5 goals / 8 steps]*
 [RGB / depth]*       -> [small CNNs + exit-in-view head]* -------+   256      ^   |   |          | goal
 own buttons + velocity -> odometer -> mind map (256x256, 8 layers,|          |   |   +-> worker policy (6 groups, -> 9 buttons
