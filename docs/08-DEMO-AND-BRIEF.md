@@ -34,8 +34,10 @@ A screen that shows the game and the agent's "thoughts" side by side.
 **Built:** [`scripts/mind_view.py`](../scripts/mind_view.py) records the dashboard to MP4 (Pillow + ffmpeg, no new dependency). It drives the real `submission/agent.py` and only *reads* its state after each `act()` (mind map grid, notebook slots, odometer pose, manager goal, exit-in-view score) plus a forward hook that copies the entity-attention weights, so the submitted agent pays no debug cost. The end card shows the scorer's result for that run.
 
 ```bash
-uv run python scripts/mind_view.py --map maps/curated/val/t3-keynear-100000.wad:MAP01 --ticks 3500 --out runs/demo/keynear.mp4
+uv run python scripts/mind_view.py --map maps/curated/val/t3-keynear-100000.wad:MAP01 --out runs/demo/keynear.mp4
 uv run python scripts/mind_view.py --map two_rooms --png 40          # single frames, no ffmpeg needed
+# live demo: a desktop window, several val maps in a row, Esc stops; --scale 0.75 on small screens
+uv run python scripts/mind_view.py --live --map maps/curated/val/t1-arena-100003.wad:MAP01 --map maps/curated/val/t3-keynear-100000.wad:MAP01 --map maps/curated/val/t3-keydoor-100001.wad:MAP01 --seed 1
 ```
 
 **Backup videos** ([`docs/demo/`](demo/), champion #2, **val maps only**; each reproduces its Mini-League run exactly):

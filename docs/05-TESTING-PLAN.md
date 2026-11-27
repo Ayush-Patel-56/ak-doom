@@ -182,6 +182,7 @@ uv run python scripts/creo.py usage       # tokens used so far
 
 - [ ] Fresh `git clone` of the public repo → `python validate.py --docker` passes
 - [ ] `git lfs ls-files` lists the champion weights, and a fresh clone downloads them (not LFS pointer files)
+- [ ] `python scripts/release_check.py` passes on the final commit: real LFS content, `champion.pt` = `champion.json` hash, the agent loads the trained brain (not the random fallback) and exits `two_rooms`, HEAD = `origin/main`. `validate.py` alone is not enough: it still says PASSED when the weights are a 132-byte LFS pointer
 - [ ] The final commit is on the **default branch** (`main`), which is what the scorer evaluates
 - [ ] Speed benchmark < 20 ms average on 1 thread
 - [ ] 0 crashes in the full Mini-League
