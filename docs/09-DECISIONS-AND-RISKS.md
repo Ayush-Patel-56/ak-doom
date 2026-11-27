@@ -58,7 +58,7 @@ Add a new row whenever we make or change a big choice. Never delete old rows; ma
 | R-05 | Odometer drifts | 🟢 | 🟡 | Measured 0.3% drift on the test map; re-check on big maps; mind map stores "age" so old info fades; fallback D-04 |
 | R-06 | Training-time cheats leak into habits | 🟡 | 🟡 | Final stages use the normal game; Mini-League uses the normal game only |
 | R-07 | Exit not visible in rays/entities (**confirmed** by the contract) | 🔴 | 🔴 | RGB encoder + "exit in view?" helper task (D-15) |
-| R-08 | Repo > 1 GB | 🟢 | 🔴 | LFS only for the champion + a curated set of WADs; generated maps are git-ignored |
+| R-08 | Repo > 1 GB | 🟢 | 🔴 | LFS for the champion, a curated set of WADs, and `docs/demo/*.mp4`; generated maps are git-ignored |
 | R-09 | LFS weights missing in the submitted repo | 🟢 | 🔴 | Fresh-clone validator check before submission |
 | R-10 | Reward hacking (e.g. spinning for novelty, door open/close loops) | 🟡 | 🟡 | Count each door/area once per episode; watch videos |
 | R-11 | Rule-compliance doubts (mind map seen as "hardcoded") | 🟢 | 🟡 | RULES.md allows preprocessing and learned memory; no pathfinding/BFS; explained in the brief |

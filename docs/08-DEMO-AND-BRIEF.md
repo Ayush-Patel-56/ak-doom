@@ -27,9 +27,9 @@ A screen that shows the game and the agent's "thoughts" side by side.
 └──────────────────────────────────────────────────────────┘
 ```
 
-**How it works:** the brain can return an optional `debug` dictionary (mind map, notebook, goal, attention weights). The dashboard reads it. On game day the debug output is **switched off** to save time.
+**How it works:** there is no brain `debug` dictionary. [`scripts/mind_view.py`](../scripts/mind_view.py) drives the real `submission/agent.py` and only *reads* its state after each `act()` (mind map, notebook, pose, manager goal, exit-in-view score). A forward hook, registered only during `record()` and removed afterwards, copies the entity-attention weights. The submitted agent is unchanged and pays no debug cost on game day.
 
-**Build options:** an OpenCV window (simplest), or a small local web page. Both can record to MP4 for the backup video.
+**Build:** there is no OpenCV window or local web page. The script records the dashboard to MP4 with Pillow + ffmpeg (`--png` writes single frames without ffmpeg).
 
 **Built:** [`scripts/mind_view.py`](../scripts/mind_view.py) records the dashboard to MP4 (Pillow + ffmpeg, no new dependency). It drives the real `submission/agent.py` and only *reads* its state after each `act()` (mind map grid, notebook slots, odometer pose, manager goal, exit-in-view score) plus a forward hook that copies the entity-attention weights, so the submitted agent pays no debug cost. The end card shows the scorer's result for that run.
 

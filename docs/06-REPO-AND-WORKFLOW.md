@@ -111,10 +111,11 @@ flowchart LR
 
 ## 6.3 Git LFS and size budget
 
-The template's `.gitattributes` already sends `*.pt`, `*.pth`, `*.safetensors`, `*.ckpt`, `*.npz`, `*.onnx` (and more) to LFS. We add one line for our curated maps (not all WADs, so the template's test WADs stay as they are):
+The template's `.gitattributes` already sends `*.pt`, `*.pth`, `*.safetensors`, `*.ckpt`, `*.npz`, `*.onnx` (and more) to LFS. We add two lines: one for our curated maps (not all WADs, so the template's test WADs stay as they are), and one for the Mind View demo videos:
 
 ```text
 maps/curated/** filter=lfs diff=lfs merge=lfs -text
+docs/demo/*.mp4 filter=lfs diff=lfs merge=lfs -text
 ```
 
 `.gitignore` additions (never ignore anything under `submission/`; the validator fails if we do):
